@@ -1,3 +1,6 @@
-﻿func main(){
-	return 5050
+﻿extern printf
+
+func main(){
+	printf("ola mundo")
+	return 0
 }

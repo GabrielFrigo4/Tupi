@@ -8,6 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Update="code_ex.asm">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
     <None Update="mycode.tp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
