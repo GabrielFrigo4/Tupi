@@ -19,17 +19,11 @@ public class Program
         //certo
         asm_code = asm_code.Replace("extern printf", "extern printf: proc");
         //certo
+        asm_code = asm_code.Replace("int8 ms", ".data\nms db");
+        //certo
         asm_code = asm_code.Replace("func main(){", ".code\nmain proc\n\tsub rsp, 28h\t;Reserve the shadow space");
         //errado
-        asm_code = asm_code.Replace("printf(\"ola mundo\")", "lea rcx, ms\n\tcall printf");
-        //errado
-        List<string> lines = new List<string>(asm_code.Split(new char[] { '\n' }));
-        lines.Insert(1, "\n.data\nms db \"ola mundo\", 0");
-        asm_code = "";
-        foreach(string line in lines)
-        {
-            asm_code += line+'\n';
-        }
+        asm_code = asm_code.Replace("printf(ms)", "lea rcx, ms\n\tcall printf");
         //certo
         asm_code = asm_code.Replace("return ", "mov rax, ");
         //certo

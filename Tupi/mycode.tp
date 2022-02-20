@@ -1,6 +1,8 @@
 ﻿extern printf
 
+int8 ms "hello world",0
+
 func main(){
-	printf("ola mundo")
+	printf(ms)
 	return 0
 }

@@ -1,5 +1,8 @@
 ﻿extern printf: proc
 
+.data
+ms db "ola mundo", 0
+
 .code
 main proc
 	sub rsp, 28h	;Reserve the shadow space
@@ -10,6 +13,3 @@ main proc
 	ret
 main endp
 End
-
-.data
-ms db "ola mundo", 0
