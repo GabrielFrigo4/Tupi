@@ -13,21 +13,34 @@ public class Program
     static void CompileTupi(string path_tupi)
     {
         string tupi_code = File.ReadAllText(path_tupi);
-        string[] palavras = tupi_code.Split(new char[] { '\t','\n',' ', '?', '!', '.', ',', ';' });
-        string asm_code = tupi_code;
+        string[] lines = tupi_code.Split('\n');
+        string asm_code = string.Empty;
 
-        //certo
-        asm_code = asm_code.Replace("extern printf", "extern printf: proc");
-        //certo
-        asm_code = asm_code.Replace("int8 ms", ".data\nms db");
-        //certo
-        asm_code = asm_code.Replace("func main(){", ".code\nmain proc\n\tsub rsp, 28h\t;Reserve the shadow space");
-        //errado
-        asm_code = asm_code.Replace("printf(ms)", "lea rcx, ms\n\tcall printf");
-        //certo
-        asm_code = asm_code.Replace("return ", "mov rax, ");
-        //certo
-        asm_code = asm_code.Replace("}", "\tadd rsp, 28h\t;Remove shadow space\n\tret\nmain endp\nEnd");
+        for(int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+            string[] words = line.Split(new char[] { '\t', '\n', ' ', '?', '!', '.', ',', ';' });
+
+            //certo
+            line = line.Replace("extern printf", "extern printf: proc");
+            //certo
+            line = line.Replace("int8 ms", ".data\nms db");
+            //certo
+            line = line.Replace("func main(){", ".code\nmain proc\n\tsub rsp, 28h\t;Reserve the shadow space");
+            //errado
+            line = line.Replace("printf(ms)", "lea rcx, ms\n\tcall printf");
+            //certo
+            line = line.Replace("return ", "mov rax, ");
+            //certo
+            line = line.Replace("}", "\tadd rsp, 28h\t;Remove shadow space\n\tret\nmain endp\nEnd");
+
+            lines[i] = line;
+        }
+
+        foreach(string line in lines)
+        {
+            asm_code += line;
+        }
 
         string path_dir = "./build";
         Directory.CreateDirectory(path_dir);
