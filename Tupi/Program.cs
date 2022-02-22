@@ -15,16 +15,39 @@ public class Program
         string tupi_code = File.ReadAllText(path_tupi);
         string[] lines = tupi_code.Split('\n');
         string asm_code = string.Empty;
+        CompileData compileData = new CompileData();
 
-        for(int i = 0; i < lines.Length; i++)
+        for (int l = 0; l < lines.Length; l++)
         {
-            string line = lines[i];
-            string[] words = line.Split(new char[] { '\t', '\n', ' ', '?', '!', '.', ',', ';' });
+            string line = lines[l];
+            string[] words = line.Split(new char[] { '\t', '\n', ' ', '?', '!', '.', ',', ';', ':' }, StringSplitOptions.RemoveEmptyEntries);
 
-            //certo
-            line = line.Replace("extern printf", "extern printf: proc");
-            //certo
-            line = line.Replace("int8 ms", ".data\nms db");
+            for (int w = 0; w < words.Length; w++)
+            {
+                string word = words[w];
+                if (w >= words.Length - 1) break;
+
+                if(word == "extern")
+                {
+                    string next_word = words[w+1];
+                    line = line.Replace($"{word} {next_word}", $"{word} {next_word}: proc");
+                }
+
+                string[] asm_types = { "byte", "word", "dword", "qword", "real4", "real8" };
+                string[] tupi_types = { "int8", "int16", "int32", "int64", "real32", "real64" };
+                if (tupi_types.Contains(word))
+                {
+                    if (!compileData.DotData)
+                    {
+                        line = ".data\n" + line;
+                        compileData.DotData = true;
+                    }
+                    int pos = Array.IndexOf(tupi_types, word);
+                    string next_word = words[w + 1];
+                    line = line.Replace($"{word} {next_word}", $"{next_word} {asm_types[pos]}");
+                }
+            }
+
             //certo
             line = line.Replace("func main(){", ".code\nmain proc\n\tsub rsp, 28h\t;Reserve the shadow space");
             //errado
@@ -34,17 +57,17 @@ public class Program
             //certo
             line = line.Replace("}", "\tadd rsp, 28h\t;Remove shadow space\n\tret\nmain endp\nEnd");
 
-            lines[i] = line;
+            lines[l] = line + '\n';
         }
 
-        foreach(string line in lines)
+        foreach (string line in lines)
         {
             asm_code += line;
         }
 
         string path_dir = "./build";
         Directory.CreateDirectory(path_dir);
-        StreamWriter write = File.CreateText(path_dir+@"\main.asm");
+        StreamWriter write = File.CreateText(path_dir + @"\main.asm");
         write.Write(asm_code);
         write.Close();
         CompileAsm(path_dir);

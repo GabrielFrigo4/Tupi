@@ -1,4 +1,5 @@
 ﻿extern printf
+extern puts
 
 int8 ms "hello world",0
 
