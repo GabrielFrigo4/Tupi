@@ -27,12 +27,14 @@ public class Program
                 string word = words[w];
                 if (w >= words.Length - 1) break;
 
+                //get extern func
                 if(word == "extern")
                 {
                     string next_word = words[w+1];
                     line = line.Replace($"{word} {next_word}", $"{word} {next_word}: proc");
                 }
 
+                //tupi types
                 string[] asm_types = { "byte", "word", "dword", "qword", "real4", "real8" };
                 string[] tupi_types = { "int8", "int16", "int32", "int64", "real32", "real64" };
                 if (tupi_types.Contains(word))
@@ -46,10 +48,14 @@ public class Program
                     string next_word = words[w + 1];
                     line = line.Replace($"{word} {next_word}", $"{next_word} {asm_types[pos]}");
                 }
+
+                //tupi func
+                if (word == "func")
+                {
+                    line = line.Replace("func main(){", ".code\nmain proc\n\tsub rsp, 28h\t;Reserve the shadow space");
+                }
             }
 
-            //certo
-            line = line.Replace("func main(){", ".code\nmain proc\n\tsub rsp, 28h\t;Reserve the shadow space");
             //errado
             line = line.Replace("printf(ms)", "lea rcx, ms\n\tcall printf");
             //certo
