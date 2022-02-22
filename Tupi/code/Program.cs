@@ -127,13 +127,17 @@ public class Program
         CompileAsm(path_dir);
     }
 
-    static void CompileAsm(string path_dir_asm)
+    static void CompileAsm(string path_dir_asm, bool run = false)
     {
         Process process = new Process();
         ProcessStartInfo startInfo = new ProcessStartInfo();
         startInfo.WindowStyle = ProcessWindowStyle.Hidden;
         startInfo.FileName = "cmd.exe";
-        startInfo.Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" && ml64 main.asm /link /subsystem:console /defaultlib:kernel32.lib /defaultlib:user32.lib /defaultlib:libcmt.lib && main";
+        startInfo.Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" && ml64 main.asm /link /subsystem:console /defaultlib:kernel32.lib /defaultlib:user32.lib /defaultlib:libcmt.lib";
+        if (run)
+        {
+            startInfo.Arguments += " && main";
+        }
         process.StartInfo = startInfo;
         process.Start();
     }
