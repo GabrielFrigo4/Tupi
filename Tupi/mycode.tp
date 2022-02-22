@@ -1,9 +1,15 @@
-﻿extern printf
-extern puts
+﻿use puts
 
-int8 ms "hello world",0
+i8 unga "goiaba",0
+i8 unga2 "goiaba2",0
 
 func main(){
-	printf(ms)
+	unga_buga()
 	return 0
+}
+
+func unga_buga(){
+	puts(unga)
+	puts(unga2)
+	return
 }
