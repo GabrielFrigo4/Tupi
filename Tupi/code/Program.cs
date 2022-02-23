@@ -1,4 +1,6 @@
 ﻿using System;
+using System.CommandLine.Binding;
+using System.CommandLine;
 using System.Diagnostics;
 
 namespace Tupi;
@@ -6,12 +8,21 @@ public class Program
 {
     static int Main(string[] args)
     {
-        CompileTupi("./mycode.tp");
-        return 0;
+        Action<string> action = CompileTupi;
+        Argument<string> source = new Argument<string>("source", "source for tupi compile");
+        RootCommand cmd = new RootCommand()
+        {
+            source,
+        };
+        cmd.SetHandler(action, source);
+        return cmd.Invoke(args);
     }
 
     static void CompileTupi(string path_tupi)
     {
+        Console.WriteLine("compile tupi code:");
+        Console.WriteLine("tranform tupi to assembly");
+
         string tupi_code = File.ReadAllText(path_tupi);
         string[] lines = tupi_code.Split('\n');
         string asm_code = string.Empty;
@@ -127,10 +138,12 @@ public class Program
         CompileAsm(path_dir);
     }
 
-    static void CompileAsm(string path_dir_asm, bool run = false)
+    static void CompileAsm(string path_dir_asm, bool run = false, bool assembler_warning = true)
     {
+        Console.WriteLine("tranform assembly to binary file");
         Process process = new Process();
         ProcessStartInfo startInfo = new ProcessStartInfo();
+        startInfo.CreateNoWindow = !assembler_warning;
         startInfo.WindowStyle = ProcessWindowStyle.Hidden;
         startInfo.FileName = "cmd.exe";
         startInfo.Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" && ml64 main.asm /link /subsystem:console /defaultlib:kernel32.lib /defaultlib:user32.lib /defaultlib:libcmt.lib";
@@ -140,5 +153,7 @@ public class Program
         }
         process.StartInfo = startInfo;
         process.Start();
+        process.WaitForExit();
+        Console.WriteLine("compile finished!!");
     }
 }
