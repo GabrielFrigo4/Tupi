@@ -41,15 +41,21 @@ public class Program
                 if (word.Contains('(') && w == 0)
                 {
                     string func_name = word.Remove(word.IndexOf('('));
-                    string param = word.Substring(word.IndexOf('(') + 1, word.IndexOf(')') - word.IndexOf('(') - 1);
-                    if(param == string.Empty)
+                    string _param = word.Substring(word.IndexOf('(') + 1, word.IndexOf(')') - word.IndexOf('(') - 1);
+                    string[] param = _param.Split(new char[] { ',', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (param.Length == 0)
                     {
                         line = line.Replace($"{word}", $"call {func_name}");
                     }
-                    else
+                    else if(param.Length == 1)
                     {
-                        line = line.Replace($"{word}", $"lea rcx, {param}\n\tcall {func_name}");
+                        line = line.Replace($"{word}", $"lea rcx, {param[0]}\n\tcall {func_name}");
                     }
+                    else if (param.Length == 2)
+                    {
+                        line = line.Replace($"{word}", $"lea rcx, {param[0]}\n\tmov rdx, {param[1]}\n\tcall {func_name}");
+                    }
+                    line += "\n\txor rax,rax";
                 }
 
                 //return
@@ -86,7 +92,7 @@ public class Program
                 //tupi types
                 string[] asm_types = { "byte", "word", "dword", "qword", "real4", "real8" };
                 string[] tupi_types = { "i8", "i16", "i32", "i64", "f32", "f64" };
-                if (tupi_types.Contains(word))
+                if (tupi_types.Contains(word) && compileData.funcs.Count == 0)
                 {
                     if (!compileData.dotData)
                     {
@@ -95,6 +101,25 @@ public class Program
                     }
                     int pos = Array.IndexOf(tupi_types, word);
                     line = line.Replace($"{word} {next_word}", $"{next_word} {asm_types[pos]}");
+                }
+                else if (tupi_types.Contains(word))
+                {
+                    int pos = Array.IndexOf(tupi_types, word);
+                    if (w + 3 < words.Length)
+                    {
+                        string val = words[w + 3];
+                        line = $"\tlocal {next_word}: {asm_types[pos]}";
+                        line += $"\n\tmov {next_word}, {val}";
+                    }
+                    else
+                    {
+                        line = $"\tlocal {next_word}: {asm_types[pos]}";
+                    }
+
+                    if (!tupi_types.Contains(lines[l + 1].Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]))
+                    {
+                        line += "\n\tsub rsp, 28h\t;Reserve the shadow space";
+                    }
                 }
 
                 //start func
@@ -110,7 +135,7 @@ public class Program
                     compileData.funcs.Add(func_name);
 
                     line = line.Replace($"{word} {next_word}", $"{func_name} proc");
-                    if(func_name == "main")
+                    if(func_name == "main" && !tupi_types.Contains(lines[l+1].Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]))
                     {
                         line += "\n\tsub rsp, 28h\t;Reserve the shadow space";
                     }

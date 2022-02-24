@@ -1,15 +1,11 @@
-﻿use puts
+﻿use printf
 
-i8 unga "goiaba",0
-i8 unga2 "goiaba2",0
+i8 print_type "message: %d",10,0
 
 func main(){
-	unga_buga()
+	i64 number = 5000
+	printf(print_type,-50)
+	printf(print_type,100)
+	printf(print_type,number)
 	return 0
-}
-
-func unga_buga(){
-	puts(unga)
-	puts(unga2)
-	return
 }
