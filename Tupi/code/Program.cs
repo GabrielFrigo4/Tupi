@@ -61,15 +61,12 @@ public class Program
                 //return
                 if (word == "return" && words.Length == 1)
                 {
-                    line = line.Replace($"{word}", "ret");
+                    line = "\tadd rsp, 28h\t;Remove shadow space\n\tret";
                 }
                 else if(word == "return" && words.Length > 1)
                 {
                     line = line.Replace($"{word}", "mov rax, ");
-                    if(compileData.funcs[compileData.funcs.Count - 1] == "main")
-                    {
-                        line += "\n\tadd rsp, 28h\t;Remove shadow space";
-                    }
+                    line += "\n\tadd rsp, 28h\t;Remove shadow space";
                     line += "\n\tret";
                 }
 
@@ -135,7 +132,7 @@ public class Program
                     compileData.funcs.Add(func_name);
 
                     line = line.Replace($"{word} {next_word}", $"{func_name} proc");
-                    if(func_name == "main" && !tupi_types.Contains(lines[l+1].Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]))
+                    if(!tupi_types.Contains(lines[l+1].Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]))
                     {
                         line += "\n\tsub rsp, 28h\t;Reserve the shadow space";
                     }
