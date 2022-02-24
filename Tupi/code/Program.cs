@@ -43,7 +43,21 @@ public class Program
                     string func_name = word.Remove(word.IndexOf('('));
                     string _param = word.Substring(word.IndexOf('(') + 1, word.IndexOf(')') - word.IndexOf('(') - 1);
                     string[] param = _param.Split(new char[] { ',', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
-                    string[] comand = {"lea", "mov", "mov", "mov" };
+                    string[] comand = new string[param.Length];
+
+                    for (int i = 0; i < param.Length; i++)
+                    {
+                        if(param[i].ToCharArray()[0] == '&')
+                        {
+                            comand[i] = "lea";
+                            param[i] = param[i].Remove(0, 1);
+                        }
+                        else
+                        {
+                            comand[i] = "mov";
+                        }
+                    }
+
                     if (param.Length == 0)
                     {
                         line = line.Replace($"{word}", $"call {func_name}");
