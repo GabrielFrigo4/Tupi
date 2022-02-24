@@ -9,8 +9,8 @@ func main(){
 
 func print(){
 	i64 number = 5000
-	printf(print_type,-50)
-	printf(print_type,100)
-	printf(print_type,number)
+	printf(&print_type,-50)
+	printf(&print_type,100)
+	printf(&print_type,number)
 	return
 }

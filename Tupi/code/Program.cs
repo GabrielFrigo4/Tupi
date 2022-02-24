@@ -43,17 +43,26 @@ public class Program
                     string func_name = word.Remove(word.IndexOf('('));
                     string _param = word.Substring(word.IndexOf('(') + 1, word.IndexOf(')') - word.IndexOf('(') - 1);
                     string[] param = _param.Split(new char[] { ',', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] comand = {"lea", "mov", "mov", "mov" };
                     if (param.Length == 0)
                     {
                         line = line.Replace($"{word}", $"call {func_name}");
                     }
                     else if(param.Length == 1)
                     {
-                        line = line.Replace($"{word}", $"lea rcx, {param[0]}\n\tcall {func_name}");
+                        line = line.Replace($"{word}", $"{comand[0]} rcx, {param[0]}\n\tcall {func_name}");
                     }
                     else if (param.Length == 2)
                     {
-                        line = line.Replace($"{word}", $"lea rcx, {param[0]}\n\tmov rdx, {param[1]}\n\tcall {func_name}");
+                        line = line.Replace($"{word}", $"{comand[0]} rcx, {param[0]}\n\t{comand[1]} rdx, {param[1]}\n\tcall {func_name}");
+                    }
+                    else if (param.Length == 3)
+                    {
+                        line = line.Replace($"{word}", $"{comand[0]} rcx, {param[0]}\n\t{comand[1]} rdx, {param[1]}\n\t{comand[2]} r8x, {param[2]}\n\tcall {func_name}");
+                    }
+                    else if (param.Length == 3)
+                    {
+                        line = line.Replace($"{word}", $"{comand[0]} rcx, {param[0]}\n\t{comand[1]} rdx, {param[1]}\n\t{comand[2]} r8x, {param[2]}\n\t{comand[3]} r9x, {param[3]}\n\tcall {func_name}");
                     }
                     line += "\n\txor rax,rax";
                 }
