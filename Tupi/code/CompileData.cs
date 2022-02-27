@@ -1,25 +1,28 @@
-﻿namespace Tupi
+﻿namespace Tupi;
+
+internal struct CompileData
 {
-    internal struct CompileData
+    internal bool dotData;
+    internal bool dotCode;
+    internal bool endCode;
+    internal bool endLocalVarsDefine;
+    internal List<string> funcs;
+    internal List<string> localVarsDefine;
+
+    /// <summary>
+    /// string = func_name/global
+    /// Dictionary<string, string> = name, type
+    /// </summary>
+    internal Dictionary<string, Dictionary<string, string>> vars;
+
+    public CompileData()
     {
-        public bool dotData;
-        public bool dotCode;
-        public bool endCode;
-        public List<string> funcs;
-
-        /// <summary>
-        /// string = func_name/global
-        /// Dictionary<string, string> = type, name
-        /// </summary>
-        public Dictionary<string, Dictionary<string, string>> vars;
-
-        public CompileData()
-        {
-            this.dotData = false;
-            this.dotCode = false;
-            this.endCode = false;
-            this.funcs = new List<string>();
-            this.vars = new Dictionary<string, Dictionary<string, string>>();
-        }
+        this.dotData = false;
+        this.dotCode = false;
+        this.endCode = false;
+        this.endLocalVarsDefine = true;
+        this.funcs = new List<string>();
+        this.localVarsDefine = new List<string>();
+        this.vars = new Dictionary<string, Dictionary<string, string>>();
     }
 }

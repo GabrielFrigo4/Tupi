@@ -8,9 +8,10 @@ func main(){
 }
 
 func print(){
-	i64 number = 5000
-	printf(&print_type,-50)
-	printf(&print_type,100)
-	printf(&print_type,number)
+	i64 size64 = 5000
+	i32 size32 = 5000
+	printf(&print_type,size64)
+	printf(&print_type,1000)
+	printf(&print_type,-1000)
 	return
 }
