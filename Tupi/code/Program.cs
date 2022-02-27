@@ -4,7 +4,7 @@ using System.CommandLine;
 using System.Diagnostics;
 
 namespace Tupi;
-public class Program
+internal class Program
 {
     static int Main(string[] args)
     {
@@ -27,6 +27,7 @@ public class Program
         string[] lines = tupi_code.Split('\n');
         string asm_code = string.Empty;
         CompileData compileData = new CompileData();
+        compileData.vars.Add(string.Empty, new Dictionary<string, string>());
 
         for (int l = 0; l < lines.Length; l++)
         {
@@ -98,6 +99,7 @@ public class Program
                 {
                     string func_name = compileData.funcs[compileData.funcs.Count - 1];
                     line = line.Replace($"{word}", $"{func_name} endp");
+                    compileData.vars.Remove(func_name);
                 }
 
                 if (w >= words.Length - 1) continue;
@@ -120,11 +122,15 @@ public class Program
                         compileData.dotData = true;
                     }
                     int pos = Array.IndexOf(tupi_types, word);
+                    compileData.vars[string.Empty].Add(word, next_word);
+
                     line = line.Replace($"{word} {next_word}", $"{next_word} {asm_types[pos]}");
                 }
                 else if (tupi_types.Contains(word))
                 {
                     int pos = Array.IndexOf(tupi_types, word);
+                    string func_name = compileData.funcs[compileData.funcs.Count - 1];
+                    compileData.vars[func_name].Add(word, next_word);
                     if (w + 3 < words.Length)
                     {
                         string val = words[w + 3];
@@ -153,6 +159,7 @@ public class Program
 
                     string func_name = next_word.Remove(next_word.IndexOf('('));
                     compileData.funcs.Add(func_name);
+                    compileData.vars.Add(func_name, new Dictionary<string, string>());
 
                     line = line.Replace($"{word} {next_word}", $"{func_name} proc");
                     if(!tupi_types.Contains(lines[l+1].Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]))
