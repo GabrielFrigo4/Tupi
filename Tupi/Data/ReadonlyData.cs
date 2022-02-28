@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Tupi.Data;
 
-namespace Tupi.Data;
-
-internal struct ReadOnlyData
+internal class ReadOnlyData
 {
     internal string[] Registors8i { get; private set; }
     internal string[] Registors16i { get; private set; }

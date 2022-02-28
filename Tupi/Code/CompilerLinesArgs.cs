@@ -8,7 +8,7 @@ internal class CompilerLinesArgs : EventArgs
     internal string[] Lines { get; private set; }
     internal int LinePos { get; private set; }
     internal string[] Terms { get; private set; }
-    internal RunData RunData { get; set; }
+    internal RunData RunData { get; private set; }
     internal ReadOnlyData ReadOnlyData { get; private set; }
 
     internal CompilerLinesArgs(string[] lines, string line, int linePos, RunData runData, ReadOnlyData readOnlyData)

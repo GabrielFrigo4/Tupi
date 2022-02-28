@@ -1,10 +1,10 @@
 ﻿namespace Tupi.Data;
 
-internal struct RunData
+internal class RunData
 {
-    internal bool DotData { get; private set; }
-    internal bool DotCode { get; private set; }
-    internal bool EndLocalVarsDefine { get; private set; }
+    internal bool DotData { get; set; }
+    internal bool DotCode { get; set; }
+    internal bool EndLocalVarsDefine { get; set; }
     internal List<string> Funcs { get; private set; }
     internal List<string> LocalVarsDefine { get; private set; }
 
@@ -22,23 +22,5 @@ internal struct RunData
         this.Funcs = new List<string>();
         this.LocalVarsDefine = new List<string>();
         this.Vars = new Dictionary<string, Dictionary<string, string>>();
-    }
-
-    internal RunData SetDotData(bool dotData)
-    {
-        this.DotData = dotData;
-        return this;
-    }
-
-    internal RunData SetDotCode(bool dotCode)
-    {
-        this.DotCode = dotCode;
-        return this;
-    }
-
-    internal RunData SetEndLocalVarsDefine(bool endLocalVarsDefine)
-    {
-        this.EndLocalVarsDefine = endLocalVarsDefine;
-        return this;
     }
 }

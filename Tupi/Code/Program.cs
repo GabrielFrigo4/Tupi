@@ -1,6 +1,5 @@
 ﻿using System.CommandLine;
 using System.Diagnostics;
-using Tupi.Data;
 
 namespace Tupi.Code;
 
@@ -64,6 +63,7 @@ internal static class Program
         Console.WriteLine("compile finished!!");
     }
 
+#region CompilerLines
     static void CompilerLines_CallFunc(object? sender, CompilerLinesArgs e)
     {
         for (int w = 0; w < e.Terms.Length; w++)
@@ -189,7 +189,7 @@ internal static class Program
                 }
                 if (!contains)
                 {
-                    e.RunData = e.RunData.SetEndLocalVarsDefine(true);
+                    e.RunData.EndLocalVarsDefine = true;
                     string newLine = string.Empty;
                     foreach (string _line in e.RunData.LocalVarsDefine)
                     {
@@ -232,7 +232,7 @@ internal static class Program
                 if (!e.RunData.DotData)
                 {
                     e.Line = ".data\n" + e.Line;
-                    e.RunData = e.RunData.SetDotData(true);
+                    e.RunData.DotCode = true;
                 }
                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
                 e.RunData.Vars[string.Empty].Add(next_word, word);
@@ -249,7 +249,7 @@ internal static class Program
                     string val = e.Terms[w + 3];
                     e.Line = $"\tlocal {next_word}: {e.ReadOnlyData.AsmTypes[pos]}";
                     e.RunData.LocalVarsDefine.Add($"\tmov {next_word}, {val}");
-                    e.RunData = e.RunData.SetEndLocalVarsDefine(false);
+                    e.RunData.EndLocalVarsDefine = false;
                 }
                 else
                 {
@@ -273,7 +273,7 @@ internal static class Program
                 if (!e.RunData.DotCode)
                 {
                     e.Line = ".code\n" + e.Line;
-                    e.RunData = e.RunData.SetDotCode(true);
+                    e.RunData.DotCode = true;
                     Console.WriteLine(e.RunData.DotCode);
                 }
 
@@ -288,8 +288,9 @@ internal static class Program
                 }
 
                 e.RunData.LocalVarsDefine.Clear();
-                e.RunData = e.RunData.SetEndLocalVarsDefine(true);
+                e.RunData.EndLocalVarsDefine = true;
             }
         }
     }
+#endregion
 }

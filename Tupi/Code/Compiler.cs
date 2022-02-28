@@ -28,8 +28,6 @@ internal class Compiler
             CompilerLinesArgs compilerLinesArgs = new CompilerLinesArgs(tupiCodeLines, tupiCodeLines[l], l, runData, readonlyData);
             CompilerLines?.Invoke(this, compilerLinesArgs);
 
-            runData = compilerLinesArgs.RunData;
-
             if (runData.DotCode && l == compilerLinesArgs.Lines.Length - 1)
             {
                 compilerLinesArgs.Line += "\nEnd";
