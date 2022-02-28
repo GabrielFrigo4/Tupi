@@ -1,13 +1,13 @@
-﻿using System;
-using System.CommandLine.Binding;
-using System.CommandLine;
+﻿using System.CommandLine;
 using System.Diagnostics;
+using Tupi.Compiler;
+using Tupi.Data;
 
 namespace Tupi;
 
 internal class Program
 {
-    static readonly TupiData tupiData = new TupiData();
+    static readonly ReadonlyData readonlyData = new ReadonlyData();
 
     static int Main(string[] args)
     {
@@ -29,8 +29,8 @@ internal class Program
         string tupi_code = File.ReadAllText(path_tupi);
         string[] lines = tupi_code.Split('\n');
         string asm_code = string.Empty;
-        CompileData compileData = new CompileData();
-        compileData.vars.Add(string.Empty, new Dictionary<string, string>());
+        RunData runData = new RunData();
+        runData.vars.Add(string.Empty, new Dictionary<string, string>());
 
         for (int l = 0; l < lines.Length; l++)
         {
@@ -58,28 +58,28 @@ internal class Program
                             comand[i] = "lea";
                             var_name = var_name.Remove(0, 1);
                             param[i] = var_name;
-                            registors_type[i] = tupiData.registors_all[3][i];
+                            registors_type[i] = readonlyData.RegistorsAll[3][i];
                         }
                         else
                         {
                             comand[i] = "mov";
 
-                            string this_func_name = compileData.funcs.Last();
-                            if (compileData.vars[this_func_name].ContainsKey(var_name))
+                            string this_func_name = runData.funcs.Last();
+                            if (runData.vars[this_func_name].ContainsKey(var_name))
                             {
-                                string var_type = compileData.vars[this_func_name][var_name];
-                                int pos = Array.IndexOf(tupiData.tupi_types, var_type);
-                                registors_type[i] = tupiData.registors_all[pos][i];
+                                string var_type = runData.vars[this_func_name][var_name];
+                                int pos = Array.IndexOf(readonlyData.TupiTypes, var_type);
+                                registors_type[i] = readonlyData.RegistorsAll[pos][i];
                             }
-                            else if (compileData.vars[string.Empty].ContainsKey(var_name))
+                            else if (runData.vars[string.Empty].ContainsKey(var_name))
                             {
-                                string var_type = compileData.vars[string.Empty][var_name];
-                                int pos = Array.IndexOf(tupiData.tupi_types, var_type);
-                                registors_type[i] = tupiData.registors_all[pos][i];
+                                string var_type = runData.vars[string.Empty][var_name];
+                                int pos = Array.IndexOf(readonlyData.TupiTypes, var_type);
+                                registors_type[i] = readonlyData.RegistorsAll[pos][i];
                             }
                             else
                             {
-                                registors_type[i] = tupiData.registors_all[3][i];
+                                registors_type[i] = readonlyData.RegistorsAll[3][i];
                             }
                         }
                     }
@@ -122,16 +122,16 @@ internal class Program
                 //end func
                 if (word == "}")
                 {
-                    string func_name = compileData.funcs[compileData.funcs.Count - 1];
+                    string func_name = runData.funcs[runData.funcs.Count - 1];
                     line = line.Replace($"{word}", $"{func_name} endp");
-                    compileData.vars.Remove(func_name);
+                    runData.vars.Remove(func_name);
                 }
 
                 //tupi types defs
-                if (compileData.funcs.Count > 0 && !compileData.endLocalVarsDefine)
+                if (runData.funcs.Count > 0 && !runData.endLocalVarsDefine)
                 {
                     bool contains = false;
-                    foreach (var types in tupiData.tupi_types)
+                    foreach (var types in readonlyData.TupiTypes)
                     {
                         if (words.Contains(types))
                         {
@@ -141,9 +141,9 @@ internal class Program
                     }
                     if (!contains)
                     {
-                        compileData.endLocalVarsDefine = true;
+                        runData.endLocalVarsDefine = true;
                         string newLine = string.Empty;
-                        foreach (string _line in compileData.localVarsDefine)
+                        foreach (string _line in runData.localVarsDefine)
                         {
                             newLine += _line + "\n";
                         }
@@ -162,34 +162,34 @@ internal class Program
                 }
 
                 //tupi types
-                if (tupiData.tupi_types.Contains(word) && compileData.funcs.Count == 0)
+                if (readonlyData.TupiTypes.Contains(word) && runData.funcs.Count == 0)
                 {
-                    if (!compileData.dotData)
+                    if (!runData.dotData)
                     {
                         line = ".data\n" + line;
-                        compileData.dotData = true;
+                        runData.dotData = true;
                     }
-                    int pos = Array.IndexOf(tupiData.tupi_types, word);
-                    compileData.vars[string.Empty].Add(next_word, word);
+                    int pos = Array.IndexOf(readonlyData.TupiTypes, word);
+                    runData.vars[string.Empty].Add(next_word, word);
 
-                    line = line.Replace($"{word} {next_word}", $"{next_word} {tupiData.asm_types[pos]}");
+                    line = line.Replace($"{word} {next_word}", $"{next_word} {readonlyData.AsmTypes[pos]}");
                 }
-                else if (tupiData.tupi_types.Contains(word) && compileData.funcs.Count > 0)
+                else if (readonlyData.TupiTypes.Contains(word) && runData.funcs.Count > 0)
                 {
-                    int pos = Array.IndexOf(tupiData.tupi_types, word);
-                    string func_name = compileData.funcs[compileData.funcs.Count - 1];
-                    compileData.vars[func_name].Add(next_word, word);
+                    int pos = Array.IndexOf(readonlyData.TupiTypes, word);
+                    string func_name = runData.funcs[runData.funcs.Count - 1];
+                    runData.vars[func_name].Add(next_word, word);
                     if (w + 3 < words.Length)
                     {
                         string val = words[w + 3];
-                        line = $"\tlocal {next_word}: {tupiData.asm_types[pos]}";
-                        compileData.localVarsDefine.Add($"\tmov {next_word}, {val}");
-                        compileData.endLocalVarsDefine = false;
+                        line = $"\tlocal {next_word}: {readonlyData.AsmTypes[pos]}";
+                        runData.localVarsDefine.Add($"\tmov {next_word}, {val}");
+                        runData.endLocalVarsDefine = false;
                         //line += $"\n\tmov {next_word}, {val}";
                     }
                     else
                     {
-                        line = $"\tlocal {next_word}: {tupiData.asm_types[pos]}";
+                        line = $"\tlocal {next_word}: {readonlyData.AsmTypes[pos]}";
                     }
 
                     //if (!tupiData.tupi_types.Contains(lines[l + 1].Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]))
@@ -201,28 +201,28 @@ internal class Program
                 //start func
                 if (word == "func")
                 {
-                    if (!compileData.dotCode)
+                    if (!runData.dotCode)
                     {
                         line = ".code\n" + line;
-                        compileData.dotCode = true;
+                        runData.dotCode = true;
                     }
 
                     string func_name = next_word.Remove(next_word.IndexOf('('));
-                    compileData.funcs.Add(func_name);
-                    compileData.vars.Add(func_name, new Dictionary<string, string>());
+                    runData.funcs.Add(func_name);
+                    runData.vars.Add(func_name, new Dictionary<string, string>());
 
                     line = line.Replace($"{word} {next_word}", $"{func_name} proc");
-                    if(!tupiData.tupi_types.Contains(lines[l+1].Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]))
+                    if(!readonlyData.TupiTypes.Contains(lines[l+1].Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]))
                     {
                         line += "\n\tsub rsp, 28h\t;Reserve the shadow space";
                     }
 
-                    compileData.localVarsDefine.Clear();
-                    compileData.endLocalVarsDefine = true;
+                    runData.localVarsDefine.Clear();
+                    runData.endLocalVarsDefine = true;
                 }
             }
 
-            if (compileData.dotCode && l == lines.Length - 1)
+            if (runData.dotCode && l == lines.Length - 1)
             {
                 line += "\nEnd";
             }

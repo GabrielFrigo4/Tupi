@@ -1,6 +1,6 @@
-﻿namespace Tupi;
+﻿namespace Tupi.Compiler;
 
-internal struct CompileData
+internal struct RunData
 {
     internal bool dotData;
     internal bool dotCode;
@@ -15,7 +15,7 @@ internal struct CompileData
     /// </summary>
     internal Dictionary<string, Dictionary<string, string>> vars;
 
-    public CompileData()
+    public RunData()
     {
         this.dotData = false;
         this.dotCode = false;
