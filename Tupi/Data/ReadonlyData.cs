@@ -6,17 +6,17 @@ using System.Threading.Tasks;
 
 namespace Tupi.Data;
 
-internal struct ReadonlyData
+internal struct ReadOnlyData
 {
-    internal readonly string[] Registors8i;
-    internal readonly string[] Registors16i;
-    internal readonly string[] Registors32i;
-    internal readonly string[] Registors64i;
-    internal readonly string[][] RegistorsAll;
-    internal readonly string[] AsmTypes;
-    internal readonly string[] TupiTypes;
+    internal string[] Registors8i { get; private set; }
+    internal string[] Registors16i { get; private set; }
+    internal string[] Registors32i { get; private set; }
+    internal string[] Registors64i { get; private set; }
+    internal string[][] RegistorsAll { get; private set; }
+    internal string[] AsmTypes { get; private set; }
+    internal string[] TupiTypes { get; private set; }
 
-    public ReadonlyData()
+    public ReadOnlyData()
     {
         Registors8i = new string[] { "cl", "dl", "r8b", "r9b" };
         Registors16i = new string[] { "cx", "dx", "r8w", "r9w" };

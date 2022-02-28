@@ -1,28 +1,41 @@
-﻿namespace Tupi.Compiler;
+﻿namespace Tupi.Data;
 
 internal struct RunData
 {
-    internal bool dotData;
-    internal bool dotCode;
-    internal bool endCode;
-    internal bool endLocalVarsDefine;
-    internal List<string> funcs;
-    internal List<string> localVarsDefine;
+    internal bool DotData { get; private set; }
+    internal bool DotCode { get; private set; }
+    internal bool EndLocalVarsDefine { get; private set; }
+    internal List<string> Funcs { get; private set; }
+    internal List<string> LocalVarsDefine { get; private set; }
 
     /// <summary>
     /// string = func_name/global
     /// Dictionary<string, string> = name, type
     /// </summary>
-    internal Dictionary<string, Dictionary<string, string>> vars;
+    internal Dictionary<string, Dictionary<string, string>> Vars { get; set; }
 
     public RunData()
     {
-        this.dotData = false;
-        this.dotCode = false;
-        this.endCode = false;
-        this.endLocalVarsDefine = true;
-        this.funcs = new List<string>();
-        this.localVarsDefine = new List<string>();
-        this.vars = new Dictionary<string, Dictionary<string, string>>();
+        this.DotData = false;
+        this.DotCode = false;
+        this.EndLocalVarsDefine = true;
+        this.Funcs = new List<string>();
+        this.LocalVarsDefine = new List<string>();
+        this.Vars = new Dictionary<string, Dictionary<string, string>>();
+    }
+
+    internal void SetDotData(bool dotData)
+    {
+        DotData = dotData;
+    }
+
+    internal void SetDotCode(bool dotCode)
+    {
+        DotCode = dotCode;
+    }
+
+    internal void SetEndLocalVarsDefine(bool endLocalVarsDefine)
+    {
+        EndLocalVarsDefine = endLocalVarsDefine;
     }
 }
