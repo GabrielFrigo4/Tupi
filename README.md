@@ -1,2 +1,2 @@
 # Tupi
-Tupi is a programing language
+Tupi is a compiled programming language that uses masm(microsoft assembly), so tupi only works for windows, the compiler uses oc# that translates the code to assembly and then uses the microsoft c++ sdk assembler to transform the assembly code in an .exe or .dll or .lib; This language is at an early stage of development, the intention of me starting the project was to train and learn, but who knows, maybe one day it will end up being good, useful and functional.
