@@ -4,7 +4,7 @@ namespace Tupi.Code;
 
 internal class Compiler
 {
-    internal event EventHandler<CompilerLinesArgs>? CompilerLoopLines;
+    internal event EventHandler<CompilerLinesArgs>? CompilerLines;
     private readonly string tupiCode = string.Empty;
     private readonly ReadOnlyData readonlyData;
     private string[] tupiCodeLines;
@@ -26,7 +26,7 @@ internal class Compiler
         for (int l = 0; l < tupiCodeLines.Length; l++)
         {
             CompilerLinesArgs compilerLinesArgs = new CompilerLinesArgs(tupiCodeLines, tupiCodeLines[l], l, runData, readonlyData);
-            CompilerLoopLines?.Invoke(this, compilerLinesArgs);
+            CompilerLines?.Invoke(this, compilerLinesArgs);
 
             runData = compilerLinesArgs.RunData;
 

@@ -24,18 +24,21 @@ internal struct RunData
         this.Vars = new Dictionary<string, Dictionary<string, string>>();
     }
 
-    internal void SetDotData(bool dotData)
+    internal RunData SetDotData(bool dotData)
     {
-        DotData = dotData;
+        this.DotData = dotData;
+        return this;
     }
 
-    internal void SetDotCode(bool dotCode)
+    internal RunData SetDotCode(bool dotCode)
     {
-        DotCode = dotCode;
+        this.DotCode = dotCode;
+        return this;
     }
 
-    internal void SetEndLocalVarsDefine(bool endLocalVarsDefine)
+    internal RunData SetEndLocalVarsDefine(bool endLocalVarsDefine)
     {
-        EndLocalVarsDefine = endLocalVarsDefine;
+        this.EndLocalVarsDefine = endLocalVarsDefine;
+        return this;
     }
 }

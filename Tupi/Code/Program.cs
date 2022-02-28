@@ -10,6 +10,8 @@ internal static class Program
 
     static int Main(string[] args)
     {
+        args = new string[1];
+        args[0] = "mycode.tp";
         Action<string> action = CompileTupi;
         Argument<string> source = new Argument<string>("source", "source for tupi compile");
         RootCommand cmd = new RootCommand()
@@ -26,7 +28,13 @@ internal static class Program
         Console.WriteLine("tranform tupi to assembly");
 
         compiler = new Compiler(pathTupi);
-        compiler.CompilerLoopLines += CompileLines;
+        compiler.CompilerLines += CompilerLines_CallFunc;
+        compiler.CompilerLines += CompilerLines_Return;
+        compiler.CompilerLines += CompilerLines_EndFunc;
+        compiler.CompilerLines += CompilerLines_TupiTypeDef;
+        compiler.CompilerLines += CompilerLines_GetExternFunc;
+        compiler.CompilerLines += CompilerLines_TupiType;
+        compiler.CompilerLines += CompilerLines_StartFunc;
         string asmCode = compiler.Start();
 
         string pathDir = "./build";
@@ -56,13 +64,12 @@ internal static class Program
         Console.WriteLine("compile finished!!");
     }
 
-    static void CompileLines(object? sender, CompilerLinesArgs e)
+    static void CompilerLines_CallFunc(object? sender, CompilerLinesArgs e)
     {
         for (int w = 0; w < e.Terms.Length; w++)
         {
             string word = e.Terms[w];
 
-            //call func
             if (word.Contains('(') && w == 0)
             {
                 string func_name = word.Remove(word.IndexOf('('));
@@ -127,8 +134,15 @@ internal static class Program
                 }
                 e.Line += "\n\txor rax,rax";
             }
+        }
+    }
 
-            //return
+    static void CompilerLines_Return(object? sender, CompilerLinesArgs e)
+    {
+        for (int w = 0; w < e.Terms.Length; w++)
+        {
+            string word = e.Terms[w];
+
             if (word == "return" && e.Terms.Length == 1)
             {
                 e.Line = "\tadd rsp, 28h\t;Remove shadow space\n\tret";
@@ -139,16 +153,29 @@ internal static class Program
                 e.Line += "\n\tadd rsp, 28h\t;Remove shadow space";
                 e.Line += "\n\tret";
             }
+        }
+    }
 
-            //end func
+    static void CompilerLines_EndFunc(object? sender, CompilerLinesArgs e)
+    {
+        for (int w = 0; w < e.Terms.Length; w++)
+        {
+            string word = e.Terms[w];
+
             if (word == "}")
             {
                 string func_name = e.RunData.Funcs[e.RunData.Funcs.Count - 1];
                 e.Line = e.Line.Replace($"{word}", $"{func_name} endp");
                 e.RunData.Vars.Remove(func_name);
+                e.RunData.Funcs.Remove(func_name);
             }
+        }
+    }
 
-            //tupi types defs
+    static void CompilerLines_TupiTypeDef(object? sender, CompilerLinesArgs e)
+    {
+        for (int w = 0; w < e.Terms.Length; w++)
+        {
             if (e.RunData.Funcs.Count > 0 && !e.RunData.EndLocalVarsDefine)
             {
                 bool contains = false;
@@ -162,7 +189,7 @@ internal static class Program
                 }
                 if (!contains)
                 {
-                    e.RunData.SetEndLocalVarsDefine(true);
+                    e.RunData = e.RunData.SetEndLocalVarsDefine(true);
                     string newLine = string.Empty;
                     foreach (string _line in e.RunData.LocalVarsDefine)
                     {
@@ -172,23 +199,40 @@ internal static class Program
                     e.Line = newLine + e.Line;
                 }
             }
+        }
+    }
+
+    static void CompilerLines_GetExternFunc(object? sender, CompilerLinesArgs e)
+    {
+        for (int w = 0; w < e.Terms.Length; w++)
+        {
+            string word = e.Terms[w];
 
             if (w >= e.Terms.Length - 1) continue;
             string next_word = e.Terms[w + 1];
 
-            //get extern func
             if (word == "use")
             {
                 e.Line = e.Line.Replace($"{word} {next_word}", $"extern {next_word}: proc");
             }
+        }
+    }
 
-            //tupi types
+    static void CompilerLines_TupiType(object? sender, CompilerLinesArgs e)
+    {
+        for (int w = 0; w < e.Terms.Length; w++)
+        {
+            string word = e.Terms[w];
+
+            if (w >= e.Terms.Length - 1) continue;
+            string next_word = e.Terms[w + 1];
+
             if (e.ReadOnlyData.TupiTypes.Contains(word) && e.RunData.Funcs.Count == 0)
             {
                 if (!e.RunData.DotData)
                 {
                     e.Line = ".data\n" + e.Line;
-                    e.RunData.SetDotData(true);
+                    e.RunData = e.RunData.SetDotData(true);
                 }
                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
                 e.RunData.Vars[string.Empty].Add(next_word, word);
@@ -205,21 +249,32 @@ internal static class Program
                     string val = e.Terms[w + 3];
                     e.Line = $"\tlocal {next_word}: {e.ReadOnlyData.AsmTypes[pos]}";
                     e.RunData.LocalVarsDefine.Add($"\tmov {next_word}, {val}");
-                    e.RunData.SetEndLocalVarsDefine(false);
+                    e.RunData = e.RunData.SetEndLocalVarsDefine(false);
                 }
                 else
                 {
                     e.Line = $"\tlocal {next_word}: {e.ReadOnlyData.AsmTypes[pos]}";
                 }
             }
+        }
+    }
 
-            //start func
+    static void CompilerLines_StartFunc(object? sender, CompilerLinesArgs e)
+    {
+        for (int w = 0; w < e.Terms.Length; w++)
+        {
+            string word = e.Terms[w];
+
+            if (w >= e.Terms.Length - 1) continue;
+            string next_word = e.Terms[w + 1];
+
             if (word == "func")
             {
                 if (!e.RunData.DotCode)
                 {
                     e.Line = ".code\n" + e.Line;
-                    e.RunData.SetDotCode(true);
+                    e.RunData = e.RunData.SetDotCode(true);
+                    Console.WriteLine(e.RunData.DotCode);
                 }
 
                 string func_name = next_word.Remove(next_word.IndexOf('('));
@@ -233,7 +288,7 @@ internal static class Program
                 }
 
                 e.RunData.LocalVarsDefine.Clear();
-                e.RunData.SetEndLocalVarsDefine(true);
+                e.RunData = e.RunData.SetEndLocalVarsDefine(true);
             }
         }
     }
