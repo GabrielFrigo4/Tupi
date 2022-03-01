@@ -11,6 +11,7 @@ internal static class Program
     {
         args = new string[1];
         args[0] = "mycode.tp";
+
         Action<string> action = CompileTupi;
         Argument<string> source = new Argument<string>("source", "source for tupi compile");
         RootCommand cmd = new RootCommand()
