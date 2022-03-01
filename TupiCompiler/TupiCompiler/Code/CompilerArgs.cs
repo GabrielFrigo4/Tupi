@@ -1,8 +1,8 @@
-﻿using Tupi.Data;
+﻿using TupiCompiler.Data;
 
-namespace Tupi.Code;
+namespace TupiCompiler.Code;
 
-internal class CompilerLinesArgs : EventArgs
+internal class CompilerArgs : EventArgs
 {
     internal string Line { get; set; }
     internal string[] Lines { get; private set; }
@@ -11,7 +11,7 @@ internal class CompilerLinesArgs : EventArgs
     internal RunData RunData { get; private set; }
     internal ReadOnlyData ReadOnlyData { get; private set; }
 
-    internal CompilerLinesArgs(string[] lines, string line, int linePos, RunData runData, ReadOnlyData readOnlyData)
+    internal CompilerArgs(string[] lines, string line, int linePos, RunData runData, ReadOnlyData readOnlyData)
     {
         this.Lines = lines;
         this.Line = line;

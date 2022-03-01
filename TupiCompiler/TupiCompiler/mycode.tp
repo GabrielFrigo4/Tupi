@@ -1,4 +1,6 @@
-﻿use printf
+﻿//#macro print_number(x) "printf(print_type,x)"
+
+use printf
 
 i8 print_type "message: %d",10,0
 

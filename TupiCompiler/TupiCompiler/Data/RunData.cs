@@ -1,4 +1,4 @@
-﻿namespace Tupi.Data;
+﻿namespace TupiCompiler.Data;
 
 internal class RunData
 {

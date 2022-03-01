@@ -1,7 +1,7 @@
 ﻿using System.CommandLine;
 using System.Diagnostics;
 
-namespace Tupi.Code;
+namespace TupiCompiler.Code;
 
 internal static class Program
 {
@@ -28,13 +28,19 @@ internal static class Program
         Console.WriteLine("tranform tupi to assembly");
 
         compiler = new Compiler(pathTupi);
-        compiler.CompilerLines += CompilerLines_CallFunc;
-        compiler.CompilerLines += CompilerLines_Return;
-        compiler.CompilerLines += CompilerLines_EndFunc;
-        compiler.CompilerLines += CompilerLines_TupiTypeDef;
-        compiler.CompilerLines += CompilerLines_GetExternFunc;
-        compiler.CompilerLines += CompilerLines_TupiType;
-        compiler.CompilerLines += CompilerLines_StartFunc;
+
+        compiler.PreCompilerEvent += PreCompileLines_Grammar;
+        compiler.PreCompilerEvent += PreCompileLines_Comment;
+        compiler.PreCompilerEvent += PreCompileLines_Macro;
+
+        compiler.CompilerEvent += CompilerLines_CallFunc;
+        compiler.CompilerEvent += CompilerLines_Return;
+        compiler.CompilerEvent += CompilerLines_EndFunc;
+        compiler.CompilerEvent += CompilerLines_TupiTypeDef;
+        compiler.CompilerEvent += CompilerLines_GetExternFunc;
+        compiler.CompilerEvent += CompilerLines_TupiType;
+        compiler.CompilerEvent += CompilerLines_StartFunc;
+
         string asmCode = compiler.Start();
 
         string pathDir = "./build";
@@ -64,8 +70,25 @@ internal static class Program
         Console.WriteLine("compile finished!!");
     }
 
-#region CompilerLines
-    static void CompilerLines_CallFunc(object? sender, CompilerLinesArgs e)
+    #region PreCompileLines
+    static void PreCompileLines_Grammar(object? sender, PreCompilerArgs e)
+    {
+
+    }
+
+    static void PreCompileLines_Comment(object? sender, PreCompilerArgs e)
+    {
+
+    }
+
+    static void PreCompileLines_Macro(object? sender, PreCompilerArgs e)
+    {
+
+    }
+    #endregion
+
+    #region CompilerLines
+    static void CompilerLines_CallFunc(object? sender, CompilerArgs e)
     {
         for (int w = 0; w < e.Terms.Length; w++)
         {
@@ -138,7 +161,7 @@ internal static class Program
         }
     }
 
-    static void CompilerLines_Return(object? sender, CompilerLinesArgs e)
+    static void CompilerLines_Return(object? sender, CompilerArgs e)
     {
         for (int w = 0; w < e.Terms.Length; w++)
         {
@@ -157,7 +180,7 @@ internal static class Program
         }
     }
 
-    static void CompilerLines_EndFunc(object? sender, CompilerLinesArgs e)
+    static void CompilerLines_EndFunc(object? sender, CompilerArgs e)
     {
         for (int w = 0; w < e.Terms.Length; w++)
         {
@@ -173,7 +196,7 @@ internal static class Program
         }
     }
 
-    static void CompilerLines_TupiTypeDef(object? sender, CompilerLinesArgs e)
+    static void CompilerLines_TupiTypeDef(object? sender, CompilerArgs e)
     {
         for (int w = 0; w < e.Terms.Length; w++)
         {
@@ -203,7 +226,7 @@ internal static class Program
         }
     }
 
-    static void CompilerLines_GetExternFunc(object? sender, CompilerLinesArgs e)
+    static void CompilerLines_GetExternFunc(object? sender, CompilerArgs e)
     {
         for (int w = 0; w < e.Terms.Length; w++)
         {
@@ -219,7 +242,7 @@ internal static class Program
         }
     }
 
-    static void CompilerLines_TupiType(object? sender, CompilerLinesArgs e)
+    static void CompilerLines_TupiType(object? sender, CompilerArgs e)
     {
         for (int w = 0; w < e.Terms.Length; w++)
         {
@@ -260,7 +283,7 @@ internal static class Program
         }
     }
 
-    static void CompilerLines_StartFunc(object? sender, CompilerLinesArgs e)
+    static void CompilerLines_StartFunc(object? sender, CompilerArgs e)
     {
         for (int w = 0; w < e.Terms.Length; w++)
         {
@@ -293,5 +316,5 @@ internal static class Program
             }
         }
     }
-#endregion
+    #endregion
 }

@@ -1,32 +1,49 @@
-﻿using Tupi.Data;
+﻿using TupiCompiler.Data;
 
-namespace Tupi.Code;
+namespace TupiCompiler.Code;
 
 internal class Compiler
 {
-    internal event EventHandler<CompilerLinesArgs>? CompilerLines;
+    internal event EventHandler<PreCompilerArgs>? PreCompilerEvent;
+    internal event EventHandler<CompilerArgs>? CompilerEvent;
     private readonly string tupiCode = string.Empty;
     private readonly ReadOnlyData readonlyData;
-    private string[] tupiCodeLines;
-    private RunData runData;
+    private readonly RunData runData;
 
     internal Compiler(string tupiCodePath)
     {
         tupiCode = File.ReadAllText(tupiCodePath);
-        tupiCodeLines = tupiCode.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         readonlyData = new ReadOnlyData();
         runData = new RunData();
     }
 
     internal string Start()
     {
+        string[] tupiCodeLines;
+        tupiCodeLines = PreCompilerCode(tupiCode);
+        return CompilerCode(tupiCodeLines);
+    }
+
+    private string[] PreCompilerCode(string code)
+    {
+        string[] codeLines;
+
+        PreCompilerArgs preCompilerArgs = new PreCompilerArgs(code);
+        PreCompilerEvent?.Invoke(this, preCompilerArgs);
+
+        codeLines = preCompilerArgs.Code.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        return codeLines;
+    }
+
+    private string CompilerCode(string[] tupiCodeLines)
+    {
         string asmCode = string.Empty;
         runData.Vars.Add(string.Empty, new Dictionary<string, string>());
 
         for (int l = 0; l < tupiCodeLines.Length; l++)
         {
-            CompilerLinesArgs compilerLinesArgs = new CompilerLinesArgs(tupiCodeLines, tupiCodeLines[l], l, runData, readonlyData);
-            CompilerLines?.Invoke(this, compilerLinesArgs);
+            CompilerArgs compilerLinesArgs = new CompilerArgs(tupiCodeLines, tupiCodeLines[l], l, runData, readonlyData);
+            CompilerEvent?.Invoke(this, compilerLinesArgs);
 
             if (runData.DotCode && l == compilerLinesArgs.Lines.Length - 1)
             {
