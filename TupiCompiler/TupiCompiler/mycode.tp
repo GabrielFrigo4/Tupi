@@ -1,8 +1,7 @@
-﻿//#macro print_number(x) "printf(print_type,x)"
-
-use printf
+﻿use printf
 
 i8 print_type "message: %d",10,0
+i8 puts_message "puts_message",0
 
 func main(){
 	print()
@@ -10,9 +9,10 @@ func main(){
 }
 
 func print(){
-	i64 size64 = 5000
-	printf(&print_type,size64)
-	printf(&print_type,1000)
-	printf(&print_type,-1000)
+	i64 size64 = 64
+	i32 size32 = 32
+	i16 size16 = 16
+	i8 size8 = 8
+	print(&puts_message)
 	return
 }

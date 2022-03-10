@@ -256,7 +256,7 @@ internal static class Program
                 if (!e.RunData.DotData)
                 {
                     e.Line = ".data\n" + e.Line;
-                    e.RunData.DotCode = true;
+                    e.RunData.DotData = true;
                 }
                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
                 e.RunData.Vars[string.Empty].Add(next_word, word);
@@ -298,7 +298,6 @@ internal static class Program
                 {
                     e.Line = ".code\n" + e.Line;
                     e.RunData.DotCode = true;
-                    Console.WriteLine(e.RunData.DotCode);
                 }
 
                 string func_name = next_word.Remove(next_word.IndexOf('('));

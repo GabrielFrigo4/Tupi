@@ -26,12 +26,10 @@ internal class Compiler
 
     private string[] PreCompilerCode(string code)
     {
-        string[] codeLines;
-
         PreCompilerArgs preCompilerArgs = new PreCompilerArgs(code);
         PreCompilerEvent?.Invoke(this, preCompilerArgs);
 
-        codeLines = preCompilerArgs.Code.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        var codeLines = preCompilerArgs.Code.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         return codeLines;
     }
 
