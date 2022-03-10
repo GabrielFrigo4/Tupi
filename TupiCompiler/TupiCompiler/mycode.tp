@@ -1,4 +1,4 @@
-﻿use printf
+﻿use puts
 
 i8 print_type "message: %d",10,0
 i8 puts_message "puts_message",0
@@ -13,6 +13,6 @@ func print(){
 	i32 size32 = 32
 	i16 size16 = 16
 	i8 size8 = 8
-	print(&puts_message)
+	puts(&puts_message)
 	return
 }
