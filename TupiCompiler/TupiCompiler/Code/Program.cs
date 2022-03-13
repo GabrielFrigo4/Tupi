@@ -83,7 +83,50 @@ internal static class Program
 
     static void PreCompileLines_Macro(object? sender, PreCompilerArgs e)
     {
+        Dictionary<string, string> macros = new Dictionary<string, string>();
+        string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
+        for(int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+            if (line.Contains("#macro "))
+            {
+                line = line.Replace("#macro ", "");
+                string macro = line.Remove(line.IndexOf('\"') - 1);
+                line = line.Remove(0, line.IndexOf('\"'));
+                string comand = line[1..^2];
+                macros.Add(macro, comand);
+                lines[i] = string.Empty;
+            }
+        }
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+            foreach (string macro in macros.Keys)
+            {
+                if (line.Contains(macro))
+                {
+                    line = line.Replace(macro, macros[macro]);
+                }
+            }
+            lines[i] = line;
+        }
+
+        e.Code = string.Empty;
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+
+            if (line != string.Empty)
+            {
+                e.Code += line + "\n";
+            }
+            else
+            {
+                lines[i + 1] = lines[i + 1].Replace("\r", "");
+            }
+        }
     }
     #endregion
 
@@ -314,6 +357,14 @@ internal static class Program
                 e.RunData.EndLocalVarsDefine = true;
             }
         }
+    }
+    #endregion
+
+    #region Private Funcs
+    private static bool GetIfWordExist(string word, string line)
+    {
+        bool wordExist = false;
+        return wordExist;
     }
     #endregion
 }

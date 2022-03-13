@@ -1,7 +1,10 @@
-﻿use puts
+﻿#macro print_unga "puts(&unga_message)"
 
-i8 print_type "message: %d",10,0
-i8 puts_message "puts_message",0
+use puts
+
+i8 print_type 'message: %d',10,0
+i8 puts_message 'puts_message',0
+i8 unga_message 'unga bunga',0
 
 func main(){
 	print()
@@ -14,5 +17,6 @@ func print(){
 	i16 size16 = 16
 	i8 size8 = 8
 	puts(&puts_message)
+	print_unga
 	return
 }
