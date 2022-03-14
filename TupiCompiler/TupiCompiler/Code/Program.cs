@@ -98,19 +98,17 @@ internal static class Program
                 macros.Add(macro, comand);
                 lines[i] = string.Empty;
             }
-        }
-
-        for (int i = 0; i < lines.Length; i++)
-        {
-            string line = lines[i];
-            foreach (string macro in macros.Keys)
+            else
             {
-                if (line.Contains(macro))
+                foreach (string macro in macros.Keys)
                 {
-                    line = line.Replace(macro, macros[macro]);
+                    if (line.Contains(macro))
+                    {
+                        line = line.Replace(macro, macros[macro]);
+                    }
                 }
+                lines[i] = line;
             }
-            lines[i] = line;
         }
 
         e.Code = string.Empty;
@@ -199,7 +197,7 @@ internal static class Program
                 {
                     e.Line = e.Line.Replace($"{word}", $"{comand[0]} {registors_type[0]}, {param[0]}\n\t{comand[1]} {registors_type[1]}, {param[1]}\n\t{comand[2]} {registors_type[2]}, {param[2]}\n\t{comand[3]} {registors_type[3]}, {param[3]}\n\tcall {func_name}");
                 }
-                e.Line += "\n\txor rax,rax";
+                e.Line += "\n\txor rax, rax";
             }
         }
     }
@@ -216,7 +214,7 @@ internal static class Program
             }
             else if (word == "return" && e.Terms.Length > 1)
             {
-                e.Line = e.Line.Replace($"{word}", "mov rax, ");
+                e.Line = e.Line.Replace($"{word} ", "mov rax, ");
                 e.Line += "\n\tadd rsp, 28h\t;Remove shadow space";
                 e.Line += "\n\tret";
             }
