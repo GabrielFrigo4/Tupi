@@ -210,7 +210,7 @@ internal static class Program
 
             if (word == "return" && e.Terms.Length == 1)
             {
-                e.Line = "\tadd rsp, 28h\t;Remove shadow space\n\tret";
+                e.Line = "\tadd rsp, 40\t;Remove shadow space\n\tret";
             }
             else if (word == "return" && e.Terms.Length > 1)
             {
@@ -260,7 +260,7 @@ internal static class Program
                     {
                         newLine += _line + "\n";
                     }
-                    newLine += "\tsub rsp, 28h\t;Reserve the shadow space\n";
+                    newLine += "\tsub rsp, 40\t;Reserve the shadow space\n";
                     e.Line = newLine + e.Line;
                 }
             }
@@ -348,7 +348,7 @@ internal static class Program
                 e.Line = e.Line.Replace($"{word} {next_word}", $"{func_name} proc");
                 if (!e.ReadOnlyData.TupiTypes.Contains(e.Lines[e.LinePos + 1].Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]))
                 {
-                    e.Line += "\n\tsub rsp, 28h\t;Reserve the shadow space";
+                    e.Line += "\n\tsub rsp, 40\t;Reserve the shadow space";
                 }
 
                 e.RunData.LocalVarsDefine.Clear();

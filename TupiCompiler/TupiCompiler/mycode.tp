@@ -4,7 +4,7 @@
 use printf
 
 i8 print_type 'message: %d',10,0
-i8 unga_message 'unga bunga',0
+i8 unga_message 'unga bunga',10,0
 
 func main(){
 	print()
