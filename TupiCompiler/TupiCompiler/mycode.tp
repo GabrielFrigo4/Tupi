@@ -1,17 +1,10 @@
-﻿#macro print_unga "printf(&unga_message)"
-#macro print_size32_1 "printf(&print_type,size32_1)"
+﻿#macro print_50 "printf(&print_type,50)"
 
 use printf
 
 i8 print_type 'message: %d',10,0
-i8 unga_message 'unga bunga',10,0
 
 func main(){
-	print()
-	return 0
-}
-
-func print(){
 	i64 size64_1 = 64
 	i64 size64_2 = 64
 	i64 size64_3 = 64
@@ -28,6 +21,6 @@ func print(){
 	i8 size8_2 = 8
 	i8 size8_3 = 8
 	i8 size8_4 = 8
-	print_unga
-	return
+	print_50
+	return 0
 }
