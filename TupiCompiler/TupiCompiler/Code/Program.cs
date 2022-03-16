@@ -210,12 +210,16 @@ internal static class Program
 
             if (word == "return" && e.Terms.Length == 1)
             {
-                e.Line = "\tadd rsp, 40\t;Remove shadow space\n\tret";
+                e.Line = "\tadd rsp, 40\t;Remove shadow space\n\tleave\n\tret";
             }
             else if (word == "return" && e.Terms.Length > 1)
             {
                 e.Line = e.Line.Replace($"{word} ", "mov rax, ");
-                e.Line += "\n\tadd rsp, 28h\t;Remove shadow space";
+                e.Line += "\n\tadd rsp, 40\t;Remove shadow space";
+                if (e.RunData.Funcs[e.RunData.Funcs.Count - 1] != "main")
+                {
+                    e.Line += "\n\tleave";
+                }
                 e.Line += "\n\tret";
             }
         }
