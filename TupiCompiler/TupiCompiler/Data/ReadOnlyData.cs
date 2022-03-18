@@ -9,6 +9,7 @@ internal class ReadOnlyData
     internal string[][] RegistorsAll { get; private set; }
     internal string[] AsmTypes { get; private set; }
     internal string[] TupiTypes { get; private set; }
+    internal int[] TupiTypeSize { get; private set; }
 
     public ReadOnlyData()
     {
@@ -19,5 +20,6 @@ internal class ReadOnlyData
         RegistorsAll = new string[][] { Registors8i, Registors16i, Registors32i, Registors64i };
         AsmTypes = new string[] { "byte", "word", "dword", "qword", "real4", "real8" };
         TupiTypes = new string[] { "i8", "i16", "i32", "i64", "f32", "f64" };
+        TupiTypeSize = new int[] { 1, 2, 4, 8, 4, 8 };
     }
 }

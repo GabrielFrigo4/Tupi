@@ -36,7 +36,7 @@ internal class Compiler
     private string CompilerCode(string[] tupiCodeLines)
     {
         string asmCode = string.Empty;
-        runData.Vars.Add(string.Empty, new Dictionary<string, string>());
+        runData.Vars.Add(string.Empty, new Dictionary<string, VarData>());
 
         for (int l = 0; l < tupiCodeLines.Length; l++)
         {
