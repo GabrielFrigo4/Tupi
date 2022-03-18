@@ -1,4 +1,5 @@
 ﻿#macro print_50 "printf(&print_type,50)"
+#macro iptr "i64"
 
 use printf
 
