@@ -40,6 +40,7 @@ internal class Compiler
 
         for (int l = 0; l < tupiCodeLines.Length; l++)
         {
+            if (tupiCodeLines[l] == string.Empty) continue;
             CompilerArgs compilerLinesArgs = new CompilerArgs(tupiCodeLines, tupiCodeLines[l], l, runData, readonlyData);
             CompilerEvent?.Invoke(this, compilerLinesArgs);
 

@@ -74,14 +74,60 @@ internal static class Program
     #region PreCompileLines
     static void PreCompileLines_Grammar(object? sender, PreCompilerArgs e)
     {
+        string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+            if(line == "\r")
+            {
+                line = string.Empty;
+            }
+            lines[i] = line;
+        }
 
+        e.Code = string.Empty;
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+
+            if (line != string.Empty)
+            {
+                e.Code += line + "\n";
+            }
+        }
     }
 
     static void PreCompileLines_Comment(object? sender, PreCompilerArgs e)
     {
+        string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+            if (line.Contains("//"))
+            {
+                string comment = line.Remove(0, line.IndexOf("//"));
+                line = line.Remove(line.IndexOf("//"));
+                lines[i] = line;
+            }
+        }
+
+        e.Code = string.Empty;
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+
+            if (line != string.Empty)
+            {
+                e.Code += line + "\n";
+            }
+            else if (i + 1 < line.Length)
+            {
+                lines[i + 1] = lines[i + 1].Replace("\r", "");
+            }
+        }
     }
-
+   
     static void PreCompileLines_Macro(object? sender, PreCompilerArgs e)
     {
         Dictionary<string, string> macros = new Dictionary<string, string>();
@@ -121,7 +167,7 @@ internal static class Program
             {
                 e.Code += line + "\n";
             }
-            else
+            else if (i + 1 < line.Length) 
             {
                 lines[i + 1] = lines[i + 1].Replace("\r", "");
             }
