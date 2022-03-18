@@ -315,7 +315,7 @@ internal static class Program
                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
                 e.RunData.Vars[string.Empty].Add(next_word, new VarData(word, e.ReadOnlyData.TupiTypeSize[pos]));
 
-                e.Line = e.Line.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.AsmTypes[pos]}");
+                e.Line = e.Line.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.DefAsmTypes[pos]}");
             }
             else if (e.ReadOnlyData.TupiTypes.Contains(word) && e.RunData.Funcs.Count > 0)
             {

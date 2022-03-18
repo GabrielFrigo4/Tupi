@@ -12,6 +12,7 @@ func main(){
 	i64 second2 = 64
 	i8 first3 = 8
 	i64 second3 = 64
+	f64 float_val
 	print_50
 	return 0
 }
