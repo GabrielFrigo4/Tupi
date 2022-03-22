@@ -6,13 +6,14 @@ internal class RunData
     internal bool DotCode { get; set; }
     internal bool EndLocalVarsDefine { get; set; }
     internal List<FuncData> Funcs { get; private set; }
+    internal List<StructData> Structs { get; private set; }
     internal List<string> LocalVarsDefine { get; private set; }
 
     /// <summary>
     /// string = func_name/global
     /// Dictionary<string, string> = name, type
     /// </summary>
-    internal Dictionary<string, Dictionary<string, VarData>> Vars { get; set; }
+    internal Dictionary<string, Dictionary<string, VarData>> FuncVars { get; set; }
 
     public RunData()
     {
@@ -20,7 +21,8 @@ internal class RunData
         this.DotCode = false;
         this.EndLocalVarsDefine = true;
         this.Funcs = new List<FuncData>();
+        this.Structs = new List<StructData>();
         this.LocalVarsDefine = new List<string>();
-        this.Vars = new Dictionary<string, Dictionary<string, VarData>>();
+        this.FuncVars = new Dictionary<string, Dictionary<string, VarData>>();
     }
 }
