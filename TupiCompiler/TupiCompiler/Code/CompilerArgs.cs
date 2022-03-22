@@ -4,7 +4,8 @@ namespace TupiCompiler.Code;
 
 internal class CompilerArgs : EventArgs
 {
-    internal string Line { get; set; }
+    internal string SetLine { get; set; }
+    internal string Line { get; private set; }
     internal string[] Lines { get; private set; }
     internal int LinePos { get; private set; }
     internal string[] Terms { get; private set; }
@@ -14,6 +15,7 @@ internal class CompilerArgs : EventArgs
     internal CompilerArgs(string[] lines, string line, int linePos, RunData runData, ReadOnlyData readOnlyData)
     {
         this.Lines = lines;
+        this.SetLine = line;
         this.Line = line;
         this.LinePos = linePos;
         this.Terms = line.Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries);

@@ -226,25 +226,25 @@ internal static class Program
 
                 if (param.Length == 0)
                 {
-                    e.Line = e.Line.Replace($"{word}", $"call {func_name}");
+                    e.SetLine = e.SetLine.Replace($"{word}", $"call {func_name}");
                 }
                 else if (param.Length == 1)
                 {
-                    e.Line = e.Line.Replace($"{word}", $"{comand[0]} {registors_type[0]}, {param[0]}\n\tcall {func_name}");
+                    e.SetLine = e.SetLine.Replace($"{word}", $"{comand[0]} {registors_type[0]}, {param[0]}\n\tcall {func_name}");
                 }
                 else if (param.Length == 2)
                 {
-                    e.Line = e.Line.Replace($"{word}", $"{comand[0]} {registors_type[0]}, {param[0]}\n\t{comand[1]} {registors_type[1]}, {param[1]}\n\tcall {func_name}");
+                    e.SetLine = e.SetLine.Replace($"{word}", $"{comand[0]} {registors_type[0]}, {param[0]}\n\t{comand[1]} {registors_type[1]}, {param[1]}\n\tcall {func_name}");
                 }
                 else if (param.Length == 3)
                 {
-                    e.Line = e.Line.Replace($"{word}", $"{comand[0]} {registors_type[0]}, {param[0]}\n\t{comand[1]} {registors_type[1]}, {param[1]}\n\t{comand[2]} {registors_type[2]}, {param[2]}\n\tcall {func_name}");
+                    e.SetLine = e.SetLine.Replace($"{word}", $"{comand[0]} {registors_type[0]}, {param[0]}\n\t{comand[1]} {registors_type[1]}, {param[1]}\n\t{comand[2]} {registors_type[2]}, {param[2]}\n\tcall {func_name}");
                 }
                 else if (param.Length == 3)
                 {
-                    e.Line = e.Line.Replace($"{word}", $"{comand[0]} {registors_type[0]}, {param[0]}\n\t{comand[1]} {registors_type[1]}, {param[1]}\n\t{comand[2]} {registors_type[2]}, {param[2]}\n\t{comand[3]} {registors_type[3]}, {param[3]}\n\tcall {func_name}");
+                    e.SetLine = e.SetLine.Replace($"{word}", $"{comand[0]} {registors_type[0]}, {param[0]}\n\t{comand[1]} {registors_type[1]}, {param[1]}\n\t{comand[2]} {registors_type[2]}, {param[2]}\n\t{comand[3]} {registors_type[3]}, {param[3]}\n\tcall {func_name}");
                 }
-                e.Line += "\n\txor rax, rax";
+                e.SetLine += "\n\txor rax, rax";
             }
         }
     }
@@ -259,17 +259,17 @@ internal static class Program
 
             if (word == "return" && e.Terms.Length == 1)
             {
-                e.Line = $"\tadd rsp, {CorrectShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace)}\t;Remove shadow space";
-                e.Line += "\n\tpop rdi";
-                e.Line += "\n\tleave";
-                e.Line += "\n\tret";
+                e.SetLine = $"\tadd rsp, {CorrectShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace)}\t;Remove shadow space";
+                e.SetLine += "\n\tpop rdi";
+                e.SetLine += "\n\tleave";
+                e.SetLine += "\n\tret";
             }
             else if (word == "return" && e.Terms.Length > 1)
             {
-                e.Line = e.Line.Replace($"{word} ", "mov rax, ");
-                e.Line += $"\n\tadd rsp, {CorrectShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace)}\t;Remove shadow space";
-                e.Line += "\n\tpop rdi";
-                e.Line += "\n\tret";
+                e.SetLine = e.SetLine.Replace($"{word} ", "mov rax, ");
+                e.SetLine += $"\n\tadd rsp, {CorrectShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace)}\t;Remove shadow space";
+                e.SetLine += "\n\tpop rdi";
+                e.SetLine += "\n\tret";
             }
         }
     }
@@ -284,7 +284,7 @@ internal static class Program
             {
                 FuncData func = e.RunData.Funcs.Last();
                 string func_name = func.Name;
-                e.Line = e.Line.Replace($"{word}", $"{func_name} endp");
+                e.SetLine = e.SetLine.Replace($"{word}", $"{func_name} endp");
                 e.RunData.Vars.Remove(func_name);
                 e.RunData.Funcs.Remove(func);
             }
@@ -320,7 +320,7 @@ internal static class Program
                     newLine += "\tpush rdi";
                     newLine += $"\n\tsub rsp, {CorrectShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace)}\t;Reserve the shadow space";
                     newLine += "\n\tmov rdi, rsp\n";
-                    e.Line = newLine + e.Line;
+                    e.SetLine = newLine + e.SetLine;
                 }
             }
         }
@@ -337,7 +337,7 @@ internal static class Program
 
             if (word == "use")
             {
-                e.Line = e.Line.Replace($"{word} {next_word}", $"extern {next_word}: proc");
+                e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"extern {next_word}: proc");
             }
         }
     }
@@ -355,13 +355,13 @@ internal static class Program
             {
                 if (!e.RunData.DotData)
                 {
-                    e.Line = ".data\n" + e.Line;
+                    e.SetLine = ".data\n" + e.SetLine;
                     e.RunData.DotData = true;
                 }
                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
                 e.RunData.Vars[string.Empty].Add(next_word, new VarData(word, e.ReadOnlyData.TupiTypeSize[pos]));
 
-                e.Line = e.Line.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.DefAsmTypes[pos]}");
+                e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.DefAsmTypes[pos]}");
             }
             else if (e.ReadOnlyData.TupiTypes.Contains(word) && e.RunData.Funcs.Count > 0)
             {
@@ -373,13 +373,13 @@ internal static class Program
                 if (w + 3 < e.Terms.Length)
                 {
                     string val = e.Terms[w + 3];
-                    e.Line = $"\tlocal {next_word}: {e.ReadOnlyData.AsmTypes[pos]}";
+                    e.SetLine = $"\tlocal {next_word}: {e.ReadOnlyData.AsmTypes[pos]}";
                     e.RunData.LocalVarsDefine.Add($"\tmov {next_word}, {val}");
                     e.RunData.EndLocalVarsDefine = false;
                 }
                 else
                 {
-                    e.Line = $"\tlocal {next_word}: {e.ReadOnlyData.AsmTypes[pos]}";
+                    e.SetLine = $"\tlocal {next_word}: {e.ReadOnlyData.AsmTypes[pos]}";
                 }
             }
         }
@@ -396,22 +396,30 @@ internal static class Program
 
             if (word == "func")
             {
+                string lineCode = e.Line;
                 if (!e.RunData.DotCode)
                 {
-                    e.Line = ".code\n" + e.Line;
+                    e.SetLine = ".code\n" + e.SetLine;
                     e.RunData.DotCode = true;
                 }
 
+                int index1 = lineCode.IndexOf('(');
+                int index2 = lineCode.IndexOf(')');
                 string func_name = next_word.Remove(next_word.IndexOf('('));
+                //Console.WriteLine(func_name);
+                index1++;
+                string func_arguments = lineCode[index1..index2];
+                //Console.WriteLine(func_arguments);
                 e.RunData.Funcs.Add(new FuncData(func_name));
                 e.RunData.Vars.Add(func_name, new Dictionary<string, VarData>());
 
-                e.Line = e.Line.Replace($"{word} {next_word}", $"{func_name} proc");
+                //e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{func_name} proc");
+                e.SetLine = $"{func_name} proc";
                 if (!e.ReadOnlyData.TupiTypes.Contains(e.Lines[e.LinePos + 1].Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]))
                 {
-                    e.Line += "\n\tpush rdi";
-                    e.Line += $"\n\tsub rsp, {CorrectShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace)}\t;Reserve the shadow space";
-                    e.Line += "\n\tmov rdi, rsp";
+                    e.SetLine += "\n\tpush rdi";
+                    e.SetLine += $"\n\tsub rsp, {CorrectShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace)}\t;Reserve the shadow space";
+                    e.SetLine += "\n\tmov rdi, rsp";
                 }
 
                 e.RunData.LocalVarsDefine.Clear();

@@ -1,11 +1,16 @@
 ﻿#macro print_50 "printf(&print_type,50)"
-#macro iptr "i64"
+#macro intPtr "i64"
 
 use printf //import C func from .lib file
 
+//struct MyStruct{
+//	i8 myByte ?
+//	i64 myLong 64
+//}
+
 i8 print_type 'message: %d',10,0
 
-func main(){
+func main(i8 args){
 	i8 first1 = 8//fist int
 	i64 second1 = 64
 
@@ -20,6 +25,13 @@ func main(){
 	return 0
 }
 
-//func print_i64(i64 integer){
-//	printf(&print_type,integer)
-//}
+func print_i64(intPtr stringPtr,i64 integer){
+	printf(&print_type,integer)
+	return
+}
+
+func print50x2(){
+	print_50
+	print_50
+	return
+}

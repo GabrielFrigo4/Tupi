@@ -46,10 +46,10 @@ internal class Compiler
 
             if (runData.DotCode && l == compilerLinesArgs.Lines.Length - 1)
             {
-                compilerLinesArgs.Line += "\nEnd";
+                compilerLinesArgs.SetLine += "\nEnd";
             }
 
-            tupiCodeLines[l] = compilerLinesArgs.Line;
+            tupiCodeLines[l] = compilerLinesArgs.SetLine;
             tupiCodeLines[l] += "\n";
         }
 
