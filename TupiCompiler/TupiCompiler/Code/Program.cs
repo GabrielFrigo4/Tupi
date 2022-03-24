@@ -205,15 +205,19 @@ internal static class Program
                         comand[i] = "mov";
 
                         string this_func_name = e.RunData.Funcs.Last().Name;
-                        if (e.RunData.FuncVars[this_func_name].ContainsKey(var_name))
+                        if (e.RunData.Funcs.Last().LocalVar.Select((VarData var) => var.Name).Contains(var_name))
                         {
-                            string var_type = e.RunData.FuncVars[this_func_name][var_name].Type;
+                            string var_type = string.Empty;
+                            if(e.RunData.Funcs.Last().GetDataByName(var_name) is VarData var_data)
+                            {
+                                var_type = var_data.Type;
+                            }
                             int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, var_type);
                             registors_type[i] = e.ReadOnlyData.RegistorsAll[pos][i];
                         }
-                        else if (e.RunData.FuncVars[string.Empty].ContainsKey(var_name))
+                        else if (e.RunData.GlobalVars.ContainsKey(var_name))
                         {
-                            string var_type = e.RunData.FuncVars[string.Empty][var_name].Type;
+                            string var_type = e.RunData.GlobalVars[var_name].Type;
                             int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, var_type);
                             registors_type[i] = e.ReadOnlyData.RegistorsAll[pos][i];
                         }
@@ -285,7 +289,6 @@ internal static class Program
                 FuncData func = e.RunData.Funcs.Last();
                 string func_name = func.Name;
                 e.SetLine = e.SetLine.Replace($"{word}", $"{func_name} endp");
-                e.RunData.FuncVars.Remove(func_name);
                 e.RunData.Funcs.Remove(func);
             }
         }
@@ -312,7 +315,11 @@ internal static class Program
                 {
                     e.RunData.EndLocalVarsDefine = true;
                     string newLine = string.Empty;
-                    foreach (string _line in e.RunData.LocalVarsDefine)
+                    foreach (string _line in e.RunData.Funcs.Last().Args.Select((VarData var) => var.Def))
+                    {
+                        newLine += _line + "\n";
+                    }
+                    foreach (string _line in e.RunData.Funcs.Last().LocalVar.Select((VarData var) => var.Def))
                     {
                         newLine += _line + "\n";
                     }
@@ -359,28 +366,30 @@ internal static class Program
                     e.RunData.DotData = true;
                 }
                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
-                e.RunData.FuncVars[string.Empty].Add(next_word, new VarData(word, e.ReadOnlyData.TupiTypeSize[pos]));
+                e.RunData.GlobalVars.Add(next_word, new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos]));
 
                 e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.DefAsmTypes[pos]}");
             }
             else if (e.ReadOnlyData.TupiTypes.Contains(word) && e.RunData.Funcs.Count > 0)
             {
                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
-                string func_name = e.RunData.Funcs.Last().Name;
-                e.RunData.FuncVars[func_name].Add(next_word, new VarData(word, e.ReadOnlyData.TupiTypeSize[pos]));
-                e.RunData.Funcs.Last().ShadowSpace = AddShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace, e.ReadOnlyData.TupiTypeSize[pos]);
+                VarData varData;
 
                 if (w + 3 < e.Terms.Length)
                 {
                     string val = e.Terms[w + 3];
                     e.SetLine = $"\tlocal {next_word}: {e.ReadOnlyData.AsmTypes[pos]}";
-                    e.RunData.LocalVarsDefine.Add($"\tmov {next_word}, {val}");
+                    varData = new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos], $"\tmov {next_word}, {val}");
                     e.RunData.EndLocalVarsDefine = false;
                 }
                 else
                 {
                     e.SetLine = $"\tlocal {next_word}: {e.ReadOnlyData.AsmTypes[pos]}";
+                    varData = new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos]);
                 }
+
+                e.RunData.Funcs.Last().LocalVar.Add(varData);
+                e.RunData.Funcs.Last().ShadowSpace = AddShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace, e.ReadOnlyData.TupiTypeSize[pos]);
             }
         }
     }
@@ -397,32 +406,53 @@ internal static class Program
             if (word == "func")
             {
                 string lineCode = e.Line;
+
+                int index1 = lineCode.IndexOf('(');
+                int index2 = lineCode.IndexOf(')');
+                string func_name = next_word.Remove(next_word.IndexOf('('));
+                index1++;
+                string func_arguments = lineCode[index1..index2];
+                string[] args = func_arguments.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                FuncData funcData = new FuncData(func_name);
+                e.RunData.Funcs.Add(funcData);
+                string argsLine = string.Empty;
+                for (int a = 0; a < args.Length; a++)
+                {
+                    string arg = args[a];
+                    string[] argWords = arg.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    string type = argWords[0];
+                    string name = argWords[1];
+
+                    string var_type = type;
+                    int _pos1 = Array.IndexOf(e.ReadOnlyData.TupiTypes, var_type);
+                    string val = e.ReadOnlyData.RegistorsAll[_pos1][a];
+
+                    int _pos2 = Array.IndexOf(e.ReadOnlyData.TupiTypes, type);
+                    argsLine += $"\n\tlocal {name}: {e.ReadOnlyData.AsmTypes[_pos2]}";
+                    VarData varData = new VarData(name, type, e.ReadOnlyData.TupiTypeSize[_pos2], $"\tmov {name}, {val}");
+                    funcData.Args.Add(varData);
+                    e.RunData.Funcs.Last().ShadowSpace = AddShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace, e.ReadOnlyData.TupiTypeSize[_pos2]);
+                }
+
+                e.SetLine = $"{func_name} proc" + argsLine;
                 if (!e.RunData.DotCode)
                 {
                     e.SetLine = ".code\n" + e.SetLine;
                     e.RunData.DotCode = true;
                 }
 
-                int index1 = lineCode.IndexOf('(');
-                int index2 = lineCode.IndexOf(')');
-                string func_name = next_word.Remove(next_word.IndexOf('('));
-                //Console.WriteLine(func_name);
-                index1++;
-                string func_arguments = lineCode[index1..index2];
-                //Console.WriteLine(func_arguments);
-                e.RunData.Funcs.Add(new FuncData(func_name));
-                e.RunData.FuncVars.Add(func_name, new Dictionary<string, VarData>());
-
-                //e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{func_name} proc");
-                e.SetLine = $"{func_name} proc";
                 if (!e.ReadOnlyData.TupiTypes.Contains(e.Lines[e.LinePos + 1].Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]))
                 {
+                    foreach (string _line in e.RunData.Funcs.Last().Args.Select((VarData var) => var.Def))
+                    {
+                        e.SetLine += "\n" + _line;
+                    }
+
                     e.SetLine += "\n\tpush rdi";
                     e.SetLine += $"\n\tsub rsp, {CorrectShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace)}\t;Reserve the shadow space";
                     e.SetLine += "\n\tmov rdi, rsp";
                 }
 
-                e.RunData.LocalVarsDefine.Clear();
                 e.RunData.EndLocalVarsDefine = true;
             }
         }
@@ -448,7 +478,7 @@ internal static class Program
 
                 string struct_name = next_word.Remove(next_word.IndexOf('('));
                 e.RunData.Structs.Add(new StructData(struct_name));
-                e.RunData.FuncVars.Add(struct_name, new Dictionary<string, VarData>());
+                //e.RunData.FuncVars.Add(struct_name, new Dictionary<string, VarData>());
 
                 //e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{func_name} proc");
                 e.SetLine = $"{struct_name} struct";

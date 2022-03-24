@@ -19,19 +19,12 @@ func main(i8 args){
 
 	i8 first3 = 8
 	i64 second3 = 64
-	f64 float_val
-	print_50
+	print_i64(second1)
 
 	return 0
 }
 
-func print_i64(intPtr stringPtr,i64 integer){
+func print_i64(i64 integer){
 	printf(&print_type,integer)
-	return
-}
-
-func print50x2(){
-	print_50
-	print_50
 	return
 }

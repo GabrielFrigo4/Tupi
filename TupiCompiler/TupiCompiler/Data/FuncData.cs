@@ -13,4 +13,14 @@ internal class FuncData
         LocalVar = new List<VarData>();
         Args = new List<VarData>();
     }
+
+    internal VarData? GetDataByName(string name)
+    {
+        foreach(var v in LocalVar)
+        {
+            if(v.Name == name)
+                return v;
+        }
+        return null;
+    }
 }
