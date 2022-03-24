@@ -265,7 +265,6 @@ internal static class Program
             {
                 e.SetLine = $"\tadd rsp, {CorrectShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace)}\t;Remove shadow space";
                 e.SetLine += "\n\tpop rdi";
-                e.SetLine += "\n\tleave";
                 e.SetLine += "\n\tret";
             }
             else if (word == "return" && e.Terms.Length > 1)
@@ -496,9 +495,11 @@ internal static class Program
 
     private static int CorrectShadowSpaceFunc(int shadowSpace)
     {
+        if (shadowSpace == 32) return 32;
+
         int result = shadowSpace;
         int rest = result % 8;
-        if (rest == 0) return result;
+        if (rest == 0) return result + 8;
 
         result += 16 - rest;
         return result;
