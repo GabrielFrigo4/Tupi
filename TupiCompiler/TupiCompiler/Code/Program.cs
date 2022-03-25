@@ -194,7 +194,7 @@ internal static class Program
 
     static void CompilerLines_TupiTypeDef(object? sender, CompilerArgs e)
     {
-        if (e.RunData.Funcs.Count == 0) return;
+        if (e.RunData.CurrentFunc == null) return;
 
         for (int w = 0; w < e.Terms.Length; w++)
         {
@@ -213,17 +213,17 @@ internal static class Program
                 {
                     e.RunData.EndLocalVarsDefine = true;
                     string newLine = string.Empty;
-                    foreach (string _line in e.RunData.Funcs.Last().Args.Select((VarData var) => var.Def))
+                    foreach (string _line in e.RunData.CurrentFunc.Args.Select((VarData var) => var.Def))
                     {
                         newLine += _line + "\n";
                     }
-                    foreach (string _line in e.RunData.Funcs.Last().LocalVar.Select((VarData var) => var.Def))
+                    foreach (string _line in e.RunData.CurrentFunc.LocalVar.Select((VarData var) => var.Def))
                     {
                         newLine += _line + "\n";
                     }
 
                     newLine += "\tpush rdi";
-                    newLine += $"\n\tsub rsp, {CorrectShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace)}\t;Reserve the shadow space";
+                    newLine += $"\n\tsub rsp, {CorrectShadowSpaceFunc(e.RunData.CurrentFunc.ShadowSpace)}\t;Reserve the shadow space";
                     newLine += "\n\tmov rdi, rsp\n";
                     e.SetLine = newLine + e.SetLine;
                 }
@@ -250,8 +250,8 @@ internal static class Program
                 index1++;
                 string func_arguments = lineCode[index1..index2];
                 string[] args = func_arguments.Split(',', StringSplitOptions.RemoveEmptyEntries);
-                FuncData funcData = new FuncData(func_name);
-                e.RunData.Funcs.Add(funcData);
+                e.RunData.CurrentFunc = new FuncData(func_name);
+                e.RunData.Funcs.Add(e.RunData.CurrentFunc);
                 string argsLine = string.Empty;
                 for (int a = 0; a < args.Length; a++)
                 {
@@ -267,8 +267,8 @@ internal static class Program
                     int _pos2 = Array.IndexOf(e.ReadOnlyData.TupiTypes, type);
                     argsLine += $"\n\tlocal {name}: {e.ReadOnlyData.AsmTypes[_pos2]}";
                     VarData varData = new VarData(name, type, e.ReadOnlyData.TupiTypeSize[_pos2], $"\tmov {name}, {val}");
-                    funcData.Args.Add(varData);
-                    e.RunData.Funcs.Last().ShadowSpace = AddShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace, e.ReadOnlyData.TupiTypeSize[_pos2]);
+                    e.RunData.CurrentFunc.Args.Add(varData);
+                    e.RunData.CurrentFunc.ShadowSpace = AddShadowSpaceFunc(e.RunData.CurrentFunc.ShadowSpace, e.ReadOnlyData.TupiTypeSize[_pos2]);
                 }
 
                 e.SetLine = $"{func_name} proc" + argsLine;
@@ -280,13 +280,13 @@ internal static class Program
 
                 if (!e.ReadOnlyData.TupiTypes.Contains(e.Lines[e.LinePos + 1].Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0]))
                 {
-                    foreach (string _line in e.RunData.Funcs.Last().Args.Select((VarData var) => var.Def))
+                    foreach (string _line in e.RunData.CurrentFunc.Args.Select((VarData var) => var.Def))
                     {
                         e.SetLine += "\n" + _line;
                     }
 
                     e.SetLine += "\n\tpush rdi";
-                    e.SetLine += $"\n\tsub rsp, {CorrectShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace)}\t;Reserve the shadow space";
+                    e.SetLine += $"\n\tsub rsp, {CorrectShadowSpaceFunc(e.RunData.CurrentFunc.ShadowSpace)}\t;Reserve the shadow space";
                     e.SetLine += "\n\tmov rdi, rsp";
                 }
 
@@ -314,10 +314,8 @@ internal static class Program
                 }
 
                 string struct_name = next_word.Remove(next_word.IndexOf('('));
-                e.RunData.Structs.Add(new StructData(struct_name));
-                //e.RunData.FuncVars.Add(struct_name, new Dictionary<string, VarData>());
-
-                //e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{func_name} proc");
+                e.RunData.CurrentStruct = new StructData(struct_name);
+                e.RunData.Structs.Add(e.RunData.CurrentStruct);
                 e.SetLine = $"{struct_name} struct";
             }
         }
@@ -332,7 +330,7 @@ internal static class Program
             if (w >= e.Terms.Length - 1) continue;
             string next_word = e.Terms[w + 1];
 
-            if (e.ReadOnlyData.TupiTypes.Contains(word) && e.RunData.Funcs.Count == 0)
+            if (e.ReadOnlyData.TupiTypes.Contains(word) && e.RunData.CurrentFunc == null)
             {
                 if (!e.RunData.DotData)
                 {
@@ -344,7 +342,7 @@ internal static class Program
 
                 e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.DefAsmTypes[pos]}");
             }
-            else if (e.ReadOnlyData.TupiTypes.Contains(word) && e.RunData.Funcs.Count > 0)
+            else if (e.ReadOnlyData.TupiTypes.Contains(word) && e.RunData.CurrentFunc != null)
             {
                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
                 VarData varData;
@@ -362,14 +360,16 @@ internal static class Program
                     varData = new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos]);
                 }
 
-                e.RunData.Funcs.Last().LocalVar.Add(varData);
-                e.RunData.Funcs.Last().ShadowSpace = AddShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace, e.ReadOnlyData.TupiTypeSize[pos]);
+                e.RunData.CurrentFunc.LocalVar.Add(varData);
+                e.RunData.CurrentFunc.ShadowSpace = AddShadowSpaceFunc(e.RunData.CurrentFunc.ShadowSpace, e.ReadOnlyData.TupiTypeSize[pos]);
             }
         }
     }
 
     static void CompilerLines_CallFunc(object? sender, CompilerArgs e)
     {
+        if (e.RunData.CurrentFunc == null) return;
+
         for (int w = 0; w < e.Terms.Length; w++)
         {
             string word = e.Terms[w];
@@ -396,11 +396,11 @@ internal static class Program
                     {
                         comand[i] = "mov";
 
-                        string this_func_name = e.RunData.Funcs.Last().Name;
-                        if (e.RunData.Funcs.Last().LocalVar.Select((VarData var) => var.Name).Contains(var_name))
+                        string this_func_name = e.RunData.CurrentFunc.Name;
+                        if (e.RunData.CurrentFunc.LocalVar.Select((VarData var) => var.Name).Contains(var_name))
                         {
                             string var_type = string.Empty;
-                            if(e.RunData.Funcs.Last().GetDataByName(var_name) is VarData var_data)
+                            if(e.RunData.CurrentFunc.GetDataByName(var_name) is VarData var_data)
                             {
                                 var_type = var_data.Type;
                             }
@@ -447,7 +447,7 @@ internal static class Program
 
     static void CompilerLines_Return(object? sender, CompilerArgs e)
     {
-        if (e.RunData.Funcs.Count == 0) return;
+        if (e.RunData.CurrentFunc == null) return;
 
         for (int w = 0; w < e.Terms.Length; w++)
         {
@@ -455,14 +455,14 @@ internal static class Program
 
             if (word == "return" && e.Terms.Length == 1)
             {
-                e.SetLine = $"\tadd rsp, {CorrectShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace)}\t;Remove shadow space";
+                e.SetLine = $"\tadd rsp, {CorrectShadowSpaceFunc(e.RunData.CurrentFunc.ShadowSpace)}\t;Remove shadow space";
                 e.SetLine += "\n\tpop rdi";
                 e.SetLine += "\n\tret";
             }
             else if (word == "return" && e.Terms.Length > 1)
             {
                 e.SetLine = e.SetLine.Replace($"{word} ", "mov rax, ");
-                e.SetLine += $"\n\tadd rsp, {CorrectShadowSpaceFunc(e.RunData.Funcs.Last().ShadowSpace)}\t;Remove shadow space";
+                e.SetLine += $"\n\tadd rsp, {CorrectShadowSpaceFunc(e.RunData.CurrentFunc.ShadowSpace)}\t;Remove shadow space";
                 e.SetLine += "\n\tpop rdi";
                 e.SetLine += "\n\tret";
             }
@@ -471,16 +471,19 @@ internal static class Program
 
     static void CompilerLines_EndFunc(object? sender, CompilerArgs e)
     {
+        if (e.RunData.CurrentFunc == null) return;
+
         for (int w = 0; w < e.Terms.Length; w++)
         {
             string word = e.Terms[w];
 
             if (word == "}")
             {
-                FuncData func = e.RunData.Funcs.Last();
+                FuncData func = e.RunData.CurrentFunc;
                 string func_name = func.Name;
                 e.SetLine = e.SetLine.Replace($"{word}", $"{func_name} endp");
-                e.RunData.Funcs.Remove(func);
+                e.RunData.CurrentFunc = null;
+                break;
             }
         }
     }
