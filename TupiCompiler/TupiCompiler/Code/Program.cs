@@ -37,10 +37,12 @@ internal static class Program
         compiler.CompilerEvent += CompilerLines_GetExternFunc;
         compiler.CompilerEvent += CompilerLines_TupiTypeDef;
         compiler.CompilerEvent += CompilerLines_StartFunc;
+        compiler.CompilerEvent += CompilerLines_StartStruct;
         compiler.CompilerEvent += CompilerLines_TupiType;
         compiler.CompilerEvent += CompilerLines_CallFunc;
         compiler.CompilerEvent += CompilerLines_Return;
         compiler.CompilerEvent += CompilerLines_EndFunc;
+        compiler.CompilerEvent += CompilerLines_EndStruct;
 
         string asmCode = compiler.Start();
 
@@ -306,17 +308,16 @@ internal static class Program
 
             if (word == "struct")
             {
-                string lineCode = e.Line;
+                string struct_name = next_word.Remove(next_word.IndexOf('{'));
+                e.RunData.CurrentStruct = new StructData(struct_name);
+                e.RunData.Structs.Add(e.RunData.CurrentStruct);
+
+                e.SetLine = $"{struct_name} struct";
                 if (!e.RunData.DotCode)
                 {
                     e.SetLine = ".code\n" + e.SetLine;
                     e.RunData.DotCode = true;
                 }
-
-                string struct_name = next_word.Remove(next_word.IndexOf('('));
-                e.RunData.CurrentStruct = new StructData(struct_name);
-                e.RunData.Structs.Add(e.RunData.CurrentStruct);
-                e.SetLine = $"{struct_name} struct";
             }
         }
     }
@@ -330,7 +331,9 @@ internal static class Program
             if (w >= e.Terms.Length - 1) continue;
             string next_word = e.Terms[w + 1];
 
-            if (e.ReadOnlyData.TupiTypes.Contains(word) && e.RunData.CurrentFunc == null)
+            bool containWord = e.ReadOnlyData.TupiTypes.Contains(word);
+
+            if (containWord && e.RunData.CurrentFunc == null && e.RunData.CurrentStruct == null)
             {
                 if (!e.RunData.DotData)
                 {
@@ -342,7 +345,7 @@ internal static class Program
 
                 e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.DefAsmTypes[pos]}");
             }
-            else if (e.ReadOnlyData.TupiTypes.Contains(word) && e.RunData.CurrentFunc != null)
+            else if (containWord && e.RunData.CurrentFunc != null && e.RunData.CurrentStruct == null)
             {
                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
                 VarData varData;
@@ -362,6 +365,26 @@ internal static class Program
 
                 e.RunData.CurrentFunc.LocalVar.Add(varData);
                 e.RunData.CurrentFunc.ShadowSpace = AddShadowSpaceFunc(e.RunData.CurrentFunc.ShadowSpace, e.ReadOnlyData.TupiTypeSize[pos]);
+            }
+            else if (containWord && e.RunData.CurrentFunc == null && e.RunData.CurrentStruct != null)
+            {
+                int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
+                VarData varData;
+
+                if (w + 3 < e.Terms.Length)
+                {
+                    string val = e.Terms[w + 3];
+                    e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.AsmTypes[pos]}");
+                    varData = new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos], $"\tmov {next_word}, {val}");
+                    e.RunData.EndLocalVarsDefine = false;
+                }
+                else
+                {
+                    e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.AsmTypes[pos]}");
+                    varData = new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos]);
+                }
+
+                e.RunData.CurrentStruct.Vars.Add(varData);
             }
         }
     }
@@ -479,10 +502,29 @@ internal static class Program
 
             if (word == "}")
             {
-                FuncData func = e.RunData.CurrentFunc;
-                string func_name = func.Name;
+                FuncData funcData = e.RunData.CurrentFunc;
+                string func_name = funcData.Name;
                 e.SetLine = e.SetLine.Replace($"{word}", $"{func_name} endp");
                 e.RunData.CurrentFunc = null;
+                break;
+            }
+        }
+    }
+
+    static void CompilerLines_EndStruct(object? sender, CompilerArgs e)
+    {
+        if (e.RunData.CurrentStruct == null) return;
+
+        for (int w = 0; w < e.Terms.Length; w++)
+        {
+            string word = e.Terms[w];
+
+            if (word == "}")
+            {
+                StructData structData = e.RunData.CurrentStruct;
+                string struct_name = structData.Name;
+                e.SetLine = e.SetLine.Replace($"{word}", $"{struct_name} ends");
+                e.RunData.CurrentStruct = null;
                 break;
             }
         }
