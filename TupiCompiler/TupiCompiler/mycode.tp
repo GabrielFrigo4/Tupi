@@ -1,4 +1,6 @@
-﻿use printf
+﻿#macro iptr "i64"
+
+use printf
 
 struct MyStruct{
 	i8 myByte ?
@@ -9,7 +11,7 @@ i8 msg 'myInt is %d', 10, 0
 i64 myInt 120
 MyStruct myStructTest {8, 8}
 
-func main(){
+func main(iptr args){
 	i64 myLongVar = 0
 	MyStruct myStructVar
 
