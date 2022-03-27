@@ -385,6 +385,7 @@ internal static class Program
                 }
 
                 e.RunData.CurrentStruct.Vars.Add(varData);
+                e.RunData.CurrentStruct.Size += varData.Size;
             }
         }
     }
