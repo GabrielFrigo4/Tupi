@@ -1,5 +1,4 @@
 ﻿namespace TupiCompiler.Data;
-
 internal class RunData
 {
     internal bool DotData { get; set; }

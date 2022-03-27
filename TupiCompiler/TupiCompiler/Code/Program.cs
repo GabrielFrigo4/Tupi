@@ -3,7 +3,6 @@ using System.Diagnostics;
 using TupiCompiler.Data;
 
 namespace TupiCompiler.Code;
-
 internal static class Program
 {
     static Compiler? compiler;
