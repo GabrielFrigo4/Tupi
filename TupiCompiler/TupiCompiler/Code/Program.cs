@@ -313,11 +313,6 @@ internal static class Program
                 e.RunData.Structs.Add(e.RunData.CurrentStruct);
 
                 e.SetLine = $"{struct_name} struct";
-                if (!e.RunData.DotCode)
-                {
-                    e.SetLine = ".code\n" + e.SetLine;
-                    e.RunData.DotCode = true;
-                }
             }
         }
     }

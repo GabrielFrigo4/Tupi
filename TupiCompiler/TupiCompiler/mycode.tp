@@ -1,13 +1,12 @@
 ﻿use printf
 
-i8 msg 'myInt is %d', 10, 0
-i64 myInt 120
-
 struct MyStruct{
 	i8 myByte ?
 	i64 myLong 64
 }
 
+i8 msg 'myInt is %d', 10, 0
+i64 myInt 120
 
 func main(){
 	printf(&msg,myInt)
