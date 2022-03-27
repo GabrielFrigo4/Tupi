@@ -16,7 +16,7 @@ internal class RunData
     /// </summary>
     internal Dictionary<string, VarData> GlobalVars { get; set; }
 
-    public RunData()
+    internal RunData()
     {
         this.DotData = false;
         this.DotCode = false;
@@ -26,5 +26,25 @@ internal class RunData
         this.Funcs = new List<FuncData>();
         this.Structs = new List<StructData>();
         this.GlobalVars = new Dictionary<string, VarData>();
+    }
+
+    internal StructData? GetStructByName(string name)
+    {
+        foreach (var s in Structs)
+        {
+            if (s.Name == name)
+                return s;
+        }
+        return null;
+    }
+
+    internal FuncData? GetFuncByName(string name)
+    {
+        foreach (var f in Funcs)
+        {
+            if (f.Name == name)
+                return f;
+        }
+        return null;
     }
 }

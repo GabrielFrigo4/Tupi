@@ -2,15 +2,20 @@
 
 struct MyStruct{
 	i8 myByte ?
-	i64 myLong 64
+	i64 myLong ?
 }
 
 i8 msg 'myInt is %d', 10, 0
 i64 myInt 120
+MyStruct myStructTest {8, 8}
 
 func main(){
+	i64 myLongVar = 0
+	MyStruct myStructVar
+
 	printf(&msg,myInt)
 	print_i64(myInt)
+	print_i64(myStructTest.mylong)
 	return 0
 }
 

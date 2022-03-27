@@ -211,6 +211,16 @@ internal static class Program
                         break;
                     }
                 }
+
+                foreach (var structType in e.RunData.Structs.Select((StructData data) => data.Name))
+                {
+                    if (e.Terms.Contains(structType))
+                    {
+                        contains = true;
+                        break;
+                    }
+                }
+
                 if (!contains)
                 {
                     e.RunData.EndLocalVarsDefine = true;
@@ -219,7 +229,7 @@ internal static class Program
                     {
                         newLine += _line + "\n";
                     }
-                    foreach (string _line in e.RunData.CurrentFunc.LocalVar.Select((VarData var) => var.Def))
+                    foreach (string _line in e.RunData.CurrentFunc.LocalVars.Select((VarData var) => var.Def))
                     {
                         newLine += _line + "\n";
                     }
@@ -327,6 +337,11 @@ internal static class Program
             string next_word = e.Terms[w + 1];
 
             bool containWord = e.ReadOnlyData.TupiTypes.Contains(word);
+            bool wordIsStruct = false;
+            if (!containWord && e.RunData.Structs.Select((StructData data) => data.Name).Contains(word))
+            {
+                containWord = wordIsStruct = true;
+            }
 
             if (containWord && e.RunData.CurrentFunc == null && e.RunData.CurrentStruct == null)
             {
@@ -335,48 +350,94 @@ internal static class Program
                     e.SetLine = ".data\n" + e.SetLine;
                     e.RunData.DotData = true;
                 }
-                int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
-                e.RunData.GlobalVars.Add(next_word, new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos]));
 
-                e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.DefAsmTypes[pos]}");
+                if (wordIsStruct && e.RunData.GetStructByName(word) is StructData structData)
+                {
+                    e.RunData.GlobalVars.Add(next_word, new VarData(next_word, word, structData.Size));
+                    e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {word}");
+                }
+                else
+                {
+                    int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
+                    e.RunData.GlobalVars.Add(next_word, new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos]));
+                    e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.DefAsmTypes[pos]}");
+                }
             }
             else if (containWord && e.RunData.CurrentFunc != null && e.RunData.CurrentStruct == null)
             {
-                int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
                 VarData varData;
 
                 if (w + 3 < e.Terms.Length)
                 {
-                    string val = e.Terms[w + 3];
-                    e.SetLine = $"\tlocal {next_word}: {e.ReadOnlyData.AsmTypes[pos]}";
-                    varData = new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos], $"\tmov {next_word}, {val}");
-                    e.RunData.EndLocalVarsDefine = false;
+                    if (wordIsStruct && e.RunData.GetStructByName(word) is StructData structData)
+                    {
+                        string val = e.Terms[w + 3];
+                        e.SetLine = $"\tlocal {next_word}: {word}";
+                        varData = new VarData(next_word, word, structData.Size, $"\tmov {next_word}, {val}");
+                        e.RunData.EndLocalVarsDefine = false;
+                    }
+                    else
+                    {
+                        int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
+                        string val = e.Terms[w + 3];
+                        e.SetLine = $"\tlocal {next_word}: {e.ReadOnlyData.AsmTypes[pos]}";
+                        varData = new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos], $"\tmov {next_word}, {val}");
+                        e.RunData.EndLocalVarsDefine = false;
+                    }
                 }
                 else
                 {
-                    e.SetLine = $"\tlocal {next_word}: {e.ReadOnlyData.AsmTypes[pos]}";
-                    varData = new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos]);
+                    if (wordIsStruct && e.RunData.GetStructByName(word) is StructData structData)
+                    {
+                        e.SetLine = $"\tlocal {next_word}: {word}";
+                        varData = new VarData(next_word, word, structData.Size);
+                    }
+                    else
+                    {
+                        int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
+                        e.SetLine = $"\tlocal {next_word}: {e.ReadOnlyData.AsmTypes[pos]}";
+                        varData = new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos]);
+                    }
                 }
 
-                e.RunData.CurrentFunc.LocalVar.Add(varData);
-                e.RunData.CurrentFunc.ShadowSpace = AddShadowSpaceFunc(e.RunData.CurrentFunc.ShadowSpace, e.ReadOnlyData.TupiTypeSize[pos]);
+                e.RunData.CurrentFunc.LocalVars.Add(varData);
+                e.RunData.CurrentFunc.ShadowSpace = AddShadowSpaceFunc(e.RunData.CurrentFunc.ShadowSpace, varData.Size);
             }
             else if (containWord && e.RunData.CurrentFunc == null && e.RunData.CurrentStruct != null)
             {
-                int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
                 VarData varData;
 
                 if (w + 3 < e.Terms.Length)
                 {
-                    string val = e.Terms[w + 3];
-                    e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.AsmTypes[pos]}");
-                    varData = new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos], $"\tmov {next_word}, {val}");
-                    e.RunData.EndLocalVarsDefine = false;
+                    if (wordIsStruct && e.RunData.GetStructByName(word) is StructData structData)
+                    {
+                        string val = e.Terms[w + 3];
+                        e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {word}");
+                        varData = new VarData(next_word, word, structData.Size, $"\tmov {next_word}, {val}");
+                        e.RunData.EndLocalVarsDefine = false;
+                    }
+                    else
+                    {
+                        int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
+                        string val = e.Terms[w + 3];
+                        e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.DefAsmTypes[pos]}");
+                        varData = new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos], $"\tmov {next_word}, {val}");
+                        e.RunData.EndLocalVarsDefine = false;
+                    }
                 }
                 else
                 {
-                    e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.AsmTypes[pos]}");
-                    varData = new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos]);
+                    if (wordIsStruct && e.RunData.GetStructByName(word) is StructData structData)
+                    {
+                        e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {word}");
+                        varData = new VarData(next_word, word, structData.Size);
+                    }
+                    else
+                    {
+                        int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, word);
+                        e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"{next_word} {e.ReadOnlyData.DefAsmTypes[pos]}");
+                        varData = new VarData(next_word, word, e.ReadOnlyData.TupiTypeSize[pos]);
+                    }
                 }
 
                 e.RunData.CurrentStruct.Vars.Add(varData);
@@ -416,10 +477,10 @@ internal static class Program
                         comand[i] = "mov";
 
                         string this_func_name = e.RunData.CurrentFunc.Name;
-                        if (e.RunData.CurrentFunc.LocalVar.Select((VarData var) => var.Name).Contains(var_name))
+                        if (e.RunData.CurrentFunc.LocalVars.Select((VarData var) => var.Name).Contains(var_name))
                         {
                             string var_type = string.Empty;
-                            if(e.RunData.CurrentFunc.GetDataByName(var_name) is VarData var_data)
+                            if(e.RunData.CurrentFunc.GetLocalVarByName(var_name) is VarData var_data)
                             {
                                 var_type = var_data.Type;
                             }

@@ -18,4 +18,14 @@ internal class StructData
         Size = size;
         Vars = new List<VarData>();
     }
+
+    internal VarData? GetVarByName(string name)
+    {
+        foreach (var v in Vars)
+        {
+            if (v.Name == name)
+                return v;
+        }
+        return null;
+    }
 }
