@@ -1,6 +1,8 @@
 ﻿#macro iptr "i64"
 
 use printf
+use malloc
+use free
 
 struct MyStruct{
 	i8 myByte ?
