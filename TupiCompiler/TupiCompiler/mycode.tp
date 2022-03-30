@@ -1,8 +1,9 @@
 ﻿#macro iptr "i64"
 
-use printf
-use malloc
-use free
+use CmdPrint
+use MemAlloc
+use MemReAlloc
+use MemFree
 
 struct MyStruct{
 	i8 myByte ?
@@ -17,13 +18,13 @@ func main(iptr args){
 	i64 myLongVar = 0
 	MyStruct myStructVar
 
-	printf(&msg,myInt)
+	CmdPrint(&msg,myInt)
 	print_i64(myInt)
 	print_i64(myStructTest.mylong)
 	return 0
 }
 
 func print_i64(i64 integer){
-	printf(&msg,integer)
+	CmdPrint(&msg,integer)
 	return
 }

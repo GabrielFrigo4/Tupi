@@ -1,11 +1,10 @@
 #include "pch.h"
 #include "framework.h"
-#include "heapapi.h"
 
-void CmdPrint(char* format...) {
-
+extern "C" int CmdPrint(const char* format, ...) {
+	return printf(format);
 }
 
-char* CmdScan() {
-
+extern "C" int CmdScan(const char* format, ...) {
+	return scanf_s(format);
 }

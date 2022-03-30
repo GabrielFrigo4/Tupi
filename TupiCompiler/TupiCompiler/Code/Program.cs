@@ -55,13 +55,15 @@ internal static class Program
 
     static void CompileAsm(string path_dir_asm, bool run = false, bool assembler_warning = true)
     {
+        string libDir = Path.GetFullPath("./lib");
         Console.WriteLine("tranform assembly to binary file");
         Process process = new Process();
         ProcessStartInfo startInfo = new ProcessStartInfo();
         startInfo.CreateNoWindow = !assembler_warning;
         startInfo.WindowStyle = ProcessWindowStyle.Hidden;
         startInfo.FileName = "cmd.exe";
-        startInfo.Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" && ml64 main.asm /link /subsystem:console /defaultlib:libcmt.lib";
+        //startInfo.Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" && ml64 main.asm /link /subsystem:console /defaultlib:libcmt.lib";
+        startInfo.Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" && ml64 main.asm /link /subsystem:console /defaultlib:kernel32.lib /defaultlib:{libDir}\\TupiLib.lib";
         if (run)
         {
             startInfo.Arguments += " && main";
