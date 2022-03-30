@@ -23,9 +23,6 @@
     <None Update="lib\TupiLib.lib">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Txt\code_ex.asm">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
     <None Update="mycode.tp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
