@@ -1,9 +1,12 @@
 ﻿#macro iptr "i64"
 
-use cmdPrint
-use memAlloc
-use memReAlloc
-use memFree
+usefn print
+usefn alloc
+usefn realloc
+usefn free
+usefn sign
+usefn pow
+usefn sqrt
 
 struct myStruct{
 	i8 myByte ?
@@ -18,13 +21,14 @@ fn main(iptr args){
 	i64 myLongVar = 0
 	myStruct myStructVar
 
-	cmdPrint(&msg,myInt)
+	alloc(8)
+	print(&msg,myInt)
 	print_i64(myInt)
 	print_i64(myStructTest.mylong)
 	return 0
 }
 
 fn print_i64(i64 integer){
-	cmdPrint(&msg,integer)
+	print(&msg,integer)
 	return
 }

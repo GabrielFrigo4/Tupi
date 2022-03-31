@@ -187,7 +187,7 @@ internal static class Program
             if (w >= e.Terms.Length - 1) continue;
             string next_word = e.Terms[w + 1];
 
-            if (word == "use")
+            if (word == "usefn")
             {
                 e.SetLine = e.SetLine.Replace($"{word} {next_word}", $"extern {next_word}: proc");
             }
@@ -536,12 +536,6 @@ internal static class Program
             if (word == "return" && e.Terms.Length == 1)
             {
                 e.SetLine = string.Empty;
-                //if (e.RunData.CurrentFunc.Name == "main")
-                //{
-                //    e.SetLine += "\n\tmov rcx, 0";
-                //    e.SetLine += "\n\tcall ExitProcess";
-                //}
-
                 e.SetLine += $"\tadd rsp, {CorrectShadowSpaceFunc(e.RunData.CurrentFunc.ShadowSpace)}\t;Remove shadow space";
                 e.SetLine += "\n\tpop rdi";
                 e.SetLine += "\n\tret";
@@ -549,12 +543,6 @@ internal static class Program
             else if (word == "return" && e.Terms.Length > 1)
             {
                 e.SetLine = string.Empty;
-                //if (e.RunData.CurrentFunc.Name == "main")
-                //{
-                //    e.SetLine += "\n\tmov rcx, 0";
-                //    e.SetLine += "\n\tcall ExitProcess";
-                //}
-
                 e.SetLine += e.SetLine.Replace($"{word} ", "mov rax, ");
                 e.SetLine += $"\n\tadd rsp, {CorrectShadowSpaceFunc(e.RunData.CurrentFunc.ShadowSpace)}\t;Remove shadow space";
                 e.SetLine += "\n\tpop rdi";
