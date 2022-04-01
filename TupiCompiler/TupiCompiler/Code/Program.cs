@@ -202,10 +202,9 @@ internal static class Program
                 if (terms.Length < 2 || isInsideFunc) continue;
                 if (terms[0] == "struct")
                 {
-                    string structName = terms[1].Remove(terms[1].IndexOf('{'));
-                    currentStruct = new StructData(structName);
+                    currentStruct = new StructData(terms[1].Remove(terms[1].IndexOf('{')));
                     e.RunData.Structs.Add(currentStruct);
-                    structCode += $"{structName} struct\n";
+                    structCode += $"{currentStruct.Name} struct\n";
                 }
             }
             else if(currentStruct is not null)
@@ -270,10 +269,9 @@ internal static class Program
                 if (terms.Length < 2 || isInsideFunc || isInsideStruct) continue;
                 if (terms[0] == "fn")
                 {
-                    string fnName = terms[1].Remove(terms[1].IndexOf('('));
-                    currentFunc = new FuncData(fnName);
+                    currentFunc = new FuncData(terms[1].Remove(terms[1].IndexOf('(')));
                     e.RunData.Funcs.Add(currentFunc);
-                    fnCode += $"{fnName} proc\n";
+                    fnCode += $"{currentFunc.Name} proc\n";
                 }
             }
             else if(currentFunc is not null)
