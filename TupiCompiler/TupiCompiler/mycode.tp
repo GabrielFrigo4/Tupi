@@ -18,7 +18,11 @@ i64 myInt 120
 myStruct myStructTest {8, 8}
 
 fn main(iptr args){
-	i64 myLongVar = 0
+	i64 myLongVar1 = 0
+	i8 myShortVar1 = 0
+	i8 myShortVar2 = 0
+	i64 myLongVar2 = 0
+	i8 myShortVar3 = 0
 	myStruct myStructVar
 
 	alloc(8)
@@ -29,6 +33,8 @@ fn main(iptr args){
 }
 
 fn print_i64(i64 integer){
+	i64 myLongVar1 = 0
+	i64 myLongVar2 = 0
 	print(&msg,integer)
 	return
 }
