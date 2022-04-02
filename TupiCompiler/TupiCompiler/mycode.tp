@@ -28,7 +28,6 @@ fn main(iptr args){
 	i8 myShortVar3 = 0
 	myStruct myStructVar
 
-	malloc(64)
 	createMem(8)
 	consoleWrite(&msg,myInt)
 	print_i64(myInt)
