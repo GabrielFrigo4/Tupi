@@ -375,7 +375,21 @@ internal static class Program
                     fnCode += $"\tsub rsp, {CorrectShadowSpaceFunc(currentFunc.ShadowSpace)}\t;Reserve the shadow space\n";
                     fnCode += "\tmov rdi, rsp\n";
                 }
-               
+
+                if (terms[0] == "return" && terms.Length == 1)
+                {
+                    fnCode += $"\tadd rsp, {CorrectShadowSpaceFunc(currentFunc.ShadowSpace)}\t;Remove shadow space\n";
+                    fnCode += "\tpop rdi\n";
+                    fnCode += "\tret\n";
+                }
+                else if (terms[0] == "return" && terms.Length > 1)
+                {
+                    fnCode += (line.Replace($"{terms[0]} ", "mov rax, ")+"\n").Replace("\r","");
+                    fnCode += $"\tadd rsp, {CorrectShadowSpaceFunc(currentFunc.ShadowSpace)}\t;Remove shadow space\n";
+                    fnCode += "\tpop rdi\n";
+                    fnCode += "\tret\n";
+                }
+
                 if (!isInsideFunc)
                 {
                     fnCode += $"{currentFunc.Name} endp";
