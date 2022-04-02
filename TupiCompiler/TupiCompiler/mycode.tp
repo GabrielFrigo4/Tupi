@@ -1,16 +1,19 @@
 ﻿#macro iptr "i64"
 
-usefn print
-usefn alloc
-usefn realloc
-usefn free
-usefn sign
-usefn pow
-usefn sqrt
+usefn consoleWrite
+usefn createMem
+usefn recreateMem
+usefn deleteMem
 
 struct myStruct{
 	i8 myByte ?
 	i64 myLong ?
+}
+
+struct myStruct2{
+	i8 myByte ?
+	i64 myLong ?
+	myStruct myStructVar {}
 }
 
 i8 msg 'myInt is %d', 10, 0
@@ -25,8 +28,9 @@ fn main(iptr args){
 	i8 myShortVar3 = 0
 	myStruct myStructVar
 
-	alloc(8)
-	print(&msg,myInt)
+	malloc(64)
+	createMem(8)
+	consoleWrite(&msg,myInt)
 	print_i64(myInt)
 	print_i64(myStructTest.mylong)
 	return 0
@@ -35,6 +39,6 @@ fn main(iptr args){
 fn print_i64(i64 integer){
 	i64 myLongVar1 = 0
 	i64 myLongVar2 = 0
-	print(&msg,integer)
+	consoleWrite(&msg,integer)
 	return
 }

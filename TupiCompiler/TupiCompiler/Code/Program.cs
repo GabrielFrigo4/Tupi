@@ -55,7 +55,8 @@ internal static class Program
         startInfo.CreateNoWindow = !assembler_warning;
         startInfo.WindowStyle = ProcessWindowStyle.Hidden;
         startInfo.FileName = "cmd.exe";
-        startInfo.Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" && ml64 main.asm /link /subsystem:console /defaultlib:kernel32.lib /defaultlib:{libDir}\\TupiLib.lib";
+        startInfo.Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" &&";
+        startInfo.Arguments += $" ml64 main.asm /link /subsystem:console /defaultlib:{libDir}\\TupiLib.lib";
         if (run)
         {
             startInfo.Arguments += " && main";
@@ -223,7 +224,8 @@ internal static class Program
                     currentStruct.Vars.Add(new VarData(terms[1], terms[0], @struct.Size));
                     currentStruct.Size += @struct.Size;
                 }
-                else if(isInsideStruct == false)
+
+                if(isInsideStruct == false)
                 {
                     structCode += $"{currentStruct.Name} ends";
                     e.CodeData.Struct.Add(structCode);
@@ -258,7 +260,7 @@ internal static class Program
     {
         FuncData? currentFunc = null;
         string fnCode = string.Empty;
-        bool isInsideFunc = false, isInsideStruct = false;
+        bool isInsideFunc = false, isInsideStruct = false, isDefVarEnd = false;
         foreach (var line in e.Lines)
         {
             string[] terms = e.GetTermsLine(line);
@@ -266,17 +268,122 @@ internal static class Program
             if (!isInsideFunc)
             {
                 UpdateInsideFunc(terms, ref isInsideFunc);
-                if (terms.Length < 2 || isInsideFunc || isInsideStruct) continue;
+                if (terms.Length < 2 || isInsideStruct) continue;
                 if (terms[0] == "fn")
                 {
+                    string funcArguments = line[(line.IndexOf('(')+1)..line.IndexOf(')')];
+                    string[] args = funcArguments.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
                     currentFunc = new FuncData(terms[1].Remove(terms[1].IndexOf('(')));
                     e.RunData.Funcs.Add(currentFunc);
                     fnCode += $"{currentFunc.Name} proc\n";
+                    for (int a = 0; a < args.Length; a++)
+                    {
+                        string arg = args[a];
+                        string[] argWords = arg.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (argWords.Length < 2) continue;
+                        string type = argWords[0];
+                        string name = argWords[1];
+
+                        int _pos1 = Array.IndexOf(e.ReadOnlyData.TupiTypes, type);
+                        string val = e.ReadOnlyData.RegistorsAll[_pos1][a];
+
+                        int _pos2 = Array.IndexOf(e.ReadOnlyData.TupiTypes, type);
+                        fnCode += $"\tlocal {name}: {e.ReadOnlyData.AsmTypes[_pos2]}\n";
+                        VarData varData = new VarData(name, type, e.ReadOnlyData.TupiTypeSize[_pos2], $"\tmov {name}, {val}\n");
+                        currentFunc.Args.Add(varData);
+                        currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, e.ReadOnlyData.TupiTypeSize[_pos2]);
+                    }
                 }
             }
             else if(currentFunc is not null)
             {
                 UpdateInsideFunc(terms, ref isInsideFunc);
+
+                bool contains = false;
+                if (!isDefVarEnd)
+                {
+                    foreach (var types in e.ReadOnlyData.TupiTypes)
+                    {
+                        if (terms.Contains(types))
+                        {
+                            contains = true;
+                            break;
+                        }
+                    }
+                    foreach (var structType in e.RunData.Structs.Select((StructData data) => data.Name))
+                    {
+                        if (terms.Contains(structType))
+                        {
+                            contains = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (contains && !isDefVarEnd)
+                {
+                    VarData varData;
+
+                    if (terms.Length > 3)
+                    {
+                        if (e.RunData.GetStructByName(terms[0]) is StructData structData)
+                        {
+                            fnCode += $"\tlocal {terms[1]}: {terms[0]}";
+                            varData = new VarData(terms[1], terms[0], structData.Size, $"\tmov {terms[1]}, {terms[3]}\n");
+                        }
+                        else
+                        {
+                            int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
+                            fnCode += $"\tlocal {terms[1]}: {e.ReadOnlyData.AsmTypes[pos]}\n";
+                            varData = new VarData(terms[1], terms[0], e.ReadOnlyData.TupiTypeSize[pos], $"\tmov {terms[1]}, {terms[3]}\n");
+                        }
+                    }
+                    else
+                    {
+                        if (e.RunData.GetStructByName(terms[0]) is StructData structData)
+                        {
+                            fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
+                            varData = new VarData(terms[1], terms[0], structData.Size);
+                        }
+                        else
+                        {
+                            int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
+                            fnCode += $"\tlocal {terms[1]}: {e.ReadOnlyData.AsmTypes[pos]}\n";
+                            varData = new VarData(terms[1], terms[0], e.ReadOnlyData.TupiTypeSize[pos]);
+                        }
+                    }
+
+                    currentFunc.LocalVars.Add(varData);
+                    currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
+                }
+                else if(!isDefVarEnd)
+                {
+                    isDefVarEnd = true;
+                    foreach (string _line in currentFunc.Args.Select((VarData var) => var.Def))
+                    {
+                        if(_line != string.Empty)
+                            fnCode += _line;
+                    }
+                    foreach (string _line in currentFunc.LocalVars.Select((VarData var) => var.Def))
+                    {
+                        if (_line != string.Empty)
+                            fnCode += _line;
+                    }
+
+                    fnCode += "\tpush rdi\n";
+                    fnCode += $"\tsub rsp, {CorrectShadowSpaceFunc(currentFunc.ShadowSpace)}\t;Reserve the shadow space\n";
+                    fnCode += "\tmov rdi, rsp\n";
+                }
+               
+                if (!isInsideFunc)
+                {
+                    fnCode += $"{currentFunc.Name} endp";
+                    e.CodeData.Func.Add(fnCode);
+                    fnCode = string.Empty;
+                    isInsideFunc = isInsideStruct = isDefVarEnd = false;
+                    currentFunc = null;
+                }
             }
         }
     }
@@ -720,12 +827,6 @@ internal static class Program
         {
             isInsideStruct = false;
         }
-    }
-
-    private static bool GetIfWordExist(string word, string line)
-    {
-        bool wordExist = false;
-        return wordExist;
     }
 
     private static int CorrectShadowSpaceFunc(int shadowSpace)

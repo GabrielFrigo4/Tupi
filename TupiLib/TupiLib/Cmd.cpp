@@ -2,10 +2,10 @@
 #include "framework.h"
 #include "stdio.h"
 
-extern "C" int print(const char* format, ...) {
+extern "C" int consoleWrite(const char* format, ...) {
 	return printf(format);
 }
 
-extern "C" int input(const char* format, ...) {
+extern "C" int consoleRead(const char* format, ...) {
 	return scanf_s(format);
 }
