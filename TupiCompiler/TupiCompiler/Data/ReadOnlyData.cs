@@ -16,10 +16,10 @@ internal class ReadOnlyData
 
     public ReadOnlyData()
     {
-        Registors8i = new string[] { "cl", "dl", "r8b", "r9b" };
-        Registors16i = new string[] { "cx", "dx", "r8w", "r9w" };
-        Registors32i = new string[] { "ecx", "edx", "r8d", "r9d" };
-        Registors64i = new string[] { "rcx", "rdx", "r8", "r9" };
+        Registors8i = new string[] { "cl", "dl", "r8b", "r9b", "bl" };
+        Registors16i = new string[] { "cx", "dx", "r8w", "r9w", "bx" };
+        Registors32i = new string[] { "ecx", "edx", "r8d", "r9d", "ebx" };
+        Registors64i = new string[] { "rcx", "rdx", "r8", "r9", "rbx" };
         RegistorsRealX = new string[] { "xmm0", "xmm1", "xmm2", "xmm3" };
         RegistorsRealY = new string[] { "ymm0", "ymm1", "ymm2", "ymm3" };
         RegistorsAll = new string[][] { Registors8i, Registors16i, Registors32i, Registors64i };

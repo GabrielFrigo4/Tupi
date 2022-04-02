@@ -31,7 +31,7 @@ internal class Compiler
         PreCompilerArgs preCompilerArgs = new PreCompilerArgs(code);
         PreCompilerEvent?.Invoke(this, preCompilerArgs);
 
-        var codeLines = preCompilerArgs.Code.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        var codeLines = preCompilerArgs.Code.Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
         return codeLines;
     }
 

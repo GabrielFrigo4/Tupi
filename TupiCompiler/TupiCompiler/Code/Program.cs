@@ -386,42 +386,42 @@ internal static class Program
                     string _param = terms[0].Substring(terms[0].IndexOf('(') + 1, terms[0].IndexOf(')') - terms[0].IndexOf('(') - 1);
                     string[] param = _param.Split(new char[] { ',', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
                     string[] comand = new string[param.Length];
-                    string[] registors_type = new string[param.Length];
+                    string[] registorsType = new string[param.Length];
 
                     for (int i = 0; i < param.Length; i++)
                     {
-                        string var_name = param[i];
-                        if (var_name.ToCharArray()[0] == '&')
+                        string varName = param[i];
+                        if (varName.ToCharArray()[0] == '&')
                         {
                             comand[i] = "lea";
-                            var_name = var_name.Remove(0, 1);
-                            param[i] = var_name;
-                            registors_type[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                            varName = varName.Remove(0, 1);
+                            param[i] = varName;
+                            registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
                         }
                         else
                         {
                             comand[i] = "mov";
 
                             string this_func_name = currentFunc.Name;
-                            if (currentFunc.LocalVars.Select((VarData var) => var.Name).Contains(var_name))
+                            if (currentFunc.LocalVars.Select((VarData var) => var.Name).Contains(varName))
                             {
                                 string var_type = string.Empty;
-                                if (currentFunc.GetLocalVarByName(var_name) is VarData var_data)
+                                if (currentFunc.GetLocalVarByName(varName) is VarData var_data)
                                 {
                                     var_type = var_data.Type;
                                 }
                                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, var_type);
-                                registors_type[i] = e.ReadOnlyData.RegistorsAll[pos][i];
+                                registorsType[i] = e.ReadOnlyData.RegistorsAll[pos][i];
                             }
-                            else if (e.RunData.GlobalVars.ContainsKey(var_name))
+                            else if (e.RunData.GlobalVars.ContainsKey(varName))
                             {
-                                string var_type = e.RunData.GlobalVars[var_name].Type;
+                                string var_type = e.RunData.GlobalVars[varName].Type;
                                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, var_type);
-                                registors_type[i] = e.ReadOnlyData.RegistorsAll[pos][i];
+                                registorsType[i] = e.ReadOnlyData.RegistorsAll[pos][i];
                             }
                             else
                             {
-                                registors_type[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                                registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
                             }
                         }
                     }
@@ -432,19 +432,28 @@ internal static class Program
                     }
                     else if (param.Length == 1)
                     {
-                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registors_type[0]}, {param[0]}\n\tcall {func_name}") + "\n";
+                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\tcall {func_name}") + "\n";
                     }
                     else if (param.Length == 2)
                     {
-                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registors_type[0]}, {param[0]}\n\t{comand[1]} {registors_type[1]}, {param[1]}\n\tcall {func_name}") + "\n";
+                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\tcall {func_name}") + "\n";
                     }
                     else if (param.Length == 3)
                     {
-                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registors_type[0]}, {param[0]}\n\t{comand[1]} {registors_type[1]}, {param[1]}\n\t{comand[2]} {registors_type[2]}, {param[2]}\n\tcall {func_name}") + "\n";
+                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\tcall {func_name}") + "\n";
                     }
-                    else if (param.Length == 3)
+                    else if (param.Length == 4)
                     {
-                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registors_type[0]}, {param[0]}\n\t{comand[1]} {registors_type[1]}, {param[1]}\n\t{comand[2]} {registors_type[2]}, {param[2]}\n\t{comand[3]} {registors_type[3]}, {param[3]}\n\tcall {func_name}") + "\n";
+                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\t{comand[3]} {registorsType[3]}, {param[3]}\n\tcall {func_name}") + "\n";
+                    }
+                    else if (param.Length > 4)
+                    {
+                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\t{comand[3]} {registorsType[3]}, {param[3]}\n\tcall {func_name}") + "\n";
+                        for (int i = param.Length - 4; i > 0; i--)
+                        {
+                            fnCode += $"\t{comand[i + 3]} {registorsType[i + 3]}, {param[i + 3]}\n";
+                            fnCode += $"\tpush {registorsType[i + 3]}\n";
+                        }
                     }
                     fnCode += "\txor rax, rax\n";
                 }
@@ -458,7 +467,7 @@ internal static class Program
                 }
                 else if (terms[0] == "return" && terms.Length > 1)
                 {
-                    fnCode += (line.Replace($"{terms[0]} ", "mov rax, ")+"\n").Replace("\r","");
+                    fnCode += line.Replace($"{terms[0]} ", "mov rax, ") + "\n";
                     fnCode += $"\tadd rsp, {CorrectShadowSpaceFunc(currentFunc.ShadowSpace)}\t;Remove shadow space\n";
                     fnCode += "\tpop rdi\n";
                     fnCode += "\tret\n";
