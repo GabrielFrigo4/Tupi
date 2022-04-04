@@ -419,9 +419,13 @@ internal static class Program
                                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, var_type);
                                 registorsType[i] = e.ReadOnlyData.RegistorsAll[pos][i];
                             }
-                            else
+                            else if(i < 4)
                             {
                                 registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                            }
+                            else
+                            {
+                                registorsType[i] = "rbx";
                             }
                         }
                     }
@@ -448,12 +452,13 @@ internal static class Program
                     }
                     else if (param.Length > 4)
                     {
-                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\t{comand[3]} {registorsType[3]}, {param[3]}\n\tcall {func_name}") + "\n";
+                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\t{comand[3]} {registorsType[3]}, {param[3]}") + "\n";
                         for (int i = param.Length - 4; i > 0; i--)
                         {
                             fnCode += $"\t{comand[i + 3]} {registorsType[i + 3]}, {param[i + 3]}\n";
                             fnCode += $"\tpush {registorsType[i + 3]}\n";
                         }
+                        fnCode += $"\tcall {func_name}\n";
                     }
                     fnCode += "\txor rax, rax\n";
                 }
