@@ -423,10 +423,6 @@ internal static class Program
                             {
                                 registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
                             }
-                            else
-                            {
-                                registorsType[i] = "rbx";
-                            }
                         }
                     }
 
@@ -453,10 +449,9 @@ internal static class Program
                     else if (param.Length > 4)
                     {
                         fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\t{comand[3]} {registorsType[3]}, {param[3]}") + "\n";
-                        for (int i = param.Length - 4; i > 0; i--)
+                        for (int i = 4; i < param.Length; i++)
                         {
-                            fnCode += $"\t{comand[i + 3]} {registorsType[i + 3]}, {param[i + 3]}\n";
-                            fnCode += $"\tpush {registorsType[i + 3]}\n";
+                            fnCode += $"\t{comand[i]} {e.ReadOnlyData.AsmTypes[3]} ptr [rsp+{i*8}], {param[i]}\n";
                         }
                         fnCode += $"\tcall {func_name}\n";
                     }
