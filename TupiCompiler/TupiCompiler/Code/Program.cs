@@ -387,6 +387,9 @@ internal static class Program
                     string[] param = _param.Split(new char[] { ',', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
                     string[] comand = new string[param.Length];
                     string[] registorsType = new string[param.Length];
+                    string[] varType = Array.Empty<string>();
+                    if(param.Length > 4)
+                        varType = new string[param.Length-4];
 
                     for (int i = 0; i < param.Length; i++)
                     {
@@ -411,17 +414,38 @@ internal static class Program
                                     var_type = var_data.Type;
                                 }
                                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, var_type);
-                                registorsType[i] = e.ReadOnlyData.RegistorsAll[pos][i];
+                                if (i < 5)
+                                {
+                                    registorsType[i] = e.ReadOnlyData.RegistorsAll[pos][i];
+                                }
+                                else
+                                {
+                                    varType[i - 4] = e.ReadOnlyData.AsmTypes[pos];
+                                    registorsType[i] = e.ReadOnlyData.RegistorsB[pos];
+                                }
                             }
                             else if (e.RunData.GlobalVars.ContainsKey(varName))
                             {
                                 string var_type = e.RunData.GlobalVars[varName].Type;
                                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, var_type);
-                                registorsType[i] = e.ReadOnlyData.RegistorsAll[pos][i];
+                                if (i < 5)
+                                {
+                                    registorsType[i] = e.ReadOnlyData.RegistorsAll[pos][i];
+                                }
+                                else
+                                {
+                                    varType[i-4] = e.ReadOnlyData.AsmTypes[pos];
+                                    registorsType[i] = e.ReadOnlyData.RegistorsB[pos];
+                                }
                             }
                             else if(i < 4)
                             {
                                 registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                            }
+                            else
+                            {
+                                varType[i - 4] = e.ReadOnlyData.AsmTypes[3];
+                                registorsType[i] = e.ReadOnlyData.RegistorsB[3];
                             }
                         }
                     }
@@ -451,7 +475,8 @@ internal static class Program
                         fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\t{comand[3]} {registorsType[3]}, {param[3]}") + "\n";
                         for (int i = 4; i < param.Length; i++)
                         {
-                            fnCode += $"\t{comand[i]} {e.ReadOnlyData.AsmTypes[3]} ptr [rsp+{i*8}], {param[i]}\n";
+                            fnCode += $"\t{comand[i]} {registorsType[i]}, {param[i]}\n";
+                            fnCode += $"\tmov {varType[i-4]} ptr [rsp+{i*8}], {registorsType[i]}\n";
                         }
                         fnCode += $"\tcall {func_name}\n";
                     }

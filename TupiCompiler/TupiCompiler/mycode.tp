@@ -23,14 +23,14 @@ i64 myInt 120
 myStruct myStructTest {8, 8}
 
 fn main(iptr args){
-	i64 myLongVar1 = 0
-	i8 myShortVar1 = 0
-	i8 myShortVar2 = 0
-	i64 myLongVar2 = 0
-	i8 myShortVar3 = 0
+	i64 myLongVar1 = 10
+	i8 myShortVar1 = 11
+	i8 myShortVar2 = 12
+	i64 myLongVar2 = 13
+	i8 myShortVar3 = 14
 	myStruct myStructVar
 
-	printf(&msg6,1,2,3,4,5)
+	printf(&msg6,1,2,3,4,myShortVar3)
 	print_i64(myInt)
 	print_i64(myStructTest.mylong)
 	return 0

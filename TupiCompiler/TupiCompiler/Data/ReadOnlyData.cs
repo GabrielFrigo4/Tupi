@@ -8,6 +8,7 @@ internal class ReadOnlyData
     internal string[] Registors64i { get; private set; }
     internal string[] RegistorsRealX { get; private set; }
     internal string[] RegistorsRealY { get; private set; }
+    internal string[] RegistorsB { get; private set; }
     internal string[][] RegistorsAll { get; private set; }
     internal string[] AsmTypes { get; private set; }
     internal string[] DefAsmTypes { get; private set; }
@@ -22,6 +23,7 @@ internal class ReadOnlyData
         Registors64i = new string[] { "rcx", "rdx", "r8", "r9" };
         RegistorsRealX = new string[] { "xmm0", "xmm1", "xmm2", "xmm3" };
         RegistorsRealY = new string[] { "ymm0", "ymm1", "ymm2", "ymm3" };
+        RegistorsB = new string[] { "bl", "bx", "ebx", "rbx" };
         RegistorsAll = new string[][] { Registors8i, Registors16i, Registors32i, Registors64i };
         AsmTypes = new string[] { "byte", "word", "dword", "qword", "real4", "real8" };
         DefAsmTypes = new string[] { "db", "dw", "dd", "dq", "dd", "dq" };
