@@ -13,8 +13,8 @@ internal static class Program
         args[0] = "mycode.tp";
 
         Action<string> action = CompileTupi;
-        Argument<string> source = new Argument<string>("source", "source for tupi compile");
-        RootCommand cmd = new RootCommand()
+        Argument<string> source = new("source", "source for tupi compile");
+        RootCommand cmd = new()
         {
             source,
         };
