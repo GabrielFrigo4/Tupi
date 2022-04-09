@@ -31,6 +31,7 @@ internal static class Program
         compiler.PreCompilerEvent += PreCompileLines_Grammar;
         compiler.PreCompilerEvent += PreCompileLines_Comment;
         compiler.PreCompilerEvent += PreCompileLines_Macro;
+        compiler.PreCompilerEvent += PreCompileLines_Grammar;
 
         compiler.CompilerEvent += Compile_UseFn;
         compiler.CompilerEvent += Compile_Struct;
@@ -70,16 +71,37 @@ internal static class Program
     #region PreCompile
     static void PreCompileLines_Grammar(object? sender, PreCompilerArgs e)
     {
-        string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        for (int i = 0; i < lines.Length; i++)
+        bool isInsideStringOrMacro = IsInsideStringOrMacro(e.Code, e.Code.IndexOf("  "));
+        while (true)
         {
-            string line = lines[i];
-            if(line == "\r")
+            if (e.Code.Contains("  ") && !isInsideStringOrMacro)
             {
-                line = string.Empty;
+                e.Code = e.Code.Replace("  ", " ");
+                isInsideStringOrMacro = IsInsideStringOrMacro(e.Code, e.Code.IndexOf("  "));
             }
-            lines[i] = line;
+            else if (e.Code.Contains("\n\n"))
+            {
+                e.Code = e.Code.Replace("\n\n", "\n");
+            }
+            else if (e.Code.Contains("\n "))
+            {
+                e.Code = e.Code.Replace("\n ", "\n");
+            }
+            else if (e.Code.Contains('\t'))
+            {
+                e.Code = e.Code.Replace("\t", "");
+            }
+            else if (e.Code.Contains('\r'))
+            {
+                e.Code = e.Code.Replace("\r", "");
+            }
+            else
+            {
+                break;
+            }
         }
+
+        string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
         e.Code = string.Empty;
         for (int i = 0; i < lines.Length; i++)
@@ -91,6 +113,8 @@ internal static class Program
                 e.Code += line + "\n";
             }
         }
+
+        Console.WriteLine(e.Code);
     }
 
     static void PreCompileLines_Comment(object? sender, PreCompilerArgs e)
@@ -137,7 +161,7 @@ internal static class Program
                 line = line.Replace("#macro ", "");
                 string macro = line.Remove(line.IndexOf('\"') - 1);
                 line = line.Remove(0, line.IndexOf('\"'));
-                string comand = line[1..^2];
+                string comand = line[1..^1];
                 macros.Add(macro, comand);
                 lines[i] = string.Empty;
             }
@@ -513,6 +537,43 @@ internal static class Program
     #endregion
 
     #region Private Funcs
+    private static bool IsInsideStringOrMacro(string code, int pos)
+    {
+        int strLimPos = 0;
+        int strLimCount = 0;
+        while (strLimPos < pos)
+        {
+            if (code[strLimPos..pos].Contains('\''))
+            {
+                Console.WriteLine($"str {code[strLimPos..pos].IndexOf('\'')}");
+                strLimPos += code[strLimPos..pos].IndexOf('\'');
+                strLimCount++;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        int macroLimPos = 0;
+        int macroLimCount = 0;
+        //while (strLimPos < pos)
+        //{
+        //    if (code[macroLimPos..pos].Contains('"'))
+        //    {
+        //        Console.WriteLine($"macro {code[macroLimPos..pos].IndexOf('"')}");
+        //        macroLimPos += code[macroLimPos..pos].IndexOf('"');
+        //        macroLimCount++;
+        //    }
+        //    else
+        //    {
+        //        break;
+        //    }
+        //}
+
+        return (strLimCount % 2 == 1) || (macroLimCount % 2 == 1);
+    }
+
     private static void UpdateInsideFunc(string[] terms, ref bool isInsideFunc)
     {
         if (terms.Length == 0) return;
