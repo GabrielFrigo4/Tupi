@@ -72,46 +72,6 @@ internal static class Program
     #region PreCompile
     static void PreCompileLines_Grammar(object? sender, PreCompilerArgs e)
     {
-        //int startPos = 0;
-        //while (true)
-        //{
-        //    if (!IsInsideStringOrMacro(e.Code[startPos..], e.Code[startPos..].IndexOf("  "), ref startPos))
-        //    {
-        //        e.Code = e.Code.Replace("  ", " ");
-        //    }
-        //    else if (!IsInsideStringOrMacro(e.Code[startPos..], e.Code[startPos..].IndexOf("\n\n"), ref startPos))
-        //    {
-        //        e.Code = e.Code.Replace("\n\n", "\n");
-        //    }
-        //    else if (!IsInsideStringOrMacro(e.Code[startPos..], e.Code[startPos..].IndexOf("\n "), ref startPos))
-        //    {
-        //        e.Code = e.Code.Replace("\n ", "\n");
-        //    }
-        //    else if (!IsInsideStringOrMacro(e.Code[startPos..], e.Code[startPos..].IndexOf('\t'), ref startPos))
-        //    {
-        //        e.Code = e.Code.Replace("\t", "");
-        //    }
-        //    else if (!IsInsideStringOrMacro(e.Code[startPos..], e.Code[startPos..].IndexOf('\r'), ref startPos))
-        //    {
-        //        e.Code = e.Code.Replace("\r", "");
-        //    }
-        //    else
-        //    {
-        //        break;
-        //    }
-        //}
-
-        //while (true)
-        //{
-        //    if (!IsInsideStringOrMacro(e.Code[startPos..], e.Code[startPos..].IndexOf("  "), ref startPos))
-        //    {
-        //        e.Code = e.Code.Replace("  ", " ");
-        //    }
-        //    else 
-        //    {
-        //        break;
-        //    }
-        //}
         e.Code = e.Code.Replace("  ", " ");
         e.Code = e.Code.Replace("\n\n", "\n");
         e.Code = e.Code.Replace("\n ", "\n");
@@ -554,19 +514,14 @@ internal static class Program
     #endregion
 
     #region Private Funcs
-    private static bool IsInsideStringOrMacro(string code, int pos, ref int startPos)
+    private static bool IsInsideStringOrMacro(string code, int pos)
     {
         if(pos < 0) return true;
 
-        MatchCollection matchCollectionMacro = Regex.Matches(code[startPos..pos], "\"");
-        MatchCollection matchCollectionStr = Regex.Matches(code[startPos..pos], "\'");
+        MatchCollection matchCollectionMacro = Regex.Matches(code[..pos], "\"");
+        MatchCollection matchCollectionStr = Regex.Matches(code[..pos], "\'");
 
-        bool ret = (matchCollectionMacro.Count % 2 == 1) || (matchCollectionStr.Count % 2 == 1);
-        if(ret)
-            startPos += pos;
-
-        Console.WriteLine(ret);
-        return ret;
+        return (matchCollectionMacro.Count % 2 == 1) || (matchCollectionStr.Count % 2 == 1);
     }
 
     private static void UpdateInsideFunc(string[] terms, ref bool isInsideFunc)
