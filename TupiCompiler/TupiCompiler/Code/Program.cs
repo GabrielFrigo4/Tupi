@@ -32,7 +32,7 @@ internal static class Program
         compiler.PreCompilerEvent += PreCompileLines_Grammar;
         compiler.PreCompilerEvent += PreCompileLines_Comment;
         compiler.PreCompilerEvent += PreCompileLines_Macro;
-        compiler.PreCompilerEvent += PreCompileLines_Grammar;
+        compiler.PreCompilerEvent += PreCompileLines_Empty;
 
         compiler.CompilerEvent += Compile_UseFn;
         compiler.CompilerEvent += Compile_Struct;
@@ -72,26 +72,38 @@ internal static class Program
     #region PreCompile
     static void PreCompileLines_Grammar(object? sender, PreCompilerArgs e)
     {
-        e.Code = e.Code.Replace("  ", " ");
-        e.Code = e.Code.Replace("\n\n", "\n");
-        e.Code = e.Code.Replace("\n ", "\n");
-        e.Code = e.Code.Replace("\t", "");
-        e.Code = e.Code.Replace("\r", "");
-
-        string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-
-        e.Code = string.Empty;
-        for (int i = 0; i < lines.Length; i++)
+        int totalEdits = 0;
+        string codeStr = e.Code;
+        char[] codeChars = e.Code.ToCharArray();
+        for (int pos = 0; pos < e.Code.Length - 1; pos++)
         {
-            string line = lines[i];
-
-            if (line != string.Empty)
+            if (IsInsideString(e.Code, pos)) continue;
+            if(codeChars[pos] == ' ' && codeChars[pos+1] == ' ')
             {
-                e.Code += line + "\n";
+                int newPos = pos - totalEdits;
+                codeStr = codeStr.Remove(newPos, 1);
+                totalEdits++;
+            }
+            if (codeChars[pos] == '\n' && (codeChars[pos + 1] == '\n' || codeChars[pos + 1] == ' '))
+            {
+                int newPos = pos - totalEdits;
+                codeStr = codeStr.Remove(newPos, 1);
+                totalEdits++;
+            }
+            if (codeChars[pos] == '\t')
+            {
+                int newPos = pos - totalEdits;
+                codeStr = codeStr.Remove(newPos, 1);
+                totalEdits++;
+            }
+            if (codeChars[pos] == '\r')
+            {
+                int newPos = pos - totalEdits;
+                codeStr = codeStr.Remove(newPos, 1);
+                totalEdits++;
             }
         }
-
-        Console.WriteLine(e.Code);
+        e.Code = codeStr;
     }
 
     static void PreCompileLines_Comment(object? sender, PreCompilerArgs e)
@@ -127,7 +139,7 @@ internal static class Program
    
     static void PreCompileLines_Macro(object? sender, PreCompilerArgs e)
     {
-        Dictionary<string, string> macros = new Dictionary<string, string>();
+        Dictionary<string, string> macros = new();
         string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
         for(int i = 0; i < lines.Length; i++)
@@ -169,6 +181,27 @@ internal static class Program
                 lines[i + 1] = lines[i + 1].Replace("\r", "");
             }
         }
+    }
+
+    static void PreCompileLines_Empty(object? sender, PreCompilerArgs e)
+    {
+        string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+        e.Code = string.Empty;
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+            line = line.Replace("\t", "");
+            line = line.Replace("\r", "");
+            line = line.Replace(" ", "");
+
+            if (line != string.Empty)
+            {
+                e.Code += lines[i] + "\n";
+            }
+        }
+
+        Console.WriteLine(e.Code);
     }
     #endregion
 
@@ -514,14 +547,12 @@ internal static class Program
     #endregion
 
     #region Private Funcs
-    private static bool IsInsideStringOrMacro(string code, int pos)
+    private static bool IsInsideString(string code, int pos)
     {
         if(pos < 0) return true;
 
-        MatchCollection matchCollectionMacro = Regex.Matches(code[..pos], "\"");
         MatchCollection matchCollectionStr = Regex.Matches(code[..pos], "\'");
-
-        return (matchCollectionMacro.Count % 2 == 1) || (matchCollectionStr.Count % 2 == 1);
+        return matchCollectionStr.Count % 2 == 1;
     }
 
     private static void UpdateInsideFunc(string[] terms, ref bool isInsideFunc)
