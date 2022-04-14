@@ -358,19 +358,22 @@ internal static class Program
                 if (contains && !isDefVarEnd)
                 {
                     VarData varData;
-
                     if (terms.Length > 3)
                     {
                         if (e.RunData.GetStructByName(terms[0]) is StructData structData)
                         {
                             fnCode += $"\tlocal {terms[1]}: {terms[0]}";
                             varData = new VarData(terms[1], terms[0], structData.Size, $"\tmov {terms[1]}, {terms[3]}\n");
+                            currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
+                            //foreach(var var in structData.Vars)
+                            //    currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, var.Size);
                         }
                         else
                         {
                             int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
                             fnCode += $"\tlocal {terms[1]}: {e.ReadOnlyData.AsmTypes[pos]}\n";
                             varData = new VarData(terms[1], terms[0], e.ReadOnlyData.TupiTypeSize[pos], $"\tmov {terms[1]}, {terms[3]}\n");
+                            currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
                         }
                     }
                     else
@@ -379,17 +382,19 @@ internal static class Program
                         {
                             fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
                             varData = new VarData(terms[1], terms[0], structData.Size);
+                            currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
+                            //foreach(var var in structData.Vars)
+                            //    currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, var.Size);
                         }
                         else
                         {
                             int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
                             fnCode += $"\tlocal {terms[1]}: {e.ReadOnlyData.AsmTypes[pos]}\n";
                             varData = new VarData(terms[1], terms[0], e.ReadOnlyData.TupiTypeSize[pos]);
+                            currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
                         }
                     }
-
                     currentFunc.LocalVars.Add(varData);
-                    currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
                 }
                 //def vars(local and args)
                 else if(!isDefVarEnd)
@@ -524,7 +529,7 @@ internal static class Program
                 //goto
                 if (terms[0] == "goto" && terms.Length == 2)
                 {
-                    fnCode += $"jmp {terms[1]}\n";
+                    fnCode += $"\tjmp {terms[1]}\n";
                 }
 
                 //return
@@ -598,9 +603,7 @@ internal static class Program
         int result = shadowSpace;
         int rest = result % 8;
         if (rest == 0) return result + 8;
-
-        result += 16 - rest;
-        return result;
+        else return result + 16 - rest;
     }
 
     private static int AddShadowSpaceFunc(int shadowSpace, int varSize)

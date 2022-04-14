@@ -1,6 +1,6 @@
 ﻿#macro iptr "i64"
 
-usefn printf
+usefn consoleWrite
 
 struct myStruct{
 	i8 myByte ?
@@ -8,41 +8,35 @@ struct myStruct{
 }
 
 i8 msg1 'myInt is %d', 10, 0
+i8 msgLoop 'myInt in loop is %d', 10, 0
 i8 msg6 'myInts is %d %d %d %d %d', 10, 0
 i64 myInt 120
 myStruct myStructTest {8, 8}
 
 fn main(iptr args){
-	//iptr msgPtr
 	i64 myLongVar1 = 10
 	i8 myShortVar1 = 11
 	i8 myShortVar2 = 12
 	i64 myLongVar2 = 13
 	i8 myShortVar3 = 14
-	i64 myLoopInt = 0
 	myStruct myStructVar
 
-	printf(&msg6,1,2,3,4,myShortVar3)
+	consoleWrite(&msg6,1,2,3,4,myShortVar3)
 	print_i64(myInt)
-	//myInt=0
 	print_i64(myInt)
-	//myInt++
 	print_i64(myInt)
-	//myInt+=10
 	print_i64(myInt)
-	//myInt--
 	print_i64(myInt)
-	//myInt-=10
 	print_i64(myInt)
 	print_i64(myStructTest.mylong)
 
-	//mark myLoop
-	print_i64(myLoopInt)
-	//goto myLoop
+	mark myLoop
+	consoleWrite(&msgLoop,0)
+	goto myLoop
 	return 0
 }
 
 fn print_i64(i64 integer){
-	printf(&msg1,integer)
+	consoleWrite(&msg1,integer)
 	return
 }
