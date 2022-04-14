@@ -200,8 +200,6 @@ internal static class Program
                 e.Code += lines[i] + "\n";
             }
         }
-
-        Console.WriteLine(e.Code);
     }
     #endregion
 
@@ -490,23 +488,23 @@ internal static class Program
                     }
                     else if (param.Length == 1)
                     {
-                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\tcall {func_name}") + "\n";
+                        fnCode += line.Replace($"{terms[0]}", $"\t{comand[0]} {registorsType[0]}, {param[0]}\n\tcall {func_name}") + "\n";
                     }
                     else if (param.Length == 2)
                     {
-                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\tcall {func_name}") + "\n";
+                        fnCode += line.Replace($"{terms[0]}", $"\t{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\tcall {func_name}") + "\n";
                     }
                     else if (param.Length == 3)
                     {
-                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\tcall {func_name}") + "\n";
+                        fnCode += line.Replace($"{terms[0]}", $"\t{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\tcall {func_name}") + "\n";
                     }
                     else if (param.Length == 4)
                     {
-                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\t{comand[3]} {registorsType[3]}, {param[3]}\n\tcall {func_name}") + "\n";
+                        fnCode += line.Replace($"{terms[0]}", $"\t{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\t{comand[3]} {registorsType[3]}, {param[3]}\n\tcall {func_name}") + "\n";
                     }
                     else if (param.Length > 4)
                     {
-                        fnCode += line.Replace($"{terms[0]}", $"{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\t{comand[3]} {registorsType[3]}, {param[3]}") + "\n";
+                        fnCode += line.Replace($"{terms[0]}", $"\t{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\t{comand[3]} {registorsType[3]}, {param[3]}") + "\n";
                         for (int i = 4; i < param.Length; i++)
                         {
                             fnCode += $"\t{comand[i]} {registorsType[i]}, {param[i]}\n";
@@ -515,6 +513,18 @@ internal static class Program
                         fnCode += $"\tcall {func_name}\n";
                     }
                     fnCode += "\txor rax, rax\n";
+                }
+
+                //mark
+                if (terms[0] == "mark" && terms.Length == 2)
+                {
+                    fnCode += $"{terms[1]}:\n";
+                }
+
+                //goto
+                if (terms[0] == "goto" && terms.Length == 2)
+                {
+                    fnCode += $"jmp {terms[1]}\n";
                 }
 
                 //return
@@ -526,7 +536,7 @@ internal static class Program
                 }
                 else if (terms[0] == "return" && terms.Length > 1)
                 {
-                    fnCode += line.Replace($"{terms[0]} ", "mov rax, ") + "\n";
+                    fnCode += line.Replace($"{terms[0]} ", "\tmov rax, ") + "\n";
                     fnCode += $"\tadd rsp, {CorrectShadowSpaceFunc(currentFunc.ShadowSpace)}\t;Remove shadow space\n";
                     fnCode += "\tpop rdi\n";
                     fnCode += "\tret\n";

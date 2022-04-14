@@ -45,15 +45,13 @@ fn main(iptr args){
 	print_i64(myInt)
 	print_i64(myStructTest.mylong)
 
-	mark myLoop
+	//mark myLoop
 	print_i64(myLoopInt)
-	goto myLoop
+	//goto myLoop
 	return 0
 }
 
 fn print_i64(i64 integer){
-	i64 myLongVar1 = 0
-	i64 myLongVar2 = 0
 	consoleWrite(&msg1,integer)
 	return
 }
