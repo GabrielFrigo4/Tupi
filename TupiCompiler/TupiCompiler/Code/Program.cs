@@ -364,16 +364,12 @@ internal static class Program
                         {
                             fnCode += $"\tlocal {terms[1]}: {terms[0]}";
                             varData = new VarData(terms[1], terms[0], structData.Size, $"\tmov {terms[1]}, {terms[3]}\n");
-                            currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
-                            //foreach(var var in structData.Vars)
-                            //    currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, var.Size);
                         }
                         else
                         {
                             int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
                             fnCode += $"\tlocal {terms[1]}: {e.ReadOnlyData.AsmTypes[pos]}\n";
                             varData = new VarData(terms[1], terms[0], e.ReadOnlyData.TupiTypeSize[pos], $"\tmov {terms[1]}, {terms[3]}\n");
-                            currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
                         }
                     }
                     else
@@ -382,18 +378,15 @@ internal static class Program
                         {
                             fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
                             varData = new VarData(terms[1], terms[0], structData.Size);
-                            currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
-                            //foreach(var var in structData.Vars)
-                            //    currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, var.Size);
                         }
                         else
                         {
                             int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
                             fnCode += $"\tlocal {terms[1]}: {e.ReadOnlyData.AsmTypes[pos]}\n";
                             varData = new VarData(terms[1], terms[0], e.ReadOnlyData.TupiTypeSize[pos]);
-                            currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
                         }
                     }
+                    currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
                     currentFunc.LocalVars.Add(varData);
                 }
                 //def vars(local and args)
@@ -600,25 +593,31 @@ internal static class Program
     {
         if (shadowSpace == 32) return 32;
 
-        int result = shadowSpace;
-        int rest = result % 8;
-        if (rest == 0) return result + 8;
-        else return result + 16 - rest;
+        int rest = shadowSpace % 8;
+        if (rest == 0) return shadowSpace + 8;
+        else return shadowSpace + 16 - rest;
     }
 
     private static int AddShadowSpaceFunc(int shadowSpace, int varSize)
     {
-        int result = shadowSpace;
-        double firsDiv = Math.Floor(shadowSpace / 8f);
-        double secondDiv = Math.Floor((shadowSpace + varSize) / 8f);
-        if (firsDiv == secondDiv) return result + varSize;
+        int alpha = (int)Math.Ceiling(varSize / 8f)*8;
+        if (Math.Floor(shadowSpace / 8f) ==
+            Math.Floor((shadowSpace + varSize) / 8f))
+            return shadowSpace + varSize;
 
-        int rest = shadowSpace % 8;
-        if (rest == 0) return result + varSize;
-
-        result += 8 - rest;
-        result += varSize;
-        return result;
+        if (alpha != 8)
+        {
+            shadowSpace += 8;
+        }
+        int rest = shadowSpace % alpha;
+        if (rest == 0) return shadowSpace + varSize;
+        shadowSpace += alpha - rest;
+        shadowSpace += varSize;
+        if (alpha != 8)
+        {
+            shadowSpace -= 8;
+        }
+        return shadowSpace;
     }
     #endregion
 }
