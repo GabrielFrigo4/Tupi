@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "framework.h"
 #include "mem.h"
+extern "C" double floor(double x);
+extern "C" double abs(double x);
 
 extern "C" BOOL consoleWrite(const VOID * lpBuffer, DWORD nNumberOfCharsToWrite, LPDWORD lpNumberOfCharsWritten) {
     HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -16,54 +18,49 @@ extern "C" BOOL consoleWriteStr(const char* str) {
     return consoleWrite(str, length, NULL);
 }
 
-extern "C" BOOL consoleWriteInt(long long int number) {
+BOOL consoleWriteInt(long long int number) {
     bool isNegative = false;
     char* strInt = (char*)createMem(1);
-    char* strSignIntIvert = (char*)createMem(1);
-    DWORD length = 0;
+    char* strSignIntIvert = (char*)createMem(2);
+    DWORD length = 1;
+
+    //end of string
+    if (strSignIntIvert != NULL) {
+        strSignIntIvert[0] = '\0';
+    }
+
+    //sign
     if (number < 0) {
         if (strInt != NULL) {
             strInt[0] = '-';
         }
         number *= -1;
         isNegative = true;
-        if (strSignIntIvert != NULL) {
-            char* strInt2 = (char*)recreateMem(strSignIntIvert, length + 1);
-            strSignIntIvert = strInt2;
-        }
     }
 
+    //body number
     if (number == 0) {
-        if (strSignIntIvert != NULL) {
-            strSignIntIvert[length] = '0';
-        }
-        number /= 10;
         length++;
+        char* strInt2 = (char*)recreateMem(strSignIntIvert, static_cast<size_t>(length));
+        strSignIntIvert = strInt2;
         if (strSignIntIvert != NULL) {
-            char* strInt2 = (char*)recreateMem(strSignIntIvert, length + 1);
-            strSignIntIvert = strInt2;
+            strSignIntIvert[length - 1] = '0';
         }
     }
     else {
         while (number > 0)
         {
+            length++;
+            char* strInt2 = (char*)recreateMem(strSignIntIvert, static_cast<size_t>(length));
+            strSignIntIvert = strInt2;
             if (strSignIntIvert != NULL) {
-                strSignIntIvert[length] = (char)(number % 10 + '0');
+                strSignIntIvert[length - 1] = (char)(number % 10 + '0');
             }
             number /= 10;
-            length++;
-            if (strSignIntIvert != NULL) {
-                char* strInt2 = (char*)recreateMem(strSignIntIvert, length + 1);
-                strSignIntIvert = strInt2;
-            }
         }
     }
 
-    if (strSignIntIvert != NULL) {
-        strSignIntIvert[length] = '\0';
-    }
-    length++;
-    if (strSignIntIvert != NULL) {
+    if (strInt != NULL) {
         char* strInt2 = (char*)recreateMem(strInt, length + isNegative);
         strInt = strInt2;
     }
@@ -78,9 +75,102 @@ extern "C" BOOL consoleWriteInt(long long int number) {
         invertPos--;
     } while (invertPos > 0);
 
-    return consoleWrite(strInt, length, NULL);
+    BOOL returnVal = consoleWrite(strInt, length, NULL);
+    deleteMem(strInt);
+    deleteMem(strSignIntIvert);
+    return returnVal;
 }
 
-//extern "C" int consoleRead(const char* format, ...) {
-//	return scanf_s(format);
-//}
+BOOL consoleWriteFloat(double number) {
+    long long int IntPart = floor(abs(number));
+    double DecimalPart = abs(number) - IntPart;
+    bool isNegative = false;
+    char* strFloat = (char*)createMem(1);
+    char* strSignFloatIvert = (char*)createMem(1);
+    DWORD length = 0;
+
+    //sign
+    if (number < 0) {
+        if (strFloat != NULL) {
+            strFloat[0] = '-';
+        }
+        number *= -1;
+        isNegative = true;
+    }
+
+    //integer part
+    if (IntPart == 0) {
+        length++;
+        char* strFloar2 = (char*)recreateMem(strSignFloatIvert, static_cast<size_t>(length));
+        strSignFloatIvert = strFloar2;
+        if (strSignFloatIvert != NULL) {
+            strSignFloatIvert[length - 1] = '0';
+        }
+    }
+    else {
+        while (IntPart > 0)
+        {
+            length++;
+            char* strFloar2 = (char*)recreateMem(strSignFloatIvert, static_cast<size_t>(length));
+            strSignFloatIvert = strFloar2;
+            if (strSignFloatIvert != NULL) {
+                strSignFloatIvert[length - 1] = (char)(IntPart % 10 + '0');
+            }
+            IntPart /= 10;
+        }
+    }
+
+    if (strFloat != NULL) {
+        char* strFloat2 = (char*)recreateMem(strFloat, static_cast<size_t>(length) + isNegative);
+        strFloat = strFloat2;
+    }
+
+    int invertPos = length;
+    length += isNegative;
+    do
+    {
+        if (strFloat != NULL && strSignFloatIvert != NULL) {
+            strFloat[length - invertPos] = strSignFloatIvert[invertPos - 1];
+        }
+        invertPos--;
+    } while (invertPos > 0);
+
+    //decimal part
+    if (DecimalPart > 0) {
+        length++;
+        if (strFloat != NULL) {
+            char* strFloat2 = (char*)recreateMem(strFloat, length);
+            strFloat = strFloat2;
+        }
+        if (strFloat != NULL) {
+            strFloat[length - 1] = '.';
+        }
+    }
+    while (DecimalPart > 0)
+    {
+        int numb = floor(DecimalPart * 10);
+        DecimalPart = DecimalPart * 10 - numb;
+        length++;
+        if (strFloat != NULL) {
+            char* strFloat2 = (char*)recreateMem(strFloat, length);
+            strFloat = strFloat2;
+        }
+        if (strFloat != NULL) {
+            strFloat[length - 1] = (char)(numb + '0');
+        }
+    }
+
+    //end of string
+    if (strFloat != NULL) {
+        char* strFloat2 = (char*)recreateMem(strFloat, static_cast<size_t>(length) + 1);
+        strFloat = strFloat2;
+    }
+    if (strFloat != NULL) {
+        strFloat[length] = '\0';
+    }
+
+    BOOL returnVal = consoleWrite(strFloat, length, NULL);
+    deleteMem(strFloat);
+    deleteMem(strSignFloatIvert);
+    return returnVal;
+}
