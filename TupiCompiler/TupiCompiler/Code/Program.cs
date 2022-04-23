@@ -78,7 +78,21 @@ internal static class Program
         for (int pos = 0; pos < e.Code.Length - 1; pos++)
         {
             if (IsInsideString(e.Code, pos)) continue;
-            if(codeChars[pos] == ' ' && codeChars[pos+1] == ' ')
+            if (codeChars[pos] == '\t')
+            {
+                int newPos = pos - totalEdits;
+                codeStr = codeStr.Remove(newPos, 1);
+                totalEdits++;
+            }
+            if (codeChars[pos] == '\r')
+            {
+                int newPos = pos - totalEdits;
+                codeStr = codeStr.Remove(newPos, 1);
+                totalEdits++;
+            }
+
+            if (pos == e.Code.Length - 1) break;
+            if (codeChars[pos] == ' ' && codeChars[pos + 1] == ' ')
             {
                 int newPos = pos - totalEdits;
                 codeStr = codeStr.Remove(newPos, 1);
@@ -90,16 +104,10 @@ internal static class Program
                 codeStr = codeStr.Remove(newPos, 1);
                 totalEdits++;
             }
-            if (codeChars[pos] == '\t')
+            if (codeChars[pos] == ';' && codeChars[pos + 1] == '\n')
             {
                 int newPos = pos - totalEdits;
-                codeStr = codeStr.Remove(newPos, 1);
-                totalEdits++;
-            }
-            if (codeChars[pos] == '\r')
-            {
-                int newPos = pos - totalEdits;
-                codeStr = codeStr.Remove(newPos, 1);
+                codeStr = codeStr.Remove(newPos-1, 1);
                 totalEdits++;
             }
         }
