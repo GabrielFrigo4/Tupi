@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CmdStd.cpp" />
+    <ClCompile Include="Numb2Str.cpp" />
+    <ClCompile Include="Str2Numb.cpp" />
     <ClCompile Include="TupiLib_Teste.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
