@@ -29,8 +29,10 @@ internal static class Program
         Console.WriteLine("tranform tupi to assembly");
 
         compiler = new Compiler(pathTupi);
-        compiler.PreCompilerEvent += PreCompileLines_Grammar;
+        compiler.PreCompilerEvent += PreCompileLines_GrammarSub;
+        compiler.PreCompilerEvent += PreCompileLines_GrammarAdd;
         compiler.PreCompilerEvent += PreCompileLines_Comment;
+        compiler.PreCompilerEvent += PreCompileLines_String;
         compiler.PreCompilerEvent += PreCompileLines_Macro;
         compiler.PreCompilerEvent += PreCompileLines_Empty;
 
@@ -70,7 +72,7 @@ internal static class Program
     }
 
     #region PreCompile
-    static void PreCompileLines_Grammar(object? sender, PreCompilerArgs e)
+    static void PreCompileLines_GrammarSub(object? sender, PreCompilerArgs e)
     {
         int totalEdits = 0;
         string codeStr = e.Code;
@@ -83,12 +85,14 @@ internal static class Program
                 int newPos = pos - totalEdits;
                 codeStr = codeStr.Remove(newPos, 1);
                 totalEdits++;
+                continue;
             }
             if (codeChars[pos] == '\r')
             {
                 int newPos = pos - totalEdits;
                 codeStr = codeStr.Remove(newPos, 1);
                 totalEdits++;
+                continue;
             }
 
             if (pos == e.Code.Length - 1) break;
@@ -97,18 +101,60 @@ internal static class Program
                 int newPos = pos - totalEdits;
                 codeStr = codeStr.Remove(newPos, 1);
                 totalEdits++;
+                continue;
             }
             if (codeChars[pos] == '\n' && (codeChars[pos + 1] == '\n' || codeChars[pos + 1] == ' '))
             {
                 int newPos = pos - totalEdits;
                 codeStr = codeStr.Remove(newPos, 1);
                 totalEdits++;
+                continue;
             }
-            if (codeChars[pos] == ';' && codeChars[pos + 1] == '\n')
+            if (codeChars[pos] == ';' && (codeChars[pos + 1] == '\n' || codeChars[pos + 1] == '\r'))
             {
                 int newPos = pos - totalEdits;
-                codeStr = codeStr.Remove(newPos-1, 1);
+                codeStr = codeStr.Remove(newPos, 1);
                 totalEdits++;
+                continue;
+            }
+        }
+        e.Code = codeStr;
+    }
+
+    static void PreCompileLines_GrammarAdd(object? sender, PreCompilerArgs e)
+    {
+        int totalEdits = 0;
+        string codeStr = e.Code;
+        char[] codeChars = e.Code.ToCharArray();
+        for (int pos = 0; pos < e.Code.Length - 1; pos++)
+        {
+            if (IsInsideString(e.Code, pos)) continue;
+            if(codeChars.Length <= pos + 1) break;
+            if ((codeChars[pos] == '=') && (codeChars[pos+1] != ' '))
+            {
+                int newPos = pos + totalEdits;
+                codeStr = codeStr.Insert(newPos + 1, " ");
+                totalEdits++;
+                continue;
+            }
+
+            if (codeChars[pos] != ' ' && codeChars[pos] != '+' &&
+                codeChars[pos] != '-' && codeChars[pos + 1] == '=')
+            {
+                int newPos = pos + totalEdits;
+                codeStr = codeStr.Insert(newPos + 1, " ");
+                totalEdits++;
+                continue;
+            }
+
+            if (codeChars.Length <= pos + 2) break;
+            if (codeChars[pos] != ' ' && codeChars[pos + 2] == '=' && 
+                (codeChars[pos + 1] == '-' || codeChars[pos + 1] == '+'))
+            {
+                int newPos = pos + totalEdits;
+                codeStr = codeStr.Insert(newPos + 1, " ");
+                totalEdits++;
+                continue;
             }
         }
         e.Code = codeStr;
@@ -144,7 +190,18 @@ internal static class Program
             }
         }
     }
-   
+
+    static void PreCompileLines_String(object? sender, PreCompilerArgs e)
+    {
+        const byte newline = (byte)'\n';        //10
+        const byte tab = (byte)'\t';            //9
+        const byte backspace = (byte)'\b';      //8
+        const byte backslash = (byte)'\\';      //92
+        const byte nullChar = (byte)'\0';       //0
+        const byte singleQuotes = (byte)'\'';   //39
+        const byte doubleQuotes = (byte)'\"';    //34
+    }
+
     static void PreCompileLines_Macro(object? sender, PreCompilerArgs e)
     {
         Dictionary<string, string> macros = new();
@@ -519,6 +576,35 @@ internal static class Program
                         fnCode += $"\tcall {func_name}\n";
                     }
                     fnCode += "\txor rax, rax\n";
+                }
+
+                //operator
+                if(terms.Length == 2)
+                {
+                    switch (terms[1])
+                    {
+                        case "++":
+                            fnCode += $"\tinc {terms[0]}\n";
+                            break;
+                        case "--":
+                            fnCode += $"\tdec {terms[0]}\n";
+                            break;
+                    }
+                }
+                else if (terms.Length == 3)
+                {
+                    switch (terms[1])
+                    {
+                        case "+=":
+                            fnCode += $"\tadd {terms[0]}, {terms[2]}\n";
+                            break;
+                        case "-=":
+                            fnCode += $"\tsub {terms[0]}, {terms[2]}\n";
+                            break;
+                        case "=":
+                            fnCode += $"\tmov {terms[0]}, {terms[2]}\n";
+                            break;
+                    }
                 }
 
                 //mark
