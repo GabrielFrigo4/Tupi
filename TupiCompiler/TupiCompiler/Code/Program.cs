@@ -33,9 +33,6 @@ internal static class Program
 
     static int Main(string[] args)
     {
-        WinUtils.AddEnvironmentPath(compPath + "1033/");
-        WinUtils.AddEnvironmentPath(compPath + "1046/");
-        WinUtils.AddEnvironmentPath(compPath + "onecore/");
         WinUtils.AddEnvironmentPath(compPath);
         WinUtils.AddEnvironmentPath(libPath);
 
