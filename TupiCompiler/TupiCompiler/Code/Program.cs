@@ -33,7 +33,11 @@ internal static class Program
 
     static int Main(string[] args)
     {
+        WinUtils.AddEnvironmentPath(compPath + "1033/");
+        WinUtils.AddEnvironmentPath(compPath + "1046/");
+        WinUtils.AddEnvironmentPath(compPath + "onecore/");
         WinUtils.AddEnvironmentPath(compPath);
+        WinUtils.AddEnvironmentPath(libPath);
 
         args = new string[1];
         args[0] = "mycode.tp";
@@ -83,8 +87,9 @@ internal static class Program
         startInfo.CreateNoWindow = !assembler_warning;
         startInfo.WindowStyle = ProcessWindowStyle.Hidden;
         startInfo.FileName = "cmd.exe";
-        startInfo.Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" &&";
-        startInfo.Arguments += $" ml64 main.asm /link /subsystem:console /defaultlib:{libDir}\\TupiLib.lib";
+        //startInfo.Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" &&";
+        startInfo.Arguments = $"/C cd \"{path_dir_asm}\" &&";
+        startInfo.Arguments += $" ml64 main.asm /link /subsystem:console /defaultlib:{libDir}TupiLib.lib";
         if (run)
         {
             startInfo.Arguments += " && main";
