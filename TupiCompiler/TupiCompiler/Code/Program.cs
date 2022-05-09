@@ -1,15 +1,40 @@
 ﻿using System.CommandLine;
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using TupiCompiler.Data;
+using TupiCompiler.Utility;
 
 namespace TupiCompiler.Code;
 internal static class Program
 {
     static Compiler? compiler;
+    public readonly static string
+        libPath = "./_lib/",
+        compPath = "./_comp/",
+        libDir = Path.GetFullPath(libPath),
+        compDir = Path.GetFullPath(compPath);
+
+    static readonly string? exePath = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
+    internal static string EXE_PATH
+    {
+        get
+        {
+            if(exePath == null)
+            {
+                return string.Empty;
+            }
+            else
+            {
+                return exePath;
+            }
+        }
+    }
 
     static int Main(string[] args)
     {
+        WinUtils.AddEnvironmentPath(compPath);
+
         args = new string[1];
         args[0] = "mycode.tp";
 
@@ -52,10 +77,9 @@ internal static class Program
 
     static void CompileAsm(string path_dir_asm, bool run = false, bool assembler_warning = true)
     {
-        string libDir = Path.GetFullPath("./lib");
         Console.WriteLine("tranform assembly to binary file");
-        Process process = new Process();
-        ProcessStartInfo startInfo = new ProcessStartInfo();
+        Process process = new();
+        ProcessStartInfo startInfo = new();
         startInfo.CreateNoWindow = !assembler_warning;
         startInfo.WindowStyle = ProcessWindowStyle.Hidden;
         startInfo.FileName = "cmd.exe";
