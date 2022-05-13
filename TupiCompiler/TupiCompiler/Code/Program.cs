@@ -11,9 +11,7 @@ internal static class Program
     static Compiler? compiler;
     public readonly static string
         libPath = "./_lib/",
-        compPath = "./_comp/",
-        libDir = Path.GetFullPath(libPath),
-        compDir = Path.GetFullPath(compPath);
+        libDir = Path.GetFullPath(libPath);
 
     static readonly string? exePath = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
     internal static string EXE_PATH
@@ -33,7 +31,6 @@ internal static class Program
 
     static int Main(string[] args)
     {
-        WinUtils.AddEnvironmentPath(compPath);
         WinUtils.AddEnvironmentPath(libPath);
 
         args = new string[1];
@@ -84,8 +81,7 @@ internal static class Program
         startInfo.CreateNoWindow = !assembler_warning;
         startInfo.WindowStyle = ProcessWindowStyle.Hidden;
         startInfo.FileName = "cmd.exe";
-        //startInfo.Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" &&";
-        startInfo.Arguments = $"/C cd \"{path_dir_asm}\" &&";
+        startInfo.Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" &&";
         startInfo.Arguments += $" ml64 main.asm /link /subsystem:console /defaultlib:{libDir}TupiLib.lib";
         if (run)
         {
@@ -105,7 +101,7 @@ internal static class Program
         char[] codeChars = e.Code.ToCharArray();
         for (int pos = 0; pos < e.Code.Length - 1; pos++)
         {
-            if (IsInsideString(e.Code, pos)) continue;
+            if (IsInsideString(e.Code, pos, out _)) continue;
             if (codeChars[pos] == '\t')
             {
                 int newPos = pos - totalEdits;
@@ -154,7 +150,7 @@ internal static class Program
         char[] codeChars = e.Code.ToCharArray();
         for (int pos = 0; pos < e.Code.Length - 1; pos++)
         {
-            if (IsInsideString(e.Code, pos)) continue;
+            if (IsInsideString(e.Code, pos, out _)) continue;
             if(codeChars.Length <= pos + 1) break;
             if ((codeChars[pos] == '=') && (codeChars[pos+1] != ' '))
             {
@@ -195,7 +191,6 @@ internal static class Program
             string line = lines[i];
             if (line.Contains("//"))
             {
-                string comment = line.Remove(0, line.IndexOf("//"));
                 line = line.Remove(line.IndexOf("//"));
                 lines[i] = line;
             }
@@ -225,7 +220,53 @@ internal static class Program
         const byte backslash = (byte)'\\';      //92
         const byte nullChar = (byte)'\0';       //0
         const byte singleQuotes = (byte)'\'';   //39
-        const byte doubleQuotes = (byte)'\"';    //34
+        const byte doubleQuotes = (byte)'\"';   //34
+
+        for (int pos = 0; pos < e.Code.Length - 1; pos++)
+        {
+            void SetString(string type, byte value)
+            {
+                if (e.Code[pos..(pos + 2)] == type)
+                {
+                    bool back = false, front = false;
+                    if (e.Code[pos - 1] == '\'')
+                        back = true;
+                    if (e.Code[pos + 2] == '\'')
+                        front = true;
+
+                    if(back == true && front == true)
+                    {
+                        e.Code = e.Code.Remove(--pos, 4);
+                        e.Code = e.Code.Insert(pos, $"{value}");
+                    }
+                    else if (back == true && front == false)
+                    {
+                        e.Code = e.Code.Remove(--pos, 3);
+                        e.Code = e.Code.Insert(pos, $"{value}, \'");
+                    }
+                    else if (back == false && front == true)
+                    {
+                        e.Code = e.Code.Remove(pos, 3);
+                        e.Code = e.Code.Insert(pos, $"\', {value}");
+                    }
+                    else if (back == false && front == false)
+                    {
+                        e.Code = e.Code.Remove(pos, 2);
+                        e.Code = e.Code.Insert(pos, $"\', {value},\'");
+                    }
+                }
+            }
+
+            if (!IsInsideString(e.Code, pos, out _)) continue;
+
+            SetString(@"\n", newline);
+            SetString(@"\t", tab);
+            SetString(@"\b", backspace);
+            SetString(@"\\", backslash);
+            SetString(@"\0", nullChar);
+            SetString(@"\'", singleQuotes);
+            SetString("\\\"", doubleQuotes);
+        }
     }
 
     static void PreCompileLines_Macro(object? sender, PreCompilerArgs e)
@@ -675,12 +716,19 @@ internal static class Program
     #endregion
 
     #region Private Funcs
-    private static bool IsInsideString(string code, int pos)
+    private static bool IsInsideString(string code, int pos, out bool isPathStr)
     {
-        if(pos < 0) return true;
+        bool isInside = false;
+        isPathStr = false;
+        if (pos < 0) goto endFunc;
 
         MatchCollection matchCollectionStr = Regex.Matches(code[..pos], "\'");
-        return matchCollectionStr.Count % 2 == 1;
+        //MatchCollection matchCollectionPathStr = Regex.Matches(code[..pos], "@'");
+        isInside = matchCollectionStr.Count % 2 == 1;
+        //isPathStr = matchCollectionPathStr.Count % 2 == 1;
+
+    endFunc:
+        return isInside;
     }
 
     private static void UpdateInsideFunc(string[] terms, ref bool isInsideFunc)
