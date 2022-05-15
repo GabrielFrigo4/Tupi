@@ -33,8 +33,10 @@ internal static class Program
     {
         WinUtils.AddEnvironmentPath(libPath);
 
+#if DEBUG
         args = new string[1];
         args[0] = "mycode.tp";
+#endif
 
         Action<string> action = CompileTupi;
         Argument<string> source = new("source", "source for tupi compile");
@@ -101,7 +103,7 @@ internal static class Program
         char[] codeChars = e.Code.ToCharArray();
         for (int pos = 0; pos < e.Code.Length - 1; pos++)
         {
-            if (IsInsideString(e.Code, pos, out _)) continue;
+            if (IsInsideString(e.Code, pos, out _, out _)) continue;
             if (codeChars[pos] == '\t')
             {
                 int newPos = pos - totalEdits;
@@ -150,7 +152,7 @@ internal static class Program
         char[] codeChars = e.Code.ToCharArray();
         for (int pos = 0; pos < e.Code.Length - 1; pos++)
         {
-            if (IsInsideString(e.Code, pos, out _)) continue;
+            if (IsInsideString(e.Code, pos, out _, out _)) continue;
             if(codeChars.Length <= pos + 1) break;
             if ((codeChars[pos] == '=') && (codeChars[pos+1] != ' '))
             {
@@ -257,7 +259,7 @@ internal static class Program
                 }
             }
 
-            if (!IsInsideString(e.Code, pos, out _)) continue;
+            if (!IsInsideString(e.Code, pos, out _, out _)) continue;
 
             SetString(@"\n", newline);
             SetString(@"\t", tab);
@@ -716,16 +718,30 @@ internal static class Program
     #endregion
 
     #region Private Funcs
-    private static bool IsInsideString(string code, int pos, out bool isPathStr)
+    private static bool IsInsideString(string code, int pos, out bool isSimpleStr, out bool isCompleteStr)
     {
         bool isInside = false;
-        isPathStr = false;
+        isSimpleStr = isCompleteStr = false;
         if (pos < 0) goto endFunc;
 
-        MatchCollection matchCollectionStr = Regex.Matches(code[..pos], "\'");
-        //MatchCollection matchCollectionPathStr = Regex.Matches(code[..pos], "@'");
-        isInside = matchCollectionStr.Count % 2 == 1;
-        //isPathStr = matchCollectionPathStr.Count % 2 == 1;
+        MatchCollection matchCollectionSimpleStr = Regex.Matches(code[..pos], "\'");
+        MatchCollection matchCollectionCompleteStr = Regex.Matches(code[..pos], "\"");
+        isSimpleStr = matchCollectionSimpleStr.Count % 2 == 1;
+        isCompleteStr = matchCollectionCompleteStr.Count % 2 == 1;
+        isInside = isSimpleStr || isCompleteStr;
+
+    endFunc:
+        return isInside;
+    }
+
+    private static bool IsInsidePath(string code, int pos)
+    {
+        bool isInside = false;
+        if (pos < 0) goto endFunc;
+
+        MatchCollection matchCollectionPathStart = Regex.Matches(code[..pos], "<");
+        MatchCollection matchCollectionPathEnd = Regex.Matches(code[..pos], ">");
+        isInside = matchCollectionPathStart.Count == matchCollectionPathEnd.Count;
 
     endFunc:
         return isInside;
