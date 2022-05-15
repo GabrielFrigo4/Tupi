@@ -722,14 +722,26 @@ internal static class Program
     #region Private Funcs
     private static bool IsInsideString(string code, int pos, out bool isSimpleStr, out bool isCompleteStr)
     {
+        int simpleStrCount = 0, completeStrCount = 0;
         bool isInside = false;
         isSimpleStr = isCompleteStr = false;
         if (pos < 0) goto endFunc;
 
-        MatchCollection matchCollectionSimpleStr = Regex.Matches(code[..pos], "\'");
-        MatchCollection matchCollectionCompleteStr = Regex.Matches(code[..pos], "\"");
-        isSimpleStr = matchCollectionSimpleStr.Count % 2 == 1;
-        isCompleteStr = matchCollectionCompleteStr.Count % 2 == 1;
+        for (int i = 1; i < pos; i++)
+        {
+            char c = code[i];
+            char _c = code[i - 1];
+            if (c == '\"' && (simpleStrCount % 2 == 0 || (completeStrCount % 2 == 1 && _c == '\\')))
+            {
+                completeStrCount++;
+            }
+            if (c == '\'' && completeStrCount % 2 == 0)
+            {
+                simpleStrCount++;
+            }
+        }
+        isSimpleStr = simpleStrCount % 2 == 1;
+        isCompleteStr = completeStrCount % 2 == 1;
         isInside = isSimpleStr || isCompleteStr;
 
     endFunc:
@@ -738,12 +750,25 @@ internal static class Program
 
     private static bool IsInsidePath(string code, int pos)
     {
+        int pathStartCount = 0, pathEndCount = 0;
         bool isInside = false;
         if (pos < 0) goto endFunc;
 
-        MatchCollection matchCollectionPathStart = Regex.Matches(code[..pos], "<");
-        MatchCollection matchCollectionPathEnd = Regex.Matches(code[..pos], ">");
-        isInside = matchCollectionPathStart.Count == matchCollectionPathEnd.Count;
+        for (int i = 1; i < pos; i++)
+        {
+            if (IsInsideString(code, pos, out _, out _)) continue;
+
+            char c = code[i];
+            if (c == '<' && pathStartCount == pathEndCount)
+            {
+                pathStartCount++;
+            }
+            if (c == '>' && pathStartCount == pathEndCount + 1)
+            {
+                pathEndCount++;
+            }
+        }
+        isInside = pathStartCount == pathEndCount + 1;
 
     endFunc:
         return isInside;
