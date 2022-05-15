@@ -79,11 +79,13 @@ internal static class Program
     {
         Console.WriteLine("tranform assembly to binary file");
         Process process = new();
-        ProcessStartInfo startInfo = new();
-        startInfo.CreateNoWindow = !assembler_warning;
-        startInfo.WindowStyle = ProcessWindowStyle.Hidden;
-        startInfo.FileName = "cmd.exe";
-        startInfo.Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" &&";
+        ProcessStartInfo startInfo = new()
+        {
+            CreateNoWindow = !assembler_warning,
+            WindowStyle = ProcessWindowStyle.Hidden,
+            FileName = "cmd.exe",
+            Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" &&"
+        };
         startInfo.Arguments += $" ml64 main.asm /link /subsystem:console /defaultlib:{libDir}TupiLib.lib";
         if (run)
         {
@@ -231,9 +233,9 @@ internal static class Program
                 if (e.Code[pos..(pos + 2)] == type)
                 {
                     bool back = false, front = false;
-                    if (e.Code[pos - 1] == '\'')
+                    if (e.Code[pos - 1] == '\"')
                         back = true;
-                    if (e.Code[pos + 2] == '\'')
+                    if (e.Code[pos + 2] == '\"')
                         front = true;
 
                     if(back == true && front == true)
@@ -244,22 +246,22 @@ internal static class Program
                     else if (back == true && front == false)
                     {
                         e.Code = e.Code.Remove(--pos, 3);
-                        e.Code = e.Code.Insert(pos, $"{value}, \'");
+                        e.Code = e.Code.Insert(pos, $"{value}, \"");
                     }
                     else if (back == false && front == true)
                     {
                         e.Code = e.Code.Remove(pos, 3);
-                        e.Code = e.Code.Insert(pos, $"\', {value}");
+                        e.Code = e.Code.Insert(pos, $"\", {value}");
                     }
                     else if (back == false && front == false)
                     {
                         e.Code = e.Code.Remove(pos, 2);
-                        e.Code = e.Code.Insert(pos, $"\', {value},\'");
+                        e.Code = e.Code.Insert(pos, $"\", {value}, \"");
                     }
                 }
             }
 
-            if (!IsInsideString(e.Code, pos, out _, out _)) continue;
+            if (!IsInsideString(e.Code, pos, out bool simple, out _) || simple) continue;
 
             SetString(@"\n", newline);
             SetString(@"\t", tab);
@@ -282,9 +284,9 @@ internal static class Program
             if (line.Contains("#macro "))
             {
                 line = line.Replace("#macro ", "");
-                string macro = line.Remove(line.IndexOf('\"') - 1);
-                line = line.Remove(0, line.IndexOf('\"'));
-                string comand = line[1..^1];
+                string macro = line.Remove(line.IndexOf(' '));
+                line = line.Remove(0, line.IndexOf(' '));
+                string comand = line[1..];
                 macros.Add(macro, comand);
                 lines[i] = string.Empty;
             }
