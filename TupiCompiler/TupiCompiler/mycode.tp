@@ -2,7 +2,7 @@
 
 usefn consoleWriteInt
 usefn consoleWriteStr
-//usefn printf
+$usefn printf
 
 struct myStruct{
 	i8 myByte1 ?
@@ -28,7 +28,7 @@ fn main(iptr args){
 	i64 myLongLoop = 0;
 	myStruct myStructVar;
 
-	//consoleWriteStr(&msg6,1,2,3,4,myShortVar3)
+	$consoleWriteStr(&msg6,1,2,3,4,myShortVar3)
 	print_i64(myInt)
 	print_i64(-53)
 	print_i64(myStructTest.mylong1)

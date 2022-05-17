@@ -10,7 +10,7 @@ internal static class Program
 {
     static Compiler? compiler;
     public readonly static string
-        libPath = "./_lib/",
+        libPath = "_arch/x64/lib/",
         libDir = Path.GetFullPath(libPath);
 
     static readonly string? exePath = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
@@ -193,9 +193,9 @@ internal static class Program
         for (int i = 0; i < lines.Length; i++)
         {
             string line = lines[i];
-            if (line.Contains("//"))
+            if (line.Contains('$'))
             {
-                line = line.Remove(line.IndexOf("//"));
+                line = line.Remove(line.IndexOf('$'));
                 lines[i] = line;
             }
         }

@@ -20,7 +20,7 @@
     <None Update="Build\mbld.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="_lib\TupiLib.lib">
+    <None Update="_arch\x64\lib\TupiLib.lib">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="mycode.tp">
