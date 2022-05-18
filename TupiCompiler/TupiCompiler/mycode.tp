@@ -4,7 +4,8 @@ usefn consoleWriteInt
 usefn consoleWriteStr
 $usefn printf
 
-struct myStruct{
+struct myStruct 
+{
 	i8 myByte1 ?
 	i64 myLong1 ?
 	i8 myByte2 ?
@@ -18,7 +19,8 @@ i8 msg6 "myInts is %d %d %d %d %d\n\0"
 i64 myInt 120
 myStruct myStructTest {8, 8, 16, 16}
 
-fn main(iptr args){
+fn main(iptr args) 
+{
 	i64 myLongVar1 = 10;
 	i8 myShortVar1 = 11;
 	i8 myShortVar2 = 12;
@@ -42,7 +44,8 @@ fn main(iptr args){
 	return 0
 }
 
-fn print_i64(i64 integer){
+fn print_i64(i64 integer)
+{
 	consoleWriteStr(&msg1)
 	consoleWriteInt(integer)
 	consoleWriteStr(&pularLinha)

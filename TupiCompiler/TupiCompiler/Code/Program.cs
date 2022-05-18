@@ -128,7 +128,7 @@ internal static class Program
                 totalEdits++;
                 continue;
             }
-            if (codeChars[pos] == '\n' && (codeChars[pos + 1] == '\n' || codeChars[pos + 1] == ' '))
+            if (codeChars[pos] == '\n' && codeChars[pos + 1] == '{')
             {
                 int newPos = pos - totalEdits;
                 codeStr = codeStr.Remove(newPos, 1);
@@ -136,6 +136,13 @@ internal static class Program
                 continue;
             }
             if (codeChars[pos] == ';' && (codeChars[pos + 1] == '\n' || codeChars[pos + 1] == '\r'))
+            {
+                int newPos = pos - totalEdits;
+                codeStr = codeStr.Remove(newPos, 1);
+                totalEdits++;
+                continue;
+            }
+            if (codeChars[pos] == '\n' && (codeChars[pos + 1] == '\n' || codeChars[pos + 1] == ' '))
             {
                 int newPos = pos - totalEdits;
                 codeStr = codeStr.Remove(newPos, 1);
@@ -155,7 +162,15 @@ internal static class Program
         {
             if (IsInsideString(e.Code, pos, out _, out _)) continue;
             if(codeChars.Length <= pos + 1) break;
-            if ((codeChars[pos] == '=') && (codeChars[pos+1] != ' '))
+            if (codeChars[pos] == '=' && codeChars[pos+1] != ' ')
+            {
+                int newPos = pos + totalEdits;
+                codeStr = codeStr.Insert(newPos + 1, " ");
+                totalEdits++;
+                continue;
+            }
+
+            if (codeChars[pos] != ' ' && codeChars[pos] != '\n' && codeChars[pos + 1] == '{')
             {
                 int newPos = pos + totalEdits;
                 codeStr = codeStr.Insert(newPos + 1, " ");
@@ -335,6 +350,8 @@ internal static class Program
                 e.Code += lines[i] + "\n";
             }
         }
+
+        Console.WriteLine(e.Code);
     }
     #endregion
 
@@ -370,7 +387,7 @@ internal static class Program
                 if (terms.Length < 2 || isInsideFunc) continue;
                 if (terms[0] == "struct")
                 {
-                    currentStruct = new StructData(terms[1].Remove(terms[1].IndexOf('{')));
+                    currentStruct = new StructData(terms[1]);
                     e.RunData.Structs.Add(currentStruct);
                     structCode += $"{currentStruct.Name} struct\n";
                 }
