@@ -1,4 +1,4 @@
-﻿#macro iptr i64
+#macro iptr i64
 
 usefn consoleWriteInt
 usefn consoleWriteStr
@@ -32,7 +32,7 @@ fn main(iptr args){
 	print_i64(myInt)
 	print_i64(-53)
 	print_i64(myStructTest.mylong1)
-
+	
 	mark myLoop
 	consoleWriteStr(&msgLoop)
 	consoleWriteInt(myLongLoop)

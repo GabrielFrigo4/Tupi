@@ -1,7 +1,6 @@
 ﻿using System.CommandLine;
 using System.Diagnostics;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using TupiCompiler.Data;
 using TupiCompiler.Utility;
 
