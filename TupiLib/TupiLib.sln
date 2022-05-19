@@ -5,6 +5,8 @@ VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TupiLib", "TupiLib\TupiLib.vcxproj", "{8DD118AE-BCDE-4F86-A2EB-296FA9573BFB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "InternalTupiOperators", "InternalTupiOperators\InternalTupiOperators.vcxproj", "{2EAB3B81-6BB9-4BDB-939B-EAF4B50931AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{8DD118AE-BCDE-4F86-A2EB-296FA9573BFB}.Release|x64.Build.0 = Release|x64
 		{8DD118AE-BCDE-4F86-A2EB-296FA9573BFB}.Release|x86.ActiveCfg = Release|Win32
 		{8DD118AE-BCDE-4F86-A2EB-296FA9573BFB}.Release|x86.Build.0 = Release|Win32
+		{2EAB3B81-6BB9-4BDB-939B-EAF4B50931AB}.Debug|x64.ActiveCfg = Debug|x64
+		{2EAB3B81-6BB9-4BDB-939B-EAF4B50931AB}.Debug|x64.Build.0 = Debug|x64
+		{2EAB3B81-6BB9-4BDB-939B-EAF4B50931AB}.Debug|x86.ActiveCfg = Debug|Win32
+		{2EAB3B81-6BB9-4BDB-939B-EAF4B50931AB}.Debug|x86.Build.0 = Debug|Win32
+		{2EAB3B81-6BB9-4BDB-939B-EAF4B50931AB}.Release|x64.ActiveCfg = Release|x64
+		{2EAB3B81-6BB9-4BDB-939B-EAF4B50931AB}.Release|x64.Build.0 = Release|x64
+		{2EAB3B81-6BB9-4BDB-939B-EAF4B50931AB}.Release|x86.ActiveCfg = Release|Win32
+		{2EAB3B81-6BB9-4BDB-939B-EAF4B50931AB}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

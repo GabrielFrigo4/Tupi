@@ -7,12 +7,12 @@ extern "C" LPVOID createMem(size_t size) {
 	return HeapAlloc(hHeap, HEAP_NO_SERIALIZE, size);
 }
 
-extern "C" LPVOID recreateMem(LPVOID plMem, size_t size) {
+extern "C" LPVOID recreateMem(LPVOID lpMem, size_t size) {
 	HANDLE hHeap = GetProcessHeap();
-	return HeapReAlloc(hHeap, HEAP_NO_SERIALIZE, plMem, size);
+	return HeapReAlloc(hHeap, HEAP_NO_SERIALIZE, lpMem, size);
 }
 
-extern "C" BOOL deleteMem(LPVOID plMem) {
+extern "C" BOOL deleteMem(LPVOID lpMem) {
 	HANDLE hHeap = GetProcessHeap();
-	return HeapFree(hHeap, HEAP_NO_SERIALIZE, plMem);
+	return HeapFree(hHeap, HEAP_NO_SERIALIZE, lpMem);
 }
