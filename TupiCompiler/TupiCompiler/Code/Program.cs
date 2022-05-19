@@ -350,8 +350,6 @@ internal static class Program
                 e.Code += lines[i] + "\n";
             }
         }
-
-        Console.WriteLine(e.Code);
     }
     #endregion
 

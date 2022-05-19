@@ -18,7 +18,7 @@ extern "C" BOOL consoleWriteStr(const char* str) {
     return consoleWrite(str, length, NULL);
 }
 
-BOOL consoleWriteInt(long long int number) {
+extern "C" BOOL consoleWriteInt(long long int number) {
     bool isNegative = false;
     char* strInt = (char*)createMem(1);
     char* strSignIntIvert = (char*)createMem(2);
@@ -81,7 +81,7 @@ BOOL consoleWriteInt(long long int number) {
     return returnVal;
 }
 
-BOOL consoleWriteFloat(double number) {
+extern "C" BOOL consoleWriteFloat(double number) {
     long long int IntPart = floor(abs(number));
     double DecimalPart = abs(number) - IntPart;
     bool isNegative = false;
