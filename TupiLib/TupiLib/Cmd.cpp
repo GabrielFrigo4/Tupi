@@ -4,6 +4,9 @@
 extern "C" double floor(double x);
 extern "C" double abs(double x);
 
+extern "C" const char* IToStr(long long int val);
+extern "C" const char* FToStr(double val);
+
 extern "C" BOOL consoleWrite(const VOID * lpBuffer, DWORD nNumberOfCharsToWrite, LPDWORD lpNumberOfCharsWritten) {
     HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     return WriteConsoleA(hConsoleOutput, lpBuffer, nNumberOfCharsToWrite, lpNumberOfCharsWritten, NULL);
@@ -19,6 +22,20 @@ extern "C" BOOL consoleWriteStr(const char* str) {
 }
 
 extern "C" BOOL consoleWriteInt(long long int number) {
+    const char* strInt = IToStr(number);
+    BOOL ret = consoleWriteStr(strInt);
+    deleteMem((char*)strInt);
+    return ret;
+}
+
+extern "C" BOOL consoleWriteFloat(double number) {
+    const char* strFloat = FToStr(number);
+    BOOL ret = consoleWriteStr(strFloat);
+    deleteMem((char*)strFloat);
+    return ret;
+}
+
+extern "C" const char* IToStr(long long int number) {
     bool isNegative = false;
     char* strInt = (char*)createMem(1);
     char* strSignIntIvert = (char*)createMem(2);
@@ -75,13 +92,11 @@ extern "C" BOOL consoleWriteInt(long long int number) {
         invertPos--;
     } while (invertPos > 0);
 
-    BOOL returnVal = consoleWrite(strInt, length, NULL);
-    deleteMem(strInt);
     deleteMem(strSignIntIvert);
-    return returnVal;
+    return strInt;
 }
 
-extern "C" BOOL consoleWriteFloat(double number) {
+extern "C" const char* FToStr(double number) {
     long long int IntPart = floor(abs(number));
     double DecimalPart = abs(number) - IntPart;
     bool isNegative = false;
@@ -169,8 +184,6 @@ extern "C" BOOL consoleWriteFloat(double number) {
         strFloat[length] = '\0';
     }
 
-    BOOL returnVal = consoleWrite(strFloat, length, NULL);
-    deleteMem(strFloat);
     deleteMem(strSignFloatIvert);
-    return returnVal;
+    return strFloat;
 }
