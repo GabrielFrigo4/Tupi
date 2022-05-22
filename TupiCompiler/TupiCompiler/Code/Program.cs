@@ -10,7 +10,7 @@ internal static class Program
     static Compiler? compiler;
     public readonly static string
         libPath = "_tupi/x64/lib/",
-        thPath = "_tupi/headers",
+        thPath = "_tupi/headers/",
         libDir = Path.GetFullPath(libPath),
         thDir = Path.GetFullPath(thPath);
 
@@ -59,6 +59,7 @@ internal static class Program
         compiler.PreCompilerEvent += PreCompileLines_GrammarAdd;
         compiler.PreCompilerEvent += PreCompileLines_Comment;
         compiler.PreCompilerEvent += PreCompileLines_String;
+        compiler.PreCompilerEvent += PreCompileLines_Header;
         compiler.PreCompilerEvent += PreCompileLines_Macro;
         compiler.PreCompilerEvent += PreCompileLines_Empty;
 
@@ -289,15 +290,64 @@ internal static class Program
         }
     }
 
+    static void PreCompileLines_Header(object? sender, PreCompilerArgs e)
+    {
+        string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+            if (line.StartsWith("useth "))
+            {
+                string path = line.Replace("useth ", "").Replace("<", "").Replace(">", "");
+                lines[i] = string.Empty;
+                if (File.Exists(path))
+                {
+                    lines[i] = File.ReadAllText(path);
+                }
+                else if (File.Exists(thDir + "/" + path))
+                {
+                    lines[i] = File.ReadAllText(thDir + "/" + path);
+                }
+                else
+                {
+                    Console.WriteLine($"{path} header not find");
+                }
+            }
+        }
+
+        e.Code = string.Empty;
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+
+            if (line != string.Empty)
+            {
+                e.Code += line + "\n";
+            }
+            else if (i + 1 < line.Length)
+            {
+                lines[i + 1] = lines[i + 1].Replace("\r", "");
+            }
+        }
+
+        PreCompileLines_GrammarSub(sender, e);
+        PreCompileLines_GrammarAdd(sender, e);
+        PreCompileLines_Comment(sender, e);
+        PreCompileLines_String(sender, e);
+
+        Console.WriteLine(e.Code);
+    }
+
     static void PreCompileLines_Macro(object? sender, PreCompilerArgs e)
     {
-        Dictionary<string, string> macros = new();
         string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        Dictionary<string, string> macros = new();
+        macros.Add("iptr", "i64");
 
         for(int i = 0; i < lines.Length; i++)
         {
             string line = lines[i];
-            if (line.Contains("#macro "))
+            if (line.StartsWith("#macro "))
             {
                 line = line.Replace("#macro ", "");
                 string macro = line.Remove(line.IndexOf(' '));

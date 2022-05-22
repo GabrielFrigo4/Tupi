@@ -23,6 +23,9 @@
     <None Update="MyTupiCode\tupiheader.th">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="_tupi\headers\tupilib.th">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="_tupi\x64\lib\InternalTupiOperators.lib">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
