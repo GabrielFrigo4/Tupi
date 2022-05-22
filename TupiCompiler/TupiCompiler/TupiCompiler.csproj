@@ -20,7 +20,7 @@
     <None Update="Build\mbld.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="MyTupiCode\tupiheader.th">
+    <None Update="TupiCode\tupiheader.th">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="_tupi\headers\tupilib.th">
@@ -32,7 +32,7 @@
     <None Update="_tupi\x64\lib\TupiLib.lib">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="MyTupiCode\mycode.tp">
+    <None Update="TupiCode\mycode.tp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

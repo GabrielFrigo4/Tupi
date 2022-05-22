@@ -36,7 +36,7 @@ internal static class Program
 
 #if DEBUG
         args = new string[1];
-        args[0] = "MyTupiCode/mycode.tp";
+        args[0] = "TupiCode/mycode.tp";
 #endif
 
         Action<string> action = CompileTupi;
@@ -334,8 +334,6 @@ internal static class Program
         PreCompileLines_GrammarAdd(sender, e);
         PreCompileLines_Comment(sender, e);
         PreCompileLines_String(sender, e);
-
-        Console.WriteLine(e.Code);
     }
 
     static void PreCompileLines_Macro(object? sender, PreCompilerArgs e)
