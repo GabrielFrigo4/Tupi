@@ -2,7 +2,7 @@
 
 usefn consoleWriteInt
 usefn consoleWriteStr
-$usefn printf
+useth <./tupiheader.th>
 
 struct myStruct 
 {

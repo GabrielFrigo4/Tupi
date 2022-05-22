@@ -34,7 +34,7 @@ internal static class Program
 
 #if DEBUG
         args = new string[1];
-        args[0] = "mycode.tp";
+        args[0] = "MyTupiCode/mycode.tp";
 #endif
 
         Action<string> action = CompileTupi;
