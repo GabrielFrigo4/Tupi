@@ -1,8 +1,4 @@
-#macro iptr i64
-
-usefn consoleWriteInt
-usefn consoleWriteStr
-useth <./tupiheader.th>
+useth <tupilib.th>
 
 struct myStruct 
 {

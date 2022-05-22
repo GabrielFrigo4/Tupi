@@ -1,0 +1,9 @@
+﻿#macro iptr i64
+
+usefn consoleWriteInt
+usefn consoleWriteStr
+usefn IToStr
+usefn FToStr
+usefn MemAlloc
+usefn MemFree
+usefn MemReAlloc

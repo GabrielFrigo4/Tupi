@@ -9,8 +9,10 @@ internal static class Program
 {
     static Compiler? compiler;
     public readonly static string
-        libPath = "_arch/x64/lib/",
-        libDir = Path.GetFullPath(libPath);
+        libPath = "_tupi/x64/lib/",
+        thPath = "_tupi/headers",
+        libDir = Path.GetFullPath(libPath),
+        thDir = Path.GetFullPath(thPath);
 
     static readonly string? exePath = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
     internal static string EXE_PATH
