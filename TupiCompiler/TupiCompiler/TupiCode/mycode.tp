@@ -14,7 +14,6 @@ i8 msgLoop "myInt in loop is \0"
 i8 msg6 "myInts is %d %d %d %d %d\n\0"
 i64 myInt 120
 myStruct myStructTest {8, 8, 16, 16}
-headerstruct hdrs {0}
 
 fn main(i32 argc, iptr argv) 
 {

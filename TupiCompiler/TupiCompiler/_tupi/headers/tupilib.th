@@ -1,8 +1,4 @@
-﻿struct headerstruct{
-	i8 mybyte ?
-}
-
-usefn consoleWrite
+﻿usefn consoleWrite
 usefn consoleWriteInt
 usefn consoleWriteFloat
 usefn consoleWriteStr
