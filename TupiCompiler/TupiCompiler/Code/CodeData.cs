@@ -3,6 +3,7 @@ internal class CodeData
 {
     internal List<string> UseFn { get; private set; }
     internal List<string> Struct { get; private set; }
+    internal List<string> Union { get; private set; }
     internal List<string> GlobalVar { get; private set; }
     internal List<string> Func { get; private set; }
 
@@ -10,6 +11,7 @@ internal class CodeData
     {
         UseFn = new List<string>();
         Struct = new List<string>();
+        Union = new List<string>();
         GlobalVar = new List<string>();
         Func = new List<string>();
     }
@@ -25,6 +27,10 @@ internal class CodeData
         foreach (var @struct in Struct)
         {
             code += @struct + "\n";
+        }
+        foreach (var union in Union)
+        {
+            code += union + "\n";
         }
         foreach (var globalVar in GlobalVar)
         {

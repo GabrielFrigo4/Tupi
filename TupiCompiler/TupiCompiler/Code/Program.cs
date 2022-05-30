@@ -14,6 +14,8 @@ internal static class Program
         libDir = Path.GetFullPath(libPath),
         thDir = Path.GetFullPath(thPath);
 
+    static private string pathCompile = string.Empty;
+
     static readonly string? exePath = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
     internal static string EXE_PATH
     {
@@ -38,6 +40,9 @@ internal static class Program
         args = new string[1];
         args[0] = "TupiCode/mycode.tp";
 #endif
+        string? _pathCompile = Path.GetDirectoryName(args[0]);
+        if (_pathCompile is not null)
+            pathCompile = Path.GetFullPath(_pathCompile); 
 
         Action<string> action = CompileTupi;
         Argument<string> source = new("source", "source for tupi compile");
@@ -65,6 +70,7 @@ internal static class Program
 
         compiler.CompilerEvent += Compile_UseFn;
         compiler.CompilerEvent += Compile_Struct;
+        compiler.CompilerEvent += Compile_Union;
         compiler.CompilerEvent += Compile_GlobalVar;
         compiler.CompilerEvent += Compile_Func;
         string asmCode = compiler.Start();
@@ -304,13 +310,22 @@ internal static class Program
                 {
                     lines[i] = File.ReadAllText(path);
                 }
-                else if (File.Exists(thDir + "/" + path))
+                else if (File.Exists(pathCompile + "/" + path))
                 {
-                    lines[i] = File.ReadAllText(thDir + "/" + path);
+                    lines[i] = File.ReadAllText(pathCompile + "/" + path);
+                }
+                else if (File.Exists(thDir + path))
+                {
+                    lines[i] = File.ReadAllText(thDir + path);
                 }
                 else
                 {
+                    ConsoleColor consoleColor = Console.ForegroundColor;
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"{path} header not find");
+                    Console.WriteLine($"{pathCompile + "/" + path} header not find");
+                    Console.WriteLine($"{thDir + path} header not find");
+                    Console.ForegroundColor = consoleColor;
                 }
             }
         }
@@ -406,13 +421,14 @@ internal static class Program
     #region Compile
     static void Compile_UseFn(object? sender, CompilerArgs e)
     {
-        bool isInsideFunc = false, isInsideStruct = false;
+        bool isInsideFunc = false, isInsideStruct = false, isInsideUnion = false;
         foreach (var line in e.Lines)
         {
             string[] terms = e.GetTermsLine(line);
             UpdateInsideFunc(terms, ref isInsideFunc);
             UpdateInsideStruct(terms, ref isInsideStruct);
-            if (terms.Length < 2 || isInsideFunc || isInsideStruct) continue;
+            UpdateInsideStruct(terms, ref isInsideUnion);
+            if (terms.Length < 2 || isInsideFunc || isInsideStruct || isInsideUnion) continue;
             if (terms[0] == "usefn")
             {
                 e.CodeData.UseFn.Add($"extern {terms[1]}: proc");
@@ -437,7 +453,7 @@ internal static class Program
                 {
                     currentStruct = new StructData(terms[1]);
                     e.RunData.Structs.Add(currentStruct);
-                    structCode += $"{currentStruct.Name} struct\n";
+                    structCode = $"{currentStruct.Name} struct\n";
                 }
             }
             else if(currentStruct is not null)
@@ -457,11 +473,59 @@ internal static class Program
                     currentStruct.Size += @struct.Size;
                 }
 
-                if(isInsideStruct == false)
+                if (!isInsideStruct)
                 {
                     structCode += $"{currentStruct.Name} ends";
                     e.CodeData.Struct.Add(structCode);
                     structCode = string.Empty;
+                    currentStruct = null;
+                }
+            }
+        }
+    }
+
+    static void Compile_Union(object? sender, CompilerArgs e)
+    {
+        UnionData? currentUnion = null;
+        string unionCode = string.Empty;
+        bool isInsideFunc = false, isInsideUnion = false;
+        foreach (var line in e.Lines)
+        {
+            string[] terms = e.GetTermsLine(line);
+            UpdateInsideFunc(terms, ref isInsideFunc);
+            if (!isInsideUnion)
+            {
+                UpdateInsideUnion(terms, ref isInsideUnion);
+                if (terms.Length < 2 || isInsideFunc) continue;
+                if (terms[0] == "union")
+                {
+                    currentUnion = new UnionData(terms[1]);
+                    e.RunData.Unions.Add(currentUnion);
+                    unionCode = $"{currentUnion.Name} union\n";
+                }
+            }
+            else if (currentUnion is not null)
+            {
+                UpdateInsideUnion(terms, ref isInsideUnion);
+                if (e.ReadOnlyData.TupiTypes.Contains(terms[0]))
+                {
+                    int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
+                    unionCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {e.ReadOnlyData.AsmTypes[pos]}") + "\n";
+                    currentUnion.Vars.Add(new VarData(terms[1], terms[0], e.ReadOnlyData.TupiTypeSize[pos]));
+                    currentUnion.Size += e.ReadOnlyData.TupiTypeSize[pos];
+                }
+                else if (e.RunData.GetUnionByName(terms[0]) is UnionData union)
+                {
+                    unionCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
+                    currentUnion.Vars.Add(new VarData(terms[1], terms[0], union.Size));
+                    currentUnion.Size += union.Size;
+                }
+
+                if (!isInsideUnion)
+                {
+                    unionCode += $"{currentUnion.Name} ends";
+                    e.CodeData.Union.Add(unionCode);
+                    unionCode = string.Empty;
                 }
             }
         }
@@ -861,6 +925,19 @@ internal static class Program
         else if (terms[0] == "}")
         {
             isInsideStruct = false;
+        }
+    }
+
+    private static void UpdateInsideUnion(string[] terms, ref bool isInsideUnion)
+    {
+        if (terms.Length == 0) return;
+        if (terms[0] == "union")
+        {
+            isInsideUnion = true;
+        }
+        else if (terms[0] == "}")
+        {
+            isInsideUnion = false;
         }
     }
 

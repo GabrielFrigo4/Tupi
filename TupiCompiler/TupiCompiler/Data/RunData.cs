@@ -3,6 +3,7 @@ internal class RunData
 {
     internal List<FuncData> Funcs { get; private set; }
     internal List<StructData> Structs { get; private set; }
+    internal List<UnionData> Unions { get; private set; }
 
     /// <summary>
     /// string = name
@@ -14,6 +15,7 @@ internal class RunData
     {
         this.Funcs = new List<FuncData>();
         this.Structs = new List<StructData>();
+        this.Unions = new List<UnionData>();
         this.GlobalVars = new Dictionary<string, VarData>();
     }
 
@@ -23,6 +25,16 @@ internal class RunData
         {
             if (s.Name == name)
                 return s;
+        }
+        return null;
+    }
+
+    internal UnionData? GetUnionByName(string name)
+    {
+        foreach (var u in Unions)
+        {
+            if (u.Name == name)
+                return u;
         }
         return null;
     }

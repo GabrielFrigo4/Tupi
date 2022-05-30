@@ -1,2 +1,15 @@
-﻿usefn consoleWriteInt
-usefn consoleWriteStr
+﻿struct myStruct 
+{
+	i8 myByte1 ?
+	i64 myLong1 ?
+	i8 myByte2 ?
+	i64 myLong2 ?
+}
+
+union myUnion
+{
+	i8 myByte1 ?
+	i64 myLong1 ?
+	i8 myByte2 ?
+	i64 myLong2 ?
+}
