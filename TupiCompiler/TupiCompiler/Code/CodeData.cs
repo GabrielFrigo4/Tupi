@@ -2,6 +2,7 @@
 internal class CodeData
 {
     internal List<string> UseFn { get; private set; }
+    internal List<string> UseTh { get; private set; }
     internal List<string> Struct { get; private set; }
     internal List<string> Union { get; private set; }
     internal List<string> GlobalVar { get; private set; }
@@ -10,18 +11,23 @@ internal class CodeData
     internal CodeData()
     {
         UseFn = new List<string>();
+        UseTh = new List<string>();
         Struct = new List<string>();
         Union = new List<string>();
         GlobalVar = new List<string>();
         Func = new List<string>();
     }
 
-    internal string CreateAsmCode()
+    internal string CreateAsmCode(bool isHeader = false)
     {
         string code = string.Empty;
         foreach(var usefn in UseFn)
         {
             code += usefn + "\n";
+        }
+        foreach (var useth in UseTh)
+        {
+            code += useth + "\n";
         }
         code += ".data\n";
         foreach (var @struct in Struct)
@@ -36,12 +42,15 @@ internal class CodeData
         {
             code += globalVar + "\n";
         }
-        code += ".code\n";
-        foreach (var func in Func)
+        if (!isHeader)
         {
-            code += func + "\n";
+            code += ".code\n";
+            foreach (var func in Func)
+            {
+                code += func + "\n";
+            }
+            code += "End";
         }
-        code += "End";
         return code;
     }
 }

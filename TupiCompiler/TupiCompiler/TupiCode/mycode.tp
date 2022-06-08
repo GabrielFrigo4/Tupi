@@ -6,7 +6,7 @@ i8 msg1 'myInt is ', 0
 i8 msgLoop "myInt in loop is \0"
 i8 msg6 "myInts is %d %d %d %d %d\n\0"
 i64 myInt 120
-myStruct myStructTest {8, 8, 16, 16}
+$myStruct myStructTest {8, 8, 16, 16}
 
 fn main(i32 argc, iptr argv) 
 {
@@ -17,11 +17,11 @@ fn main(i32 argc, iptr argv)
 	i8 myShortVar3 = 14;
 	i64 myLongVar3 = 13;
 	i64 myLongLoop = 0;
-	myStruct myStructVar;
+	$myStruct myStructVar;
 
 	print_i64(myInt)
 	print_i64(-53)
-	print_i64(myStructTest.mylong1)
+	$print_i64(myStructTest.mylong1)
 	
 	mark myLoop
 	consoleWriteStr(&msgLoop)

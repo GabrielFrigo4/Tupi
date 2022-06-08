@@ -60,27 +60,32 @@ internal static class Program
         Console.WriteLine("compile tupi code:");
         Console.WriteLine("tranform tupi to assembly");
 
-        compiler = new Compiler(pathTupi);
+        Directory.CreateDirectory(pathDir);
+        StreamWriter write = File.CreateText(pathDir + @"\main.asm");
+        write.Write(CompileTupiCode(pathTupi));
+        write.Close();
+        CompileAsm(pathDir);
+    }
+
+    static string CompileTupiCode(string pathTupiCode, bool isHeader = false)
+    {
+        compiler = new Compiler(pathTupiCode, isHeader);
         compiler.PreCompilerEvent += PreCompileLines_GrammarSub;
         compiler.PreCompilerEvent += PreCompileLines_GrammarAdd;
         compiler.PreCompilerEvent += PreCompileLines_Comment;
         compiler.PreCompilerEvent += PreCompileLines_String;
-        compiler.PreCompilerEvent += PreCompileLines_Header;
         compiler.PreCompilerEvent += PreCompileLines_Macro;
         compiler.PreCompilerEvent += PreCompileLines_Empty;
 
         compiler.CompilerEvent += Compile_UseFn;
+        compiler.CompilerEvent += Compile_UseTh;
         compiler.CompilerEvent += Compile_Struct;
         compiler.CompilerEvent += Compile_Union;
         compiler.CompilerEvent += Compile_GlobalVar;
         compiler.CompilerEvent += Compile_Func;
         string asmCode = compiler.Start();
 
-        Directory.CreateDirectory(pathDir);
-        StreamWriter write = File.CreateText(pathDir + @"\main.asm");
-        write.Write(asmCode);
-        write.Close();
-        CompileAsm(pathDir);
+        return asmCode;
     }
 
     static void CompileAsm(string path_dir_asm, bool run = false, bool assembler_warning = true)
@@ -94,7 +99,7 @@ internal static class Program
             FileName = "cmd.exe",
             Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" &&"
         };
-        startInfo.Arguments += $" ml64 main.asm /link /subsystem:console /defaultlib:{libDir}TupiLib.lib";
+        startInfo.Arguments += $" ml64 main.asm /link /entry:main /subsystem:console /defaultlib:{libDir}TupiLib.lib";
         if (run)
         {
             startInfo.Arguments += " && main";
@@ -296,64 +301,6 @@ internal static class Program
         }
     }
 
-    static void PreCompileLines_Header(object? sender, PreCompilerArgs e)
-    {
-        string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        for (int i = 0; i < lines.Length; i++)
-        {
-            string line = lines[i];
-            if (line.StartsWith("useth "))
-            {
-                string path = line.Replace("useth ", "").Replace("<", "").Replace(">", "");
-                lines[i] = string.Empty;
-                if (File.Exists(path))
-                {
-                    lines[i] = File.ReadAllText(path);
-                    CreateIncludeFile(path);
-                }
-                else if (File.Exists(pathCompile + "/" + path))
-                {
-                    lines[i] = File.ReadAllText(pathCompile + "/" + path);
-                    CreateIncludeFile(path);
-                }
-                else if (File.Exists(thDir + path))
-                {
-                    lines[i] = File.ReadAllText(thDir + path);
-                    CreateIncludeFile(path);
-                }
-                else
-                {
-                    ConsoleColor consoleColor = Console.ForegroundColor;
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"{path} header not find");
-                    Console.WriteLine($"{pathCompile + "/" + path} header not find");
-                    Console.WriteLine($"{thDir + path} header not find");
-                    Console.ForegroundColor = consoleColor;
-                }
-            }
-        }
-
-        e.Code = string.Empty;
-        for (int i = 0; i < lines.Length; i++)
-        {
-            string line = lines[i];
-
-            if (line != string.Empty)
-            {
-                e.Code += line + "\n";
-            }
-            else if (i + 1 < line.Length)
-            {
-                lines[i + 1] = lines[i + 1].Replace("\r", "");
-            }
-        }
-
-        PreCompileLines_GrammarSub(sender, e);
-        PreCompileLines_GrammarAdd(sender, e);
-        PreCompileLines_Comment(sender, e);
-        PreCompileLines_String(sender, e);
-    }
-
     static void PreCompileLines_Macro(object? sender, PreCompilerArgs e)
     {
         string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -435,6 +382,42 @@ internal static class Program
             if (terms[0] == "usefn")
             {
                 e.CodeData.UseFn.Add($"extern {terms[1]}: proc");
+            }
+        }
+    }
+
+    static void Compile_UseTh(object? sender, CompilerArgs e)
+    {
+        for (int i = 0; i < e.Lines.Length; i++)
+        {
+            string line = e.Lines[i];
+            if (line.StartsWith("useth "))
+            {
+                string path = line.Replace("useth ", "").Replace("<", "").Replace(">", "");
+                if (File.Exists(path))
+                {
+                    string incName = CreateIncludeFile(path);
+                    e.CodeData.UseTh.Add($"include header/{incName}");
+                }
+                else if (File.Exists(pathCompile + "/" + path))
+                {
+                    string incName = CreateIncludeFile(pathCompile + "/" + path);
+                    e.CodeData.UseTh.Add($"include header/{incName}");
+                }
+                else if (File.Exists(thDir + path))
+                {
+                    string incName = CreateIncludeFile(thDir + path);
+                    e.CodeData.UseTh.Add($"include header/{incName}");
+                }
+                else
+                {
+                    ConsoleColor consoleColor = Console.ForegroundColor;
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"{path} header not find");
+                    Console.WriteLine($"{pathCompile + "/" + path} header not find");
+                    Console.WriteLine($"{thDir + path} header not find");
+                    Console.ForegroundColor = consoleColor;
+                }
             }
         }
     }
@@ -975,17 +958,19 @@ internal static class Program
         return shadowSpace;
     }
 
-    private static void CreateIncludeFile(string path)
+    private static string CreateIncludeFile(string path)
     {
         string fileName = Path.GetFileNameWithoutExtension(path);
-
         Directory.CreateDirectory($"{pathDir}/header/");
-        File.Create($"{pathDir}/header/{fileName}.inc");
+        StreamWriter writer = File.CreateText($"{pathDir}/header/{fileName}.inc");
+        writer.Write(CompileTupiCode(path, true));
+        writer.Close();
+        return fileName + ".inc";
     }
 
-    private static HeaderData GetHeaderDataInFile(string path)
-    {
-        return default;
-    }
+    //private static HeaderData GetHeaderDataInFile(string path)
+    //{
+    //    return default;
+    //}
     #endregion
 }

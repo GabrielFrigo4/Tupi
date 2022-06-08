@@ -10,13 +10,15 @@ internal class Compiler
     private readonly ReadOnlyData readonlyData;
     private readonly RunData runData;
     private readonly CodeData codeData;
+    private readonly bool isHeader;
 
-    internal Compiler(string tupiCodePath)
+    internal Compiler(string tupiCodePath, bool isHeader = false)
     {
         tupiCode = File.ReadAllText(tupiCodePath);
         readonlyData = new ReadOnlyData();
         runData = new RunData();
         codeData = new CodeData();
+        this.isHeader = isHeader;
     }
 
     internal string Start()
@@ -39,6 +41,6 @@ internal class Compiler
     {
         CompilerArgs compilerArgs = new CompilerArgs(tupiCodeLines, runData, codeData, readonlyData);
         CompilerEvent?.Invoke(this, compilerArgs);
-        return codeData.CreateAsmCode();
+        return codeData.CreateAsmCode(isHeader);
     }
 }
