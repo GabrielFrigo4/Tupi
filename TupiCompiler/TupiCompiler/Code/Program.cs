@@ -12,7 +12,8 @@ internal static class Program
         libPath = "_tupi/x64/lib/",
         thPath = "_tupi/headers/",
         libDir = Path.GetFullPath(libPath),
-        thDir = Path.GetFullPath(thPath);
+        thDir = Path.GetFullPath(thPath),
+        pathDir = "./build";
 
     static private string pathCompile = string.Empty;
 
@@ -75,7 +76,6 @@ internal static class Program
         compiler.CompilerEvent += Compile_Func;
         string asmCode = compiler.Start();
 
-        string pathDir = "./build";
         Directory.CreateDirectory(pathDir);
         StreamWriter write = File.CreateText(pathDir + @"\main.asm");
         write.Write(asmCode);
@@ -309,14 +309,17 @@ internal static class Program
                 if (File.Exists(path))
                 {
                     lines[i] = File.ReadAllText(path);
+                    CreateIncludeFile(path);
                 }
                 else if (File.Exists(pathCompile + "/" + path))
                 {
                     lines[i] = File.ReadAllText(pathCompile + "/" + path);
+                    CreateIncludeFile(path);
                 }
                 else if (File.Exists(thDir + path))
                 {
                     lines[i] = File.ReadAllText(thDir + path);
+                    CreateIncludeFile(path);
                 }
                 else
                 {
@@ -970,6 +973,19 @@ internal static class Program
             shadowSpace -= 8;
         }
         return shadowSpace;
+    }
+
+    private static void CreateIncludeFile(string path)
+    {
+        string fileName = Path.GetFileNameWithoutExtension(path);
+
+        Directory.CreateDirectory($"{pathDir}/header/");
+        File.Create($"{pathDir}/header/{fileName}.inc");
+    }
+
+    private static HeaderData GetHeaderDataInFile(string path)
+    {
+        return default;
     }
     #endregion
 }
