@@ -9,7 +9,7 @@ internal class Compiler
     private readonly string tupiCode = string.Empty;
     private readonly ReadOnlyData readonlyData;
     private readonly RunData runData;
-    private readonly CodeData codeData;
+    private readonly CodeCompiled codeCompiled;
     private readonly bool isHeader;
 
     internal Compiler(string tupiCodePath, bool isHeader = false)
@@ -17,7 +17,7 @@ internal class Compiler
         tupiCode = File.ReadAllText(tupiCodePath);
         readonlyData = new ReadOnlyData();
         runData = new RunData();
-        codeData = new CodeData();
+        codeCompiled = new CodeCompiled();
         this.isHeader = isHeader;
     }
 
@@ -30,7 +30,7 @@ internal class Compiler
 
     private string[] PreCompilerCode(string code)
     {
-        PreCompilerArgs preCompilerArgs = new PreCompilerArgs(code);
+        PreCompilerArgs preCompilerArgs = new(code);
         PreCompilerEvent?.Invoke(this, preCompilerArgs);
 
         var codeLines = preCompilerArgs.Code.Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
@@ -39,8 +39,13 @@ internal class Compiler
 
     private string CompilerCode(string[] tupiCodeLines)
     {
-        CompilerArgs compilerArgs = new CompilerArgs(tupiCodeLines, runData, codeData, readonlyData);
+        CompilerArgs compilerArgs = new(tupiCodeLines, runData, codeCompiled, readonlyData);
         CompilerEvent?.Invoke(this, compilerArgs);
-        return codeData.CreateAsmCode(isHeader);
+        return codeCompiled.CreateAsmCode(isHeader);
+    }
+
+    internal RunData GetRunData()
+    {
+        return runData;
     }
 }

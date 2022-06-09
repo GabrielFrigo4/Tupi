@@ -1,15 +1,10 @@
 ﻿namespace TupiCompiler.Data;
-internal class RunData
+internal class RunData: ICodeData, IHeaderData
 {
-    internal List<FuncData> Funcs { get; private set; }
-    internal List<StructData> Structs { get; private set; }
-    internal List<UnionData> Unions { get; private set; }
-
-    /// <summary>
-    /// string = name
-    /// VarData = varData
-    /// </summary>
-    internal Dictionary<string, VarData> GlobalVars { get; set; }
+    public List<FuncData> Funcs { get; private set; }
+    public List<StructData> Structs { get; private set; }
+    public List<UnionData> Unions { get; private set; }
+    public Dictionary<string, VarData> GlobalVars { get; private set; }
 
     internal RunData()
     {
@@ -47,5 +42,30 @@ internal class RunData
                 return f;
         }
         return null;
+    }
+
+    internal ICodeData GetCodeData()
+    {
+        return this;
+    }
+
+    internal IHeaderData GetHeaderData()
+    {
+        return this;
+    }
+
+    internal void AddCodeData(ICodeData codeData)
+    {
+        Funcs.AddRange(codeData.Funcs);
+        Structs.AddRange(codeData.Structs);
+        Unions.AddRange(codeData.Unions);
+        foreach(var globalVar in codeData.GlobalVars)
+            GlobalVars.TryAdd(globalVar.Key, globalVar.Value);
+    }
+
+    internal void AddHeaderData(IHeaderData headerData)
+    {
+        Structs.AddRange(headerData.Structs);
+        Unions.AddRange(headerData.Unions);
     }
 }

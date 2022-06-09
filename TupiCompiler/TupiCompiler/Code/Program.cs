@@ -7,7 +7,23 @@ using TupiCompiler.Utility;
 namespace TupiCompiler.Code;
 internal static class Program
 {
-    static Compiler? compiler;
+    static Compiler? mainCompiler;
+
+    internal static Compiler MainCompiler
+    {
+        get
+        {
+            if (mainCompiler is null)
+            {
+                throw new Exception("MainCompiler not create");
+            }
+            else
+            {
+                return mainCompiler;
+            }
+        }
+    }
+
     public readonly static string
         libPath = "_tupi/x64/lib/",
         thPath = "_tupi/headers/",
@@ -22,7 +38,7 @@ internal static class Program
     {
         get
         {
-            if(exePath == null)
+            if(exePath is null)
             {
                 return string.Empty;
             }
@@ -62,12 +78,12 @@ internal static class Program
 
         Directory.CreateDirectory(pathDir);
         StreamWriter write = File.CreateText(pathDir + @"\main.asm");
-        write.Write(CompileTupiCode(pathTupi));
+        write.Write(CompileTupiFile(pathTupi, out mainCompiler));
         write.Close();
         CompileAsm(pathDir);
     }
 
-    static string CompileTupiCode(string pathTupiCode, bool isHeader = false)
+    static string CompileTupiFile(string pathTupiCode, out Compiler compiler, bool isHeader = false)
     {
         compiler = new Compiler(pathTupiCode, isHeader);
         compiler.PreCompilerEvent += PreCompileLines_GrammarSub;
@@ -381,7 +397,7 @@ internal static class Program
             if (terms.Length < 2 || isInsideFunc || isInsideStruct || isInsideUnion) continue;
             if (terms[0] == "usefn")
             {
-                e.CodeData.UseFn.Add($"extern {terms[1]}: proc");
+                e.CodeCompiled.UseFn.Add($"extern {terms[1]}: proc");
             }
         }
     }
@@ -396,18 +412,21 @@ internal static class Program
                 string path = line.Replace("useth ", "").Replace("<", "").Replace(">", "");
                 if (File.Exists(path))
                 {
-                    string incName = CreateIncludeFile(path);
-                    e.CodeData.UseTh.Add($"include header/{incName}");
+                    string incName = CreateIncludeFile(path, out IHeaderData headerData);
+                    MainCompiler.GetRunData().AddHeaderData(headerData);
+                    e.CodeCompiled.UseTh.Add($"include header/{incName}");
                 }
                 else if (File.Exists(pathCompile + "/" + path))
                 {
-                    string incName = CreateIncludeFile(pathCompile + "/" + path);
-                    e.CodeData.UseTh.Add($"include header/{incName}");
+                    string incName = CreateIncludeFile(pathCompile + "/" + path, out IHeaderData headerData);
+                    MainCompiler.GetRunData().AddHeaderData(headerData);
+                    e.CodeCompiled.UseTh.Add($"include header/{incName}");
                 }
                 else if (File.Exists(thDir + path))
                 {
-                    string incName = CreateIncludeFile(thDir + path);
-                    e.CodeData.UseTh.Add($"include header/{incName}");
+                    string incName = CreateIncludeFile(thDir + path, out IHeaderData headerData);
+                    MainCompiler.GetRunData().AddHeaderData(headerData);
+                    e.CodeCompiled.UseTh.Add($"include header/{incName}");
                 }
                 else
                 {
@@ -462,7 +481,7 @@ internal static class Program
                 if (!isInsideStruct)
                 {
                     structCode += $"{currentStruct.Name} ends";
-                    e.CodeData.Struct.Add(structCode);
+                    e.CodeCompiled.Struct.Add(structCode);
                     structCode = string.Empty;
                     currentStruct = null;
                 }
@@ -498,19 +517,21 @@ internal static class Program
                     int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
                     unionCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {e.ReadOnlyData.AsmTypes[pos]}") + "\n";
                     currentUnion.Vars.Add(new VarData(terms[1], terms[0], e.ReadOnlyData.TupiTypeSize[pos]));
-                    currentUnion.Size += e.ReadOnlyData.TupiTypeSize[pos];
+                    if(currentUnion.Size < e.ReadOnlyData.TupiTypeSize[pos])
+                        currentUnion.Size = e.ReadOnlyData.TupiTypeSize[pos];
                 }
                 else if (e.RunData.GetUnionByName(terms[0]) is UnionData union)
                 {
                     unionCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
                     currentUnion.Vars.Add(new VarData(terms[1], terms[0], union.Size));
-                    currentUnion.Size += union.Size;
+                    if (currentUnion.Size < union.Size)
+                        currentUnion.Size = union.Size;
                 }
 
                 if (!isInsideUnion)
                 {
                     unionCode += $"{currentUnion.Name} ends";
-                    e.CodeData.Union.Add(unionCode);
+                    e.CodeCompiled.Union.Add(unionCode);
                     unionCode = string.Empty;
                 }
             }
@@ -529,11 +550,11 @@ internal static class Program
             if (e.ReadOnlyData.TupiTypes.Contains(terms[0]))
             {
                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
-                e.CodeData.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {e.ReadOnlyData.AsmTypes[pos]}"));
+                e.CodeCompiled.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {e.ReadOnlyData.AsmTypes[pos]}"));
             }
             else if (e.RunData.GetStructByName(terms[0]) is not null)
             {
-                e.CodeData.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}"));
+                e.CodeCompiled.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}"));
             }
         }
     }
@@ -823,7 +844,7 @@ internal static class Program
                 if (!isInsideFunc)
                 {
                     fnCode += $"{currentFunc.Name} endp";
-                    e.CodeData.Func.Add(fnCode);
+                    e.CodeCompiled.Func.Add(fnCode);
                     fnCode = string.Empty;
                     isInsideFunc = isInsideStruct = isDefVarEnd = false;
                     currentFunc = null;
@@ -958,19 +979,15 @@ internal static class Program
         return shadowSpace;
     }
 
-    private static string CreateIncludeFile(string path)
+    private static string CreateIncludeFile(string path, out IHeaderData headerData)
     {
         string fileName = Path.GetFileNameWithoutExtension(path);
         Directory.CreateDirectory($"{pathDir}/header/");
         StreamWriter writer = File.CreateText($"{pathDir}/header/{fileName}.inc");
-        writer.Write(CompileTupiCode(path, true));
+        writer.Write(CompileTupiFile(path, out Compiler compiler, true));
         writer.Close();
+        headerData = compiler.GetRunData().GetHeaderData();
         return fileName + ".inc";
     }
-
-    //private static HeaderData GetHeaderDataInFile(string path)
-    //{
-    //    return default;
-    //}
     #endregion
 }

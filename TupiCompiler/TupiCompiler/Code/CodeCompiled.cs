@@ -1,5 +1,5 @@
 ﻿namespace TupiCompiler.Code;
-internal class CodeData
+internal class CodeCompiled
 {
     internal List<string> UseFn { get; private set; }
     internal List<string> UseTh { get; private set; }
@@ -8,7 +8,7 @@ internal class CodeData
     internal List<string> GlobalVar { get; private set; }
     internal List<string> Func { get; private set; }
 
-    internal CodeData()
+    internal CodeCompiled()
     {
         UseFn = new List<string>();
         UseTh = new List<string>();

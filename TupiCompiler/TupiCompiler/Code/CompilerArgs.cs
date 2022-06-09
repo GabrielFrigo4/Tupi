@@ -4,14 +4,14 @@ namespace TupiCompiler.Code;
 
 internal class CompilerArgs : EventArgs
 {
-    internal CodeData CodeData { get; private set; }
+    internal CodeCompiled CodeCompiled { get; private set; }
     internal string[] Lines { get; private set; }
     internal RunData RunData { get; private set; }
     internal ReadOnlyData ReadOnlyData { get; private set; }
 
-    internal CompilerArgs(string[] lines, RunData runData, CodeData codeData, ReadOnlyData readOnlyData)
+    internal CompilerArgs(string[] lines, RunData runData, CodeCompiled codeCompiled, ReadOnlyData readOnlyData)
     {
-        this.CodeData = codeData;
+        this.CodeCompiled = codeCompiled;
         this.Lines = lines;
         this.RunData = runData;
         this.ReadOnlyData = readOnlyData;
