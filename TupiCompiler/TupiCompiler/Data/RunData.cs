@@ -5,13 +5,15 @@ internal class RunData: ICodeData, IHeaderData
     public List<StructData> Structs { get; private set; }
     public List<UnionData> Unions { get; private set; }
     public Dictionary<string, VarData> GlobalVars { get; private set; }
+    public Dictionary<string, string> Macros { get; private set; }
 
     internal RunData()
     {
-        this.Funcs = new List<FuncData>();
-        this.Structs = new List<StructData>();
-        this.Unions = new List<UnionData>();
-        this.GlobalVars = new Dictionary<string, VarData>();
+        Funcs = new();
+        Structs = new();
+        Unions = new();
+        GlobalVars = new();
+        Macros = new();
     }
 
     internal StructData? GetStructByName(string name)
@@ -61,11 +63,15 @@ internal class RunData: ICodeData, IHeaderData
         Unions.AddRange(codeData.Unions);
         foreach(var globalVar in codeData.GlobalVars)
             GlobalVars.TryAdd(globalVar.Key, globalVar.Value);
+        foreach (var macro in codeData.Macros)
+            Macros.TryAdd(macro.Key, macro.Value);
     }
 
     internal void AddHeaderData(IHeaderData headerData)
     {
         Structs.AddRange(headerData.Structs);
         Unions.AddRange(headerData.Unions);
+        foreach (var macro in headerData.Macros)
+            Macros.TryAdd(macro.Key, macro.Value);
     }
 }

@@ -6,4 +6,5 @@ internal interface ICodeData
     List<StructData> Structs { get; }
     List<UnionData> Unions { get; }
     Dictionary<string, VarData> GlobalVars { get; }
+    Dictionary<string, string> Macros { get; }
 }

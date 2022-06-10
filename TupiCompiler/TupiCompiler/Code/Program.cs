@@ -143,61 +143,54 @@ internal static class Program
     #region PreCompile
     static void PreCompileLines_GrammarSub(object? sender, PreCompilerArgs e)
     {
-        int totalEdits = 0;
         string codeStr = e.Code;
-        char[] codeChars = e.Code.ToCharArray();
-        for (int pos = 0; pos < e.Code.Length - 1; pos++)
+        for (int pos = 0; pos < codeStr.Length - 1; pos++)
         {
-            if (IsInsideString(e.Code, pos, out _, out _)) continue;
-            if (codeChars[pos] == '\t')
+            if (IsInsideString(codeStr, pos, out _, out _)) continue;
+            if (codeStr[pos] == '\t')
             {
-                int newPos = pos - totalEdits;
-                codeStr = codeStr.Remove(newPos, 1);
-                totalEdits++;
+                codeStr = codeStr.Remove(pos, 1);
+                pos--;
                 continue;
             }
-            if (codeChars[pos] == '\r')
+            if (codeStr[pos] == '\r')
             {
-                int newPos = pos - totalEdits;
-                codeStr = codeStr.Remove(newPos, 1);
-                totalEdits++;
+                codeStr = codeStr.Remove(pos, 1);
+                pos--;
                 continue;
             }
 
             if (pos == e.Code.Length - 1) break;
-            if (codeChars[pos] == ' ' && codeChars[pos + 1] == ' ')
+            if (codeStr[pos] == ' ' && codeStr[pos + 1] == ' ')
             {
-                int newPos = pos - totalEdits;
-                codeStr = codeStr.Remove(newPos, 1);
-                totalEdits++;
+                codeStr = codeStr.Remove(pos, 1);
+                pos--;
                 continue;
             }
-            if (codeChars[pos] == '\n' && codeChars[pos + 1] == '{')
+            if (codeStr[pos] == '\n' && codeStr[pos + 1] == '{')
             {
-                int newPos = pos - totalEdits;
-                codeStr = codeStr.Remove(newPos, 1);
-                totalEdits++;
+                codeStr = codeStr.Remove(pos, 1);
+                pos--;
                 continue;
             }
-            if (codeChars[pos] == '\n' && codeChars[pos + 1] == '\t' && codeChars[pos + 2] == '{')
+            if (codeStr[pos] == ';' && (codeStr[pos + 1] == '\n' || codeStr[pos + 1] == '\r'))
             {
-                int newPos = pos - totalEdits;
-                codeStr = codeStr.Remove(newPos, 1);
-                totalEdits++;
+                codeStr = codeStr.Remove(pos, 1);
+                pos--;
                 continue;
             }
-            if (codeChars[pos] == ';' && (codeChars[pos + 1] == '\n' || codeChars[pos + 1] == '\r'))
+            if (codeStr[pos] == '\n' && (codeStr[pos + 1] == '\n' || codeStr[pos + 1] == ' '))
             {
-                int newPos = pos - totalEdits;
-                codeStr = codeStr.Remove(newPos, 1);
-                totalEdits++;
+                codeStr = codeStr.Remove(pos, 1);
+                pos--;
                 continue;
             }
-            if (codeChars[pos] == '\n' && (codeChars[pos + 1] == '\n' || codeChars[pos + 1] == ' '))
+
+            if (pos == 0) continue;
+            if (codeStr[pos - 1] == '\n' && codeStr[pos] == '{')
             {
-                int newPos = pos - totalEdits;
-                codeStr = codeStr.Remove(newPos, 1);
-                totalEdits++;
+                codeStr = codeStr.Remove(pos - 1, 1);
+                pos--;
                 continue;
             }
         }
@@ -206,45 +199,35 @@ internal static class Program
 
     static void PreCompileLines_GrammarAdd(object? sender, PreCompilerArgs e)
     {
-        int totalEdits = 0;
         string codeStr = e.Code;
-        char[] codeChars = e.Code.ToCharArray();
-        for (int pos = 0; pos < e.Code.Length - 1; pos++)
+        for (int pos = 0; pos < codeStr.Length - 1; pos++)
         {
-            if (IsInsideString(e.Code, pos, out _, out _)) continue;
-            if(codeChars.Length <= pos + 1) break;
-            if (codeChars[pos] == '=' && codeChars[pos+1] != ' ')
+            if (IsInsideString(codeStr, pos, out _, out _)) continue;
+            if (codeStr.Length <= pos + 1) break;
+            if (codeStr[pos] == '=' && codeStr[pos+1] != ' ')
             {
-                int newPos = pos + totalEdits;
-                codeStr = codeStr.Insert(newPos + 1, " ");
-                totalEdits++;
+                codeStr = codeStr.Insert(pos + 1, " ");
                 continue;
             }
 
-            if (codeChars[pos] != ' ' && codeChars[pos] != '\n' && codeChars[pos + 1] == '{')
+            if (codeStr[pos] != ' ' && codeStr[pos] != '\n' && codeStr[pos + 1] == '{')
             {
-                int newPos = pos + totalEdits;
-                codeStr = codeStr.Insert(newPos + 1, " ");
-                totalEdits++;
+                codeStr = codeStr.Insert(pos + 1, " ");
                 continue;
             }
 
-            if (codeChars[pos] != ' ' && codeChars[pos] != '+' &&
-                codeChars[pos] != '-' && codeChars[pos + 1] == '=')
+            if (codeStr[pos] != ' ' && codeStr[pos] != '+' &&
+                codeStr[pos] != '-' && codeStr[pos + 1] == '=')
             {
-                int newPos = pos + totalEdits;
-                codeStr = codeStr.Insert(newPos + 1, " ");
-                totalEdits++;
+                codeStr = codeStr.Insert(pos + 1, " ");
                 continue;
             }
 
-            if (codeChars.Length <= pos + 2) break;
-            if (codeChars[pos] != ' ' && codeChars[pos + 2] == '=' && 
-                (codeChars[pos + 1] == '-' || codeChars[pos + 1] == '+'))
+            if (codeStr.Length <= pos + 2) break;
+            if (codeStr[pos] != ' ' && codeStr[pos + 2] == '=' && 
+                (codeStr[pos + 1] == '-' || codeStr[pos + 1] == '+'))
             {
-                int newPos = pos + totalEdits;
-                codeStr = codeStr.Insert(newPos + 1, " ");
-                totalEdits++;
+                codeStr = codeStr.Insert(pos + 1, " ");
                 continue;
             }
         }
@@ -253,8 +236,30 @@ internal static class Program
 
     static void PreCompileLines_Comment(object? sender, PreCompilerArgs e)
     {
-        string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        string code = e.Code;
 
+        //coment ==> ($ here $)
+        int start = -1, end = -1;
+        for (int i = 0; i < code.Length - 1; i++)
+        {
+            if (code[i] == '(' && code[i + 1] == '$')
+            {
+                start = i;
+            }
+            if (code[i] == '$' && code[i + 1] == ')' && start > 0)
+            {
+                end = i + 2;
+                int count = end - start;
+                code = code.Remove(start, count);
+                i -= count;
+
+                start = -1;
+                end = -1;
+            }
+        }
+
+        //coment ==> $ here
+        string[] lines = code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
         for (int i = 0; i < lines.Length; i++)
         {
             string line = lines[i];
@@ -265,20 +270,22 @@ internal static class Program
             }
         }
 
-        e.Code = string.Empty;
+        code = string.Empty;
         for (int i = 0; i < lines.Length; i++)
         {
             string line = lines[i];
 
             if (line != string.Empty)
             {
-                e.Code += line + "\n";
+                code += line + "\n";
             }
             else if (i + 1 < line.Length)
             {
                 lines[i + 1] = lines[i + 1].Replace("\r", "");
             }
         }
+
+        e.Code = code;
     }
 
     static void PreCompileLines_String(object? sender, PreCompilerArgs e)
@@ -589,9 +596,7 @@ internal static class Program
         FuncData? currentFunc = null;
         string fnCode = string.Empty;
 
-        int loopInd = 0;
-        bool loopInside = false;
-
+        int keysInd = 0;
         int totalKeys = 0;
         bool isInsideFunc = false, isInsideStruct = false, isDefVarEnd = false;
         foreach (var line in e.Lines)
@@ -856,16 +861,20 @@ internal static class Program
                 }
 
                 //loop
-                if (terms[0] == "loop" && terms.Length == 2 && !loopInside)
+                if (terms[0] == "loop" && terms.Length == 2 && totalKeys == 2)
                 {
-                    loopInd++;
-                    loopInside = true;
-                    fnCode += $"$loop{loopInd}:\n";
+                    keysInd++;
+                    fnCode += $"$loop{keysInd}:\n";
                 }
-                else if (terms[0] == "}" && terms.Length == 1 && loopInside)
+                else if (terms[0] == "}" && terms.Length == 1 && totalKeys == 1)
                 {
-                    loopInside = false;
-                    fnCode += $"jmp $loop{loopInd}\n";
+                    fnCode += $"\tjmp $loop{keysInd}\n$break{keysInd}:\n";
+                }
+
+                //break
+                if (terms[0] == "break" && terms.Length == 1 && totalKeys == 2)
+                {
+                    fnCode += $"\tjmp $break{keysInd}\n";
                 }
 
                 //return
@@ -892,9 +901,7 @@ internal static class Program
                     isInsideFunc = isInsideStruct = isDefVarEnd = false;
                     currentFunc = null;
                     totalKeys = 0;
-
-                    loopInside = false;
-                    loopInd = 0;
+                    keysInd = 0;
                 }
             }
         }

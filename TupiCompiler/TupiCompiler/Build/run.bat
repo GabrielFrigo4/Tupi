@@ -1,0 +1,2 @@
+@echo on
+mycode && pause

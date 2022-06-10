@@ -1,6 +1,17 @@
 useth <tupilib.th>
 useth <tupiheader.th>
 
+($ coments here $)
+($ i8 pularLinha2 "\n\0" $)
+($ 
+struct ungabunga2
+{
+	i8 myByte1 ?
+	i64 myLong1 ?
+	i8 myByte2 ?
+	i64 myLong2 ?
+}
+$)
 i8 pularLinha "\n\0"
 i8 msg1 'myInt is ', 0
 i8 msgLoop "myInt in loop is \0"
@@ -37,6 +48,7 @@ fn main(i32 argc, iptr argv)
 		consoleWriteInt(myLongLoop)
 		myLongLoop-=10;
 		consoleWriteStr(&pularLinha)
+		break;
 	}
 	return 0
 }
