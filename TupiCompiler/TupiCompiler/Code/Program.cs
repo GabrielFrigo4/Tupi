@@ -61,7 +61,7 @@ internal static class Program
         if (_pathCompile is not null)
             pathCompile = Path.GetFullPath(_pathCompile); 
 
-        Action<string> action = CompileTupi;
+        Action<string> action = CompileTupiProj;
         Argument<string> source = new("source", "source for tupi compile");
         RootCommand cmd = new()
         {
@@ -71,16 +71,20 @@ internal static class Program
         return cmd.Invoke(args);
     }
 
-    static void CompileTupi(string pathTupi)
+    static void CompileTupiProj(string pathTupi)
     {
-        Console.WriteLine("compile tupi code:");
-        Console.WriteLine("tranform tupi to assembly");
+        string tupiFileName = Path.GetFileNameWithoutExtension(pathTupi);
+        Console.WriteLine("compile tupi proj:");
+        Console.WriteLine("tranform tupi code to assembly(masm)");
 
         Directory.CreateDirectory(pathDir);
-        StreamWriter write = File.CreateText(pathDir + @"\main.asm");
+        StreamWriter write = File.CreateText(pathDir + $"\\{tupiFileName}.asm");
         write.Write(CompileTupiFile(pathTupi, out mainCompiler));
         write.Close();
-        CompileAsm(pathDir);
+
+        List<string> files = new();
+        files.Add(tupiFileName);
+        CompileAsm(pathDir, files);
     }
 
     static string CompileTupiFile(string pathTupiCode, out Compiler compiler, bool isHeader = false)
@@ -104,7 +108,7 @@ internal static class Program
         return asmCode;
     }
 
-    static void CompileAsm(string path_dir_asm, bool run = false, bool assembler_warning = true)
+    static void CompileAsm(string path_dir_asm, List<string> nameFiles, bool run = false, bool assembler_warning = true)
     {
         Console.WriteLine("tranform assembly to binary file");
         Process process = new();
@@ -113,9 +117,19 @@ internal static class Program
             CreateNoWindow = !assembler_warning,
             WindowStyle = ProcessWindowStyle.Hidden,
             FileName = "cmd.exe",
-            Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" &&"
+            Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat\" x64  &&"
         };
-        startInfo.Arguments += $" ml64 main.asm /link /entry:main /subsystem:console /defaultlib:{libDir}TupiLib.lib";
+        foreach(string asmFile in nameFiles)
+        {
+            startInfo.Arguments += $" ml64 {asmFile}.asm /c &&";
+        }
+        string linkCommand = " link";
+        foreach (string objFile in nameFiles)
+        {
+            linkCommand += $" {objFile}.obj";
+        }
+        linkCommand += $" /entry:main /subsystem:console /defaultlib:{libDir}TupiLib.lib";
+        startInfo.Arguments += linkCommand;
         if (run)
         {
             startInfo.Arguments += " && main";
@@ -159,6 +173,13 @@ internal static class Program
                 continue;
             }
             if (codeChars[pos] == '\n' && codeChars[pos + 1] == '{')
+            {
+                int newPos = pos - totalEdits;
+                codeStr = codeStr.Remove(newPos, 1);
+                totalEdits++;
+                continue;
+            }
+            if (codeChars[pos] == '\n' && codeChars[pos + 1] == '\t' && codeChars[pos + 2] == '{')
             {
                 int newPos = pos - totalEdits;
                 codeStr = codeStr.Remove(newPos, 1);
@@ -387,11 +408,12 @@ internal static class Program
     #region Compile
     static void Compile_UseFn(object? sender, CompilerArgs e)
     {
+        int totalKey = 0;
         bool isInsideFunc = false, isInsideStruct = false, isInsideUnion = false;
         foreach (var line in e.Lines)
         {
             string[] terms = e.GetTermsLine(line);
-            UpdateInsideFunc(terms, ref isInsideFunc);
+            UpdateInsideFunc(terms, ref totalKey, ref isInsideFunc);
             UpdateInsideStruct(terms, ref isInsideStruct);
             UpdateInsideStruct(terms, ref isInsideUnion);
             if (terms.Length < 2 || isInsideFunc || isInsideStruct || isInsideUnion) continue;
@@ -445,11 +467,12 @@ internal static class Program
     {
         StructData? currentStruct = null;
         string structCode = string.Empty;
+        int totalKey = 0;
         bool isInsideFunc = false, isInsideStruct = false;
         foreach (var line in e.Lines)
         {
             string[] terms = e.GetTermsLine(line);
-            UpdateInsideFunc(terms, ref isInsideFunc);
+            UpdateInsideFunc(terms, ref totalKey, ref isInsideFunc);
             if (!isInsideStruct)
             {
                 UpdateInsideStruct(terms, ref isInsideStruct);
@@ -493,11 +516,12 @@ internal static class Program
     {
         UnionData? currentUnion = null;
         string unionCode = string.Empty;
+        int totalKey = 0;
         bool isInsideFunc = false, isInsideUnion = false;
         foreach (var line in e.Lines)
         {
             string[] terms = e.GetTermsLine(line);
-            UpdateInsideFunc(terms, ref isInsideFunc);
+            UpdateInsideFunc(terms, ref totalKey, ref isInsideFunc);
             if (!isInsideUnion)
             {
                 UpdateInsideUnion(terms, ref isInsideUnion);
@@ -540,11 +564,12 @@ internal static class Program
 
     static void Compile_GlobalVar(object? sender, CompilerArgs e)
     {
+        int totalKey = 0;
         bool isInsideFunc = false, isInsideStruct = false;
         foreach (var line in e.Lines)
         {
             string[] terms = e.GetTermsLine(line);
-            UpdateInsideFunc(terms, ref isInsideFunc);
+            UpdateInsideFunc(terms, ref totalKey, ref isInsideFunc);
             UpdateInsideStruct(terms, ref isInsideStruct);
             if (terms.Length < 3 || isInsideFunc || isInsideStruct) continue;
             if (e.ReadOnlyData.TupiTypes.Contains(terms[0]))
@@ -563,6 +588,11 @@ internal static class Program
     {
         FuncData? currentFunc = null;
         string fnCode = string.Empty;
+
+        int loopInd = 0;
+        bool loopInside = false;
+
+        int totalKeys = 0;
         bool isInsideFunc = false, isInsideStruct = false, isDefVarEnd = false;
         foreach (var line in e.Lines)
         {
@@ -570,7 +600,7 @@ internal static class Program
             UpdateInsideStruct(terms, ref isInsideStruct);
             if (!isInsideFunc)
             {
-                UpdateInsideFunc(terms, ref isInsideFunc);
+                UpdateInsideFunc(terms, ref totalKeys, ref isInsideFunc);
                 if (terms.Length < 2 || isInsideStruct) continue;
                 if (terms[0] == "fn")
                 {
@@ -602,7 +632,7 @@ internal static class Program
             }
             else if(currentFunc is not null)
             {
-                UpdateInsideFunc(terms, ref isInsideFunc);
+                UpdateInsideFunc(terms, ref totalKeys, ref isInsideFunc);
 
                 bool contains = false;
                 if (!isDefVarEnd)
@@ -825,6 +855,19 @@ internal static class Program
                     fnCode += $"\tjmp {terms[1]}\n";
                 }
 
+                //loop
+                if (terms[0] == "loop" && terms.Length == 2 && !loopInside)
+                {
+                    loopInd++;
+                    loopInside = true;
+                    fnCode += $"$loop{loopInd}:\n";
+                }
+                else if (terms[0] == "}" && terms.Length == 1 && loopInside)
+                {
+                    loopInside = false;
+                    fnCode += $"jmp $loop{loopInd}\n";
+                }
+
                 //return
                 if (terms[0] == "return" && terms.Length == 1)
                 {
@@ -848,6 +891,10 @@ internal static class Program
                     fnCode = string.Empty;
                     isInsideFunc = isInsideStruct = isDefVarEnd = false;
                     currentFunc = null;
+                    totalKeys = 0;
+
+                    loopInside = false;
+                    loopInd = 0;
                 }
             }
         }
@@ -909,14 +956,24 @@ internal static class Program
         return isInside;
     }
 
-    private static void UpdateInsideFunc(string[] terms, ref bool isInsideFunc)
+    private static void UpdateInsideFunc(string[] terms, ref int totalKeys, ref bool isInsideFunc)
     {
         if (terms.Length == 0) return;
-        if(terms[0] == "fn")
+
+        if (terms[^1] == "{")
+        {
+            totalKeys++;
+        }
+        if (terms[0] == "}") 
+        {
+            totalKeys--;
+        }
+
+        if (terms[0] == "fn")
         {
             isInsideFunc = true;
         }
-        else if (terms[0] == "}")
+        else if (totalKeys == 0)
         {
             isInsideFunc = false;
         }

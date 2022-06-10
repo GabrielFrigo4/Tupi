@@ -8,6 +8,14 @@ i8 msg6 "myInts is %d %d %d %d %d\n\0"
 i64 myInt 120
 myStruct myStructTest {8, 8, 16, 16}
 
+struct ungabunga
+{
+	i8 myByte1 ?
+	i64 myLong1 ?
+	i8 myByte2 ?
+	i64 myLong2 ?
+}
+
 fn main(i32 argc, iptr argv) 
 {
 	i64 myLongVar1 = 10;
@@ -23,12 +31,13 @@ fn main(i32 argc, iptr argv)
 	print_i64(-53)
 	print_i64(myStructTest.mylong1)
 	
-	mark myLoop
-	consoleWriteStr(&msgLoop)
-	consoleWriteInt(myLongLoop)
-	myLongLoop-=10
-	consoleWriteStr(&pularLinha)
-	goto myLoop
+	loop
+	{
+		consoleWriteStr(&msgLoop)
+		consoleWriteInt(myLongLoop)
+		myLongLoop-=10;
+		consoleWriteStr(&pularLinha)
+	}
 	return 0
 }
 
