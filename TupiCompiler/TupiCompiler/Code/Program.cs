@@ -351,7 +351,8 @@ internal static class Program
     static void PreCompileLines_Macro(object? sender, PreCompilerArgs e)
     {
         string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        Dictionary<string, string> macros = new();
+        char[] seps1 = new[] { '\t', ' ', ',', '(', '{', '[', '=', '+', '-', '/', '*' };
+        char[] seps2 = new[] { ' ', ',', ')', '}', ']', '=', '+', '-', '/', '*', '\n', '\r', };
 
         for (int i = 0; i < lines.Length; i++)
         {
@@ -362,16 +363,45 @@ internal static class Program
                 string macro = line.Remove(line.IndexOf(' '));
                 line = line.Remove(0, line.IndexOf(' '));
                 string comand = line[1..];
-                macros.Add(macro, comand);
+                e.Macros.Add(macro, comand);
                 lines[i] = string.Empty;
             }
             else
             {
-                foreach (string macro in macros.Keys)
+                foreach (string macro in e.Macros.Keys)
                 {
-                    if (line.Contains(macro))
+                    int ind = line.IndexOf(macro);
+                    if (ind > -1 && !IsInsideString(line, ind, out _, out _) && !IsInsidePath(line, ind))
                     {
-                        line = line.Replace(macro, macros[macro]);
+                        foreach(char sep1 in seps1)
+                        {
+                            foreach (char sep2 in seps2)
+                            {
+                                if (line.StartsWith($"{macro}{sep2}"))
+                                {
+                                    line = line.Remove(ind, macro.Length);
+                                    line = line.Insert(ind, e.Macros[macro]);
+                                    ind = line.IndexOf(macro);
+                                    if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
+                                }
+                                else if (line.EndsWith($"{sep1}{macro}"))
+                                {
+                                    line = line.Remove(ind, macro.Length);
+                                    line = line.Insert(ind, e.Macros[macro]);
+                                    ind = line.IndexOf(macro);
+                                    if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
+                                }
+                                else if(ind - 1 == line.IndexOf($"{sep1}{macro}{sep2}"))
+                                {
+                                    line = line.Remove(ind, macro.Length);
+                                    line = line.Insert(ind, e.Macros[macro]);
+                                    ind = line.IndexOf(macro);
+                                    if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
+                                }
+                                if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
+                            }
+                            if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
+                        }
                     }
                 }
                 lines[i] = line;
@@ -682,10 +712,25 @@ internal static class Program
             if (terms.Length < 3 || isInsideFunc || isInsideStruct || isInsideUnion) continue;
             if (e.ReadOnlyData.TupiTypes.Contains(terms[0]))
             {
-                int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
-                e.CodeCompiled.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {e.ReadOnlyData.AsmTypes[pos]}"));
+                e.CodeCompiled.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}"));
+            }
+            else if (e.ReadOnlyData.AsmTypes.Contains(terms[0]))
+            {
+                e.CodeCompiled.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}"));
             }
             else if (e.RunData.GetStructByName(terms[0]) is not null)
+            {
+                e.CodeCompiled.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}"));
+            }
+            else if (e.RunData.GetTypedefByName(terms[0]) is not null)
+            {
+                e.CodeCompiled.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}"));
+            }
+            else if (e.RunData.GetStructByName(terms[0]) is not null)
+            {
+                e.CodeCompiled.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}"));
+            }
+            else if (e.RunData.GetUnionByName(terms[0]) is not null)
             {
                 e.CodeCompiled.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}"));
             }
