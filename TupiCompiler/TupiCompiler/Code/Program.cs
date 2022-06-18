@@ -352,7 +352,6 @@ internal static class Program
     {
         string[] lines = e.Code.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
         Dictionary<string, string> macros = new();
-        macros.Add("iptr", "i64");
 
         for (int i = 0; i < lines.Length; i++)
         {
@@ -731,14 +730,17 @@ internal static class Program
                         string type = argWords[0];
                         string name = argWords[1];
 
-                        int _pos1 = Array.IndexOf(e.ReadOnlyData.TupiTypes, type);
-                        string val = e.ReadOnlyData.RegistorsAll[_pos1][a];
+                        int _pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, type);
+                        string val = string.Empty;
+                        if ( _pos > 0 && _pos < 4 )
+                            val = e.ReadOnlyData.RegistorsAll[_pos][a];
+                        else
+                            val = e.ReadOnlyData.RegistorsAll[3][a];
 
-                        int _pos2 = Array.IndexOf(e.ReadOnlyData.TupiTypes, type);
-                        fnCode += $"\tlocal {name}: {e.ReadOnlyData.AsmTypes[_pos2]}\n";
-                        VarData varData = new(name, type, e.ReadOnlyData.TypeSize[_pos2], $"\tmov {name}, {val}\n");
+                        fnCode += $"\tlocal {name}: {type}\n";
+                        VarData varData = new(name, type, e.ReadOnlyData.TypeSize[_pos], $"\tmov {name}, {val}\n");
                         currentFunc.Args.Add(varData);
-                        currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, e.ReadOnlyData.TypeSize[_pos2]);
+                        currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
                     }
                 }
             }
