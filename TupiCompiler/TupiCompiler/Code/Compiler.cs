@@ -16,9 +16,9 @@ internal class Compiler
     internal Compiler(string tupiCodePath, bool isHeader = false, Architecture architecture = Architecture.X64)
     {
         tupiCode = File.ReadAllText(tupiCodePath);
-        readonlyData = new ReadOnlyData(architecture);
-        runData = new RunData();
-        codeCompiled = new CodeCompiled();
+        readonlyData = new(architecture);
+        runData = new();
+        codeCompiled = new();
         this.isHeader = isHeader;
         this.architecture = architecture;
     }
@@ -36,6 +36,8 @@ internal class Compiler
         PreCompilerEvent?.Invoke(this, preCompilerArgs);
 
         var codeLines = preCompilerArgs.Code.Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var macro in preCompilerArgs.Macros)
+            runData.Macros.TryAdd(macro.Key, macro.Value);
         return codeLines;
     }
 

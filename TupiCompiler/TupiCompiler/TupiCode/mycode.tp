@@ -1,6 +1,4 @@
 useth <tupiheader.th>
-#macro tupiheader 123
-#macro unginha123 123
 
 ($ coments here $)
 ($ i8 pularLinha2 "\n\0" $)

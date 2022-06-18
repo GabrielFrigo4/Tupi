@@ -366,47 +366,9 @@ internal static class Program
                 e.Macros.Add(macro, comand);
                 lines[i] = string.Empty;
             }
-            else
-            {
-                foreach (string macro in e.Macros.Keys)
-                {
-                    int ind = line.IndexOf(macro);
-                    if (ind > -1 && !IsInsideString(line, ind, out _, out _) && !IsInsidePath(line, ind))
-                    {
-                        foreach(char sep1 in seps1)
-                        {
-                            foreach (char sep2 in seps2)
-                            {
-                                if (line.StartsWith($"{macro}{sep2}"))
-                                {
-                                    line = line.Remove(ind, macro.Length);
-                                    line = line.Insert(ind, e.Macros[macro]);
-                                    ind = line.IndexOf(macro);
-                                    if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
-                                }
-                                else if (line.EndsWith($"{sep1}{macro}"))
-                                {
-                                    line = line.Remove(ind, macro.Length);
-                                    line = line.Insert(ind, e.Macros[macro]);
-                                    ind = line.IndexOf(macro);
-                                    if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
-                                }
-                                else if(ind - 1 == line.IndexOf($"{sep1}{macro}{sep2}"))
-                                {
-                                    line = line.Remove(ind, macro.Length);
-                                    line = line.Insert(ind, e.Macros[macro]);
-                                    ind = line.IndexOf(macro);
-                                    if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
-                                }
-                                if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
-                            }
-                            if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
-                        }
-                    }
-                }
-                lines[i] = line;
-            }
         }
+
+        lines = ReplaceMacro(lines, e.Macros);
 
         e.Code = string.Empty;
         for (int i = 0; i < lines.Length; i++)
@@ -462,6 +424,8 @@ internal static class Program
                 {
                     string incName = CreateIncludeFile(path, out IHeaderData headerData);
                     MainCompiler.GetRunData().AddHeaderData(headerData);
+                    e.SetLines(ReplaceMacro(e.Lines, e.RunData.Macros));
+
                     if (e.IsHeader)
                         e.CodeCompiled.UseTh.Add($"include {incName}");
                     else
@@ -471,6 +435,8 @@ internal static class Program
                 {
                     string incName = CreateIncludeFile(pathCompile + "/" + path, out IHeaderData headerData);
                     MainCompiler.GetRunData().AddHeaderData(headerData);
+                    e.SetLines(ReplaceMacro(e.Lines, e.RunData.Macros));
+
                     if (e.IsHeader)
                         e.CodeCompiled.UseTh.Add($"include {incName}");
                     else
@@ -480,6 +446,8 @@ internal static class Program
                 {
                     string incName = CreateIncludeFile(thDir + path, out IHeaderData headerData);
                     MainCompiler.GetRunData().AddHeaderData(headerData);
+                    e.SetLines(ReplaceMacro(e.Lines, e.RunData.Macros));
+
                     if (e.IsHeader)
                         e.CodeCompiled.UseTh.Add($"include {incName}");
                     else
@@ -1333,6 +1301,57 @@ internal static class Program
             shadowSpace -= 8;
         }
         return shadowSpace;
+    }
+
+    private static string[] ReplaceMacro(string[] lines, Dictionary<string, string> macros)
+    {
+        char[] seps1 = new[] { '\t', ' ', ',', '(', '{', '[', '=', '+', '-', '/', '*' };
+        char[] seps2 = new[] { ' ', ',', ')', '}', ']', '=', '+', '-', '/', '*', '\n', '\r', };
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+            if (line == string.Empty) continue;
+
+            foreach (string macro in macros.Keys)
+            {
+                int ind = line.IndexOf(macro);
+                if (ind > -1 && !IsInsideString(line, ind, out _, out _) && !IsInsidePath(line, ind))
+                {
+                    foreach (char sep1 in seps1)
+                    {
+                        foreach (char sep2 in seps2)
+                        {
+                            if (line.StartsWith($"{macro}{sep2}"))
+                            {
+                                line = line.Remove(ind, macro.Length);
+                                line = line.Insert(ind, macros[macro]);
+                                ind = line.IndexOf(macro);
+                                if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
+                            }
+                            else if (line.EndsWith($"{sep1}{macro}"))
+                            {
+                                line = line.Remove(ind, macro.Length);
+                                line = line.Insert(ind, macros[macro]);
+                                ind = line.IndexOf(macro);
+                                if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
+                            }
+                            else if (ind - 1 == line.IndexOf($"{sep1}{macro}{sep2}"))
+                            {
+                                line = line.Remove(ind, macro.Length);
+                                line = line.Insert(ind, macros[macro]);
+                                ind = line.IndexOf(macro);
+                                if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
+                            }
+                            if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
+                        }
+                        if (ind < 0 || IsInsideString(line, ind, out _, out _) || IsInsidePath(line, ind)) break;
+                    }
+                }
+            }
+            lines[i] = line;
+        }
+        return lines;
     }
 
     private static string CreateIncludeFile(string path, out IHeaderData headerData)

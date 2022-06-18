@@ -1,4 +1,6 @@
 ﻿useth <tupilib.th>
+#macro tupiheader 123
+#macro unginha123 123
 
 struct myStruct 
 {

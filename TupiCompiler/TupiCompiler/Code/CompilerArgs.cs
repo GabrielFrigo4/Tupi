@@ -23,4 +23,9 @@ internal class CompilerArgs : EventArgs
     {
         return line.Split(new char[] { '\r', '\t', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries);
     }
+
+    internal void SetLines(string[] newLines)
+    {
+        Lines = newLines;
+    }
 }
