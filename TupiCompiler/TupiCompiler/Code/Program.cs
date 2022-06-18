@@ -38,7 +38,7 @@ internal static class Program
     {
         get
         {
-            if(exePath is null)
+            if (exePath is null)
             {
                 return string.Empty;
             }
@@ -59,7 +59,7 @@ internal static class Program
 #endif
         string? _pathCompile = Path.GetDirectoryName(args[0]);
         if (_pathCompile is not null)
-            pathCompile = Path.GetFullPath(_pathCompile); 
+            pathCompile = Path.GetFullPath(_pathCompile);
 
         Action<string> action = CompileTupiProj;
         Argument<string> source = new("source", "source for tupi compile");
@@ -102,9 +102,9 @@ internal static class Program
 
         compiler.CompilerEvent += Compile_UseTh;
         compiler.CompilerEvent += Compile_UseFn;
-        compiler.CompilerEvent += Compile_Typedef;
         compiler.CompilerEvent += Compile_Struct;
         compiler.CompilerEvent += Compile_Union;
+        compiler.CompilerEvent += Compile_Typedef;
         compiler.CompilerEvent += Compile_GlobalVar;
         compiler.CompilerEvent += Compile_Func;
         string asmCode = compiler.Start();
@@ -123,7 +123,7 @@ internal static class Program
             FileName = "cmd.exe",
             Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat\" x64  &&"
         };
-        foreach(string asmFile in nameFiles)
+        foreach (string asmFile in nameFiles)
         {
             startInfo.Arguments += $" ml64 {asmFile}.asm /c &&";
         }
@@ -208,7 +208,7 @@ internal static class Program
         {
             if (IsInsideString(codeStr, pos, out _, out _)) continue;
             if (codeStr.Length <= pos + 1) break;
-            if (codeStr[pos] == '=' && codeStr[pos+1] != ' ')
+            if (codeStr[pos] == '=' && codeStr[pos + 1] != ' ')
             {
                 codeStr = codeStr.Insert(pos + 1, " ");
                 continue;
@@ -228,7 +228,7 @@ internal static class Program
             }
 
             if (codeStr.Length <= pos + 2) break;
-            if (codeStr[pos] != ' ' && codeStr[pos + 2] == '=' && 
+            if (codeStr[pos] != ' ' && codeStr[pos + 2] == '=' &&
                 (codeStr[pos + 1] == '-' || codeStr[pos + 1] == '+'))
             {
                 codeStr = codeStr.Insert(pos + 1, " ");
@@ -314,7 +314,7 @@ internal static class Program
                     if (e.Code[pos + 2] == '\"')
                         front = true;
 
-                    if(back == true && front == true)
+                    if (back == true && front == true)
                     {
                         e.Code = e.Code.Remove(--pos, 4);
                         e.Code = e.Code.Insert(pos, $"{value}");
@@ -355,7 +355,7 @@ internal static class Program
         Dictionary<string, string> macros = new();
         macros.Add("iptr", "i64");
 
-        for(int i = 0; i < lines.Length; i++)
+        for (int i = 0; i < lines.Length; i++)
         {
             string line = lines[i];
             if (line.StartsWith("#macro "))
@@ -389,7 +389,7 @@ internal static class Program
             {
                 e.Code += line + "\n";
             }
-            else if (i + 1 < line.Length) 
+            else if (i + 1 < line.Length)
             {
                 lines[i + 1] = lines[i + 1].Replace("\r", "");
             }
@@ -452,7 +452,7 @@ internal static class Program
                 {
                     string incName = CreateIncludeFile(thDir + path, out IHeaderData headerData);
                     MainCompiler.GetRunData().AddHeaderData(headerData);
-                    if(e.IsHeader)
+                    if (e.IsHeader)
                         e.CodeCompiled.UseTh.Add($"include {incName}");
                     else
                         e.CodeCompiled.UseTh.Add($"include header/{incName}");
@@ -488,49 +488,6 @@ internal static class Program
         }
     }
 
-    static void Compile_Typedef(object? sender, CompilerArgs e)
-    {
-        int totalKey = 0;
-        bool isInsideFunc = false, isInsideStruct = false, isInsideUnion = false;
-        foreach (var line in e.Lines)
-        {
-            string[] terms = e.GetTermsLine(line);
-            UpdateInsideFunc(terms, ref totalKey, ref isInsideFunc);
-            UpdateInsideStruct(terms, ref isInsideStruct);
-            UpdateInsideStruct(terms, ref isInsideUnion);
-            if (terms.Length < 2 || isInsideFunc || isInsideStruct || isInsideUnion) continue;
-
-            if (terms[0] == "typedef")
-            {
-                if (e.RunData.GetTypedefByName(terms[2]) is null) continue;
-                e.CodeCompiled.Typedef.Add($"{terms[2]} typedef {terms[1]}");
-
-                if (e.ReadOnlyData.TupiTypes.Contains(terms[2]))
-                {
-                    int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
-                    e.RunData.Typedef.Add(new(terms[2], e.ReadOnlyData.TypeSize[pos]));
-                }
-                else if (e.ReadOnlyData.AsmTypes.Contains(terms[2]))
-                {
-                    int pos = Array.IndexOf(e.ReadOnlyData.AsmTypes, terms[0]);
-                    e.RunData.Typedef.Add(new(terms[2], e.ReadOnlyData.TypeSize[pos]));
-                }
-                else if(e.RunData.GetTypedefByName(terms[1]) is TypedefData typedefData)
-                {
-                    e.RunData.Typedef.Add(new(terms[2], typedefData.Size));
-                }
-                else if (e.RunData.GetStructByName(terms[1]) is StructData structData)
-                {
-                    e.RunData.Typedef.Add(new(terms[2], structData.Size));
-                }
-                else if (e.RunData.GetUnionByName(terms[1]) is UnionData unionData)
-                {
-                    e.RunData.Typedef.Add(new(terms[2], unionData.Size));
-                }
-            }
-        }
-    }
-
     static void Compile_Struct(object? sender, CompilerArgs e)
     {
         StructData? currentStruct = null;
@@ -552,33 +509,39 @@ internal static class Program
                     structCode = $"{currentStruct.Name} struct\n";
                 }
             }
-            else if(currentStruct is not null)
+            else if (currentStruct is not null)
             {
                 UpdateInsideStruct(terms, ref isInsideStruct);
                 if (e.ReadOnlyData.TupiTypes.Contains(terms[0]))
                 {
                     int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
                     structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
-                    currentStruct.Vars.Add(new VarData(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
+                    currentStruct.Vars.Add(new(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
                     currentStruct.Size += e.ReadOnlyData.TypeSize[pos];
                 }
                 else if (e.ReadOnlyData.AsmTypes.Contains(terms[0]))
                 {
                     int pos = Array.IndexOf(e.ReadOnlyData.AsmTypes, terms[0]);
                     structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
-                    currentStruct.Vars.Add(new VarData(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
+                    currentStruct.Vars.Add(new(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
                     currentStruct.Size += e.ReadOnlyData.TypeSize[pos];
+                }
+                else if (e.RunData.GetTypedefByName(terms[0]) is TypedefData typedef)
+                {
+                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
+                    currentStruct.Vars.Add(new(terms[1], terms[0], typedef.Size));
+                    currentStruct.Size += typedef.Size;
                 }
                 else if (e.RunData.GetStructByName(terms[0]) is StructData @struct)
                 {
                     structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
-                    currentStruct.Vars.Add(new VarData(terms[1], terms[0], @struct.Size));
+                    currentStruct.Vars.Add(new(terms[1], terms[0], @struct.Size));
                     currentStruct.Size += @struct.Size;
                 }
                 else if (e.RunData.GetUnionByName(terms[0]) is UnionData union)
                 {
                     structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
-                    currentStruct.Vars.Add(new VarData(terms[1], terms[0], union.Size));
+                    currentStruct.Vars.Add(new(terms[1], terms[0], union.Size));
                     currentStruct.Size += union.Size;
                 }
 
@@ -621,29 +584,36 @@ internal static class Program
                 {
                     int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
                     unionCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
-                    currentUnion.Vars.Add(new VarData(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
-                    if(currentUnion.Size < e.ReadOnlyData.TypeSize[pos])
+                    currentUnion.Vars.Add(new(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
+                    if (currentUnion.Size < e.ReadOnlyData.TypeSize[pos])
                         currentUnion.Size = e.ReadOnlyData.TypeSize[pos];
                 }
                 else if (e.ReadOnlyData.AsmTypes.Contains(terms[0]))
                 {
                     int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
                     unionCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
-                    currentUnion.Vars.Add(new VarData(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
+                    currentUnion.Vars.Add(new(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
                     if (currentUnion.Size < e.ReadOnlyData.TypeSize[pos])
                         currentUnion.Size = e.ReadOnlyData.TypeSize[pos];
+                }
+                else if (e.RunData.GetTypedefByName(terms[0]) is TypedefData typedef)
+                {
+                    unionCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
+                    currentUnion.Vars.Add(new(terms[1], terms[0], typedef.Size));
+                    if (currentUnion.Size < typedef.Size)
+                        currentUnion.Size = typedef.Size;
                 }
                 else if (e.RunData.GetStructByName(terms[0]) is StructData @struct)
                 {
                     unionCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
-                    currentUnion.Vars.Add(new VarData(terms[1], terms[0], @struct.Size));
+                    currentUnion.Vars.Add(new(terms[1], terms[0], @struct.Size));
                     if (currentUnion.Size < @struct.Size)
                         currentUnion.Size = @struct.Size;
                 }
                 else if (e.RunData.GetUnionByName(terms[0]) is UnionData union)
                 {
                     unionCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
-                    currentUnion.Vars.Add(new VarData(terms[1], terms[0], union.Size));
+                    currentUnion.Vars.Add(new(terms[1], terms[0], union.Size));
                     if (currentUnion.Size < union.Size)
                         currentUnion.Size = union.Size;
                 }
@@ -653,6 +623,49 @@ internal static class Program
                     unionCode += $"{currentUnion.Name} ends";
                     e.CodeCompiled.Union.Add(unionCode);
                     unionCode = string.Empty;
+                }
+            }
+        }
+    }
+
+    static void Compile_Typedef(object? sender, CompilerArgs e)
+    {
+        int totalKey = 0;
+        bool isInsideFunc = false, isInsideStruct = false, isInsideUnion = false;
+        foreach (var line in e.Lines)
+        {
+            string[] terms = e.GetTermsLine(line);
+            UpdateInsideFunc(terms, ref totalKey, ref isInsideFunc);
+            UpdateInsideStruct(terms, ref isInsideStruct);
+            UpdateInsideStruct(terms, ref isInsideUnion);
+            if (terms.Length < 2 || isInsideFunc || isInsideStruct || isInsideUnion) continue;
+
+            if (terms[0] == "typedef")
+            {
+                if (e.RunData.GetTypedefByName(terms[2]) is not null) continue;
+                e.CodeCompiled.Typedef.Add($"{terms[2]} typedef {terms[1]}");
+
+                if (e.ReadOnlyData.TupiTypes.Contains(terms[1]))
+                {
+                    int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[1]);
+                    e.RunData.Typedef.Add(new(terms[2], e.ReadOnlyData.TypeSize[pos]));
+                }
+                else if (e.ReadOnlyData.AsmTypes.Contains(terms[1]))
+                {
+                    int pos = Array.IndexOf(e.ReadOnlyData.AsmTypes, terms[1]);
+                    e.RunData.Typedef.Add(new(terms[2], e.ReadOnlyData.TypeSize[pos]));
+                }
+                else if (e.RunData.GetTypedefByName(terms[1]) is TypedefData typedef)
+                {
+                    e.RunData.Typedef.Add(new(terms[2], typedef.Size));
+                }
+                else if (e.RunData.GetStructByName(terms[1]) is StructData @struct)
+                {
+                    e.RunData.Typedef.Add(new(terms[2], @struct.Size));
+                }
+                else if (e.RunData.GetUnionByName(terms[1]) is UnionData union)
+                {
+                    e.RunData.Typedef.Add(new(terms[2], union.Size));
                 }
             }
         }
@@ -690,21 +703,22 @@ internal static class Program
 
         int keysInd = 0;
         int totalKeys = 0;
-        bool isInsideFunc = false, isInsideStruct = false, isDefVarEnd = false;
+        bool isInsideFunc = false, isInsideStruct = false, isInsideUnion = false, isDefVarEnd = false;
         foreach (var line in e.Lines)
         {
             string[] terms = e.GetTermsLine(line);
             UpdateInsideStruct(terms, ref isInsideStruct);
+            UpdateInsideUnion(terms, ref isInsideUnion);
             if (!isInsideFunc)
             {
                 UpdateInsideFunc(terms, ref totalKeys, ref isInsideFunc);
-                if (terms.Length < 2 || isInsideStruct) continue;
+                if (terms.Length < 2 || isInsideStruct || isInsideUnion) continue;
                 if (terms[0] == "fn")
                 {
-                    string funcArguments = line[(line.IndexOf('(')+1)..line.IndexOf(')')];
+                    string funcArguments = line[(line.IndexOf('(') + 1)..line.IndexOf(')')];
                     string[] args = funcArguments.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
-                    currentFunc = new FuncData(terms[1].Remove(terms[1].IndexOf('(')));
+                    currentFunc = new(terms[1].Remove(terms[1].IndexOf('(')));
                     e.RunData.Funcs.Add(currentFunc);
                     fnCode += $"{currentFunc.Name} proc\n";
                     //args
@@ -721,79 +735,99 @@ internal static class Program
 
                         int _pos2 = Array.IndexOf(e.ReadOnlyData.TupiTypes, type);
                         fnCode += $"\tlocal {name}: {e.ReadOnlyData.AsmTypes[_pos2]}\n";
-                        VarData varData = new VarData(name, type, e.ReadOnlyData.TypeSize[_pos2], $"\tmov {name}, {val}\n");
+                        VarData varData = new(name, type, e.ReadOnlyData.TypeSize[_pos2], $"\tmov {name}, {val}\n");
                         currentFunc.Args.Add(varData);
                         currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, e.ReadOnlyData.TypeSize[_pos2]);
                     }
                 }
             }
-            else if(currentFunc is not null)
+            else if (currentFunc is not null)
             {
                 UpdateInsideFunc(terms, ref totalKeys, ref isInsideFunc);
 
                 bool contains = false;
                 if (!isDefVarEnd)
                 {
-                    foreach (var types in e.ReadOnlyData.TupiTypes)
-                    {
-                        if (terms.Contains(types))
-                        {
-                            contains = true;
-                            break;
-                        }
-                    }
-                    foreach (var structType in e.RunData.Structs.Select((StructData data) => data.Name))
-                    {
-                        if (terms.Contains(structType))
-                        {
-                            contains = true;
-                            break;
-                        }
-                    }
+                    contains = ContainsDefVar(terms, e);
                 }
 
                 //local vars
                 if (contains && !isDefVarEnd)
                 {
-                    VarData varData;
+                    VarData? varData = null;
                     if (terms.Length > 3)
                     {
-                        if (e.RunData.GetStructByName(terms[0]) is StructData structData)
-                        {
-                            fnCode += $"\tlocal {terms[1]}: {terms[0]}";
-                            varData = new VarData(terms[1], terms[0], structData.Size, $"\tmov {terms[1]}, {terms[3]}\n");
-                        }
-                        else
+                        if (e.ReadOnlyData.TupiTypes.Contains(terms[0]))
                         {
                             int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
-                            fnCode += $"\tlocal {terms[1]}: {e.ReadOnlyData.AsmTypes[pos]}\n";
-                            varData = new VarData(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos], $"\tmov {terms[1]}, {terms[3]}\n");
+                            fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
+                            varData = new(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos], $"\tmov {terms[1]}, {terms[3]}\n");
+                        }
+                        else if (e.ReadOnlyData.AsmTypes.Contains(terms[0]))
+                        {
+                            int pos = Array.IndexOf(e.ReadOnlyData.AsmTypes, terms[0]);
+                            fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
+                            varData = new(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos], $"\tmov {terms[1]}, {terms[3]}\n");
+                        }
+                        else if (e.RunData.GetTypedefByName(terms[0]) is TypedefData typedef)
+                        {
+                            fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
+                            varData = new(terms[1], terms[0], typedef.Size, $"\tmov {terms[1]}, {terms[3]}\n");
+                        }
+                        else if (e.RunData.GetStructByName(terms[0]) is StructData @struct)
+                        {
+                            fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
+                            varData = new(terms[1], terms[0], @struct.Size, $"\tmov {terms[1]}, {terms[3]}\n");
+                        }
+                        else if (e.RunData.GetUnionByName(terms[0]) is UnionData union)
+                        {
+                            fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
+                            varData = new(terms[1], terms[0], union.Size, $"\tmov {terms[1]}, {terms[3]}\n");
                         }
                     }
                     else
                     {
-                        if (e.RunData.GetStructByName(terms[0]) is StructData structData)
-                        {
-                            fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
-                            varData = new VarData(terms[1], terms[0], structData.Size);
-                        }
-                        else
+                        if (e.ReadOnlyData.TupiTypes.Contains(terms[0]))
                         {
                             int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
-                            fnCode += $"\tlocal {terms[1]}: {e.ReadOnlyData.AsmTypes[pos]}\n";
-                            varData = new VarData(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]);
+                            fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
+                            varData = new(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]);
+                        }
+                        else if (e.ReadOnlyData.AsmTypes.Contains(terms[0]))
+                        {
+                            int pos = Array.IndexOf(e.ReadOnlyData.AsmTypes, terms[0]);
+                            fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
+                            varData = new(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]);
+                        }
+                        else if (e.RunData.GetTypedefByName(terms[0]) is TypedefData typedef)
+                        {
+                            fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
+                            varData = new(terms[1], terms[0], typedef.Size);
+                        }
+                        else if (e.RunData.GetStructByName(terms[0]) is StructData @struct)
+                        {
+                            fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
+                            varData = new(terms[1], terms[0], @struct.Size);
+                        }
+                        else if (e.RunData.GetUnionByName(terms[0]) is UnionData union)
+                        {
+                            fnCode += $"\tlocal {terms[1]}: {terms[0]}\n";
+                            varData = new(terms[1], terms[0], union.Size);
                         }
                     }
-                    currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
-                    currentFunc.LocalVars.Add(varData);
+
+                    if (varData is not null)
+                    {
+                        currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
+                        currentFunc.LocalVars.Add(varData);
+                    }
                 }
-                //def vars(local and args)
-                else if(!isDefVarEnd)
+                else if (!isDefVarEnd)   //def vars(local and args)
                 {
                     isDefVarEnd = true;
                     foreach (string _line in currentFunc.Args.Select((VarData var) => var.Def))
                     {
-                        if(_line != string.Empty)
+                        if (_line != string.Empty)
                             fnCode += _line;
                     }
                     foreach (string _line in currentFunc.LocalVars.Select((VarData var) => var.Def))
@@ -816,8 +850,8 @@ internal static class Program
                     string[] comand = new string[param.Length];
                     string[] registorsType = new string[param.Length];
                     string[] varType = Array.Empty<string>();
-                    if(param.Length > 4)
-                        varType = new string[param.Length-4];
+                    if (param.Length > 4)
+                        varType = new string[param.Length - 4];
 
                     for (int i = 0; i < param.Length; i++)
                     {
@@ -862,11 +896,11 @@ internal static class Program
                                 }
                                 else
                                 {
-                                    varType[i-4] = e.ReadOnlyData.AsmTypes[pos];
+                                    varType[i - 4] = e.ReadOnlyData.AsmTypes[pos];
                                     registorsType[i] = e.ReadOnlyData.RegistorsB[pos];
                                 }
                             }
-                            else if(i < 4)
+                            else if (i < 4)
                             {
                                 registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
                             }
@@ -904,7 +938,7 @@ internal static class Program
                         for (int i = 4; i < param.Length; i++)
                         {
                             fnCode += $"\t{comand[i]} {registorsType[i]}, {param[i]}\n";
-                            fnCode += $"\tmov {varType[i-4]} ptr [rsp+{i*8}], {registorsType[i]}\n";
+                            fnCode += $"\tmov {varType[i - 4]} ptr [rsp+{i * 8}], {registorsType[i]}\n";
                         }
                         fnCode += $"\tcall {func_name}\n";
                     }
@@ -912,7 +946,7 @@ internal static class Program
                 }
 
                 //operator
-                if(terms.Length == 2)
+                if (terms.Length == 2)
                 {
                     switch (terms[1])
                     {
@@ -990,7 +1024,7 @@ internal static class Program
                     fnCode += $"{currentFunc.Name} endp";
                     e.CodeCompiled.Func.Add(fnCode);
                     fnCode = string.Empty;
-                    isInsideFunc = isInsideStruct = isDefVarEnd = false;
+                    isInsideFunc = isInsideStruct = isInsideUnion = isDefVarEnd = false;
                     currentFunc = null;
                     totalKeys = 0;
                     keysInd = 0;
@@ -1063,7 +1097,7 @@ internal static class Program
         {
             totalKeys++;
         }
-        if (terms[0] == "}") 
+        if (terms[0] == "}")
         {
             totalKeys--;
         }
@@ -1104,6 +1138,57 @@ internal static class Program
         }
     }
 
+    private static bool ContainsDefVar(string[] terms, CompilerArgs e)
+    {
+        bool contains = false;
+        if (!contains)
+            foreach (var types in e.ReadOnlyData.TupiTypes)
+            {
+                if (terms.Contains(types))
+                {
+                    contains = true;
+                    break;
+                }
+            }
+        if (!contains)
+            foreach (var types in e.ReadOnlyData.AsmTypes)
+            {
+                if (terms.Contains(types))
+                {
+                    contains = true;
+                    break;
+                }
+            }
+        if (!contains)
+            foreach (var typedefType in e.RunData.Typedef.Select((TypedefData data) => data.Name))
+            {
+                if (terms.Contains(typedefType))
+                {
+                    contains = true;
+                    break;
+                }
+            }
+        if (!contains)
+            foreach (var structType in e.RunData.Structs.Select((StructData data) => data.Name))
+            {
+                if (terms.Contains(structType))
+                {
+                    contains = true;
+                    break;
+                }
+            }
+        if (!contains)
+            foreach (var unionType in e.RunData.Unions.Select((UnionData data) => data.Name))
+            {
+                if (terms.Contains(unionType))
+                {
+                    contains = true;
+                    break;
+                }
+            }
+        return contains;
+    }
+
     private static int CorrectShadowSpaceFunc(int shadowSpace)
     {
         if (shadowSpace == 32) return 32;
@@ -1115,7 +1200,7 @@ internal static class Program
 
     private static int AddShadowSpaceFunc(int shadowSpace, int varSize)
     {
-        int alpha = (int)Math.Ceiling(varSize / 8f)*8;
+        int alpha = (int)Math.Ceiling(varSize / 8f) * 8;
         if (Math.Floor(shadowSpace / 8f) ==
             Math.Floor((shadowSpace + varSize) / 8f))
             return shadowSpace + varSize;

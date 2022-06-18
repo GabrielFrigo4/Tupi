@@ -1,19 +1,19 @@
 ﻿namespace TupiCompiler.Data;
 internal class RunData: ICodeData, IHeaderData
 {
-    public List<TypedefData> Typedef { get; private set; }
     public List<FuncData> Funcs { get; private set; }
     public List<StructData> Structs { get; private set; }
     public List<UnionData> Unions { get; private set; }
+    public List<TypedefData> Typedef { get; private set; }
     public Dictionary<string, VarData> GlobalVars { get; private set; }
     public Dictionary<string, string> Macros { get; private set; }
 
     internal RunData()
     {
-        Typedef = new();
         Funcs = new();
         Structs = new();
         Unions = new();
+        Typedef = new();
         GlobalVars = new();
         Macros = new();
     }
@@ -70,10 +70,10 @@ internal class RunData: ICodeData, IHeaderData
 
     internal void AddCodeData(ICodeData codeData)
     {
-        Typedef.AddRange(codeData.Typedef);
         Funcs.AddRange(codeData.Funcs);
         Structs.AddRange(codeData.Structs);
         Unions.AddRange(codeData.Unions);
+        Typedef.AddRange(codeData.Typedef);
         foreach (var globalVar in codeData.GlobalVars)
             GlobalVars.TryAdd(globalVar.Key, globalVar.Value);
         foreach (var macro in codeData.Macros)
@@ -82,9 +82,9 @@ internal class RunData: ICodeData, IHeaderData
 
     internal void AddHeaderData(IHeaderData headerData)
     {
-        Typedef.AddRange(headerData.Typedef);
         Structs.AddRange(headerData.Structs);
         Unions.AddRange(headerData.Unions);
+        Typedef.AddRange(headerData.Typedef);
         foreach (var macro in headerData.Macros)
             Macros.TryAdd(macro.Key, macro.Value);
     }

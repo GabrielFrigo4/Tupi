@@ -3,9 +3,9 @@ internal class CodeCompiled
 {
     internal List<string> UseTh { get; private set; }
     internal List<string> UseFn { get; private set; }
-    internal List<string> Typedef { get; private set; }
     internal List<string> Struct { get; private set; }
     internal List<string> Union { get; private set; }
+    internal List<string> Typedef { get; private set; }
     internal List<string> GlobalVar { get; private set; }
     internal List<string> Func { get; private set; }
 
@@ -13,9 +13,9 @@ internal class CodeCompiled
     {
         UseFn = new();
         UseTh = new();
-        Typedef = new();
         Struct = new();
         Union = new();
+        Typedef = new();
         GlobalVar = new();
         Func = new();
     }
@@ -31,10 +31,6 @@ internal class CodeCompiled
         {
             code += usefn + "\n";
         }
-        foreach (var typedef in Typedef)
-        {
-            code += typedef + "\n";
-        }
         foreach (var @struct in Struct)
         {
             code += @struct + "\n";
@@ -42,6 +38,10 @@ internal class CodeCompiled
         foreach (var union in Union)
         {
             code += union + "\n";
+        }
+        foreach (var typedef in Typedef)
+        {
+            code += typedef + "\n";
         }
         code += ".data\n";
         foreach (var globalVar in GlobalVar)
