@@ -1,5 +1,6 @@
-﻿namespace TupiCompiler.Data;
+﻿using TupiCompiler.Code;
 
+namespace TupiCompiler.Data;
 internal class ReadOnlyData
 {
     internal string[] Registors8i { get; private set; }
@@ -13,9 +14,9 @@ internal class ReadOnlyData
     internal string[] AsmTypes { get; private set; }
     internal string[] DefAsmTypes { get; private set; }
     internal string[] TupiTypes { get; private set; }
-    internal int[] TupiTypeSize { get; private set; }
+    internal int[] TypeSize { get; private set; }
 
-    public ReadOnlyData()
+    public ReadOnlyData(Architecture architecture)
     {
         Registors8i = new string[] { "cl", "dl", "r8b", "r9b" };
         Registors16i = new string[] { "cx", "dx", "r8w", "r9w" };
@@ -27,7 +28,13 @@ internal class ReadOnlyData
         RegistorsAll = new string[][] { Registors8i, Registors16i, Registors32i, Registors64i };
         AsmTypes = new string[] { "byte", "word", "dword", "qword", "real4", "real8" };
         DefAsmTypes = new string[] { "db", "dw", "dd", "dq", "dd", "dq" };
-        TupiTypes = new string[] { "i8", "i16", "i32", "i64", "f32", "f64" };
-        TupiTypeSize = new int[] { 1, 2, 4, 8, 4, 8 };
+        TupiTypes = new string[] { "i8", "i16", "i32", "i64", "f32", "f64", "iptr" };
+
+        int iptrSize = 8;
+        if (architecture == Architecture.X64)
+            iptrSize = 8;
+        else if (architecture == Architecture.X86)
+            iptrSize = 4;
+        TypeSize = new int[] { 1, 2, 4, 8, 4, 8, iptrSize };
     }
 }

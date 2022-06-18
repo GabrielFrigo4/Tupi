@@ -35,6 +35,16 @@
     <None Update="TupiCode\mycode.tp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="_tupi\x64\std_tupi_def.inc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="_tupi\x86\std_tupi_def.inc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="_tupi\x86\lib\" />
   </ItemGroup>
 
 </Project>

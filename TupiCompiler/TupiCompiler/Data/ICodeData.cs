@@ -2,6 +2,7 @@
 
 internal interface ICodeData
 {
+    List<TypedefData> Typedef { get; }
     List<FuncData> Funcs { get; }
     List<StructData> Structs { get; }
     List<UnionData> Unions { get; }

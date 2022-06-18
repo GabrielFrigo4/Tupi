@@ -84,6 +84,9 @@ internal static class Program
 
         List<string> files = new();
         files.Add(tupiFileName);
+        if (File.Exists(pathDir + "\\header\\std_tupi_def.inc"))
+            File.Delete(pathDir + "\\header\\std_tupi_def.inc");
+        File.Copy("./_tupi/x64/std_tupi_def.inc", pathDir + "\\header\\std_tupi_def.inc");
         CompileAsm(pathDir, files);
     }
 
@@ -97,8 +100,9 @@ internal static class Program
         compiler.PreCompilerEvent += PreCompileLines_Macro;
         compiler.PreCompilerEvent += PreCompileLines_Empty;
 
-        compiler.CompilerEvent += Compile_UseFn;
         compiler.CompilerEvent += Compile_UseTh;
+        compiler.CompilerEvent += Compile_UseFn;
+        compiler.CompilerEvent += Compile_Typedef;
         compiler.CompilerEvent += Compile_Struct;
         compiler.CompilerEvent += Compile_Union;
         compiler.CompilerEvent += Compile_GlobalVar;
@@ -413,6 +417,59 @@ internal static class Program
     #endregion
 
     #region Compile
+    static void Compile_UseTh(object? sender, CompilerArgs e)
+    {
+        if (e.IsHeader)
+            e.CodeCompiled.UseTh.Add("include std_tupi_def.inc");
+        else
+            e.CodeCompiled.UseTh.Add("include header/std_tupi_def.inc");
+
+        for (int i = 0; i < e.Lines.Length; i++)
+        {
+            string line = e.Lines[i];
+            if (line.StartsWith("useth "))
+            {
+                string path = line.Replace("useth ", "").Replace("<", "").Replace(">", "");
+                if (File.Exists(path))
+                {
+                    string incName = CreateIncludeFile(path, out IHeaderData headerData);
+                    MainCompiler.GetRunData().AddHeaderData(headerData);
+                    if (e.IsHeader)
+                        e.CodeCompiled.UseTh.Add($"include {incName}");
+                    else
+                        e.CodeCompiled.UseTh.Add($"include header/{incName}");
+                }
+                else if (File.Exists(pathCompile + "/" + path))
+                {
+                    string incName = CreateIncludeFile(pathCompile + "/" + path, out IHeaderData headerData);
+                    MainCompiler.GetRunData().AddHeaderData(headerData);
+                    if (e.IsHeader)
+                        e.CodeCompiled.UseTh.Add($"include {incName}");
+                    else
+                        e.CodeCompiled.UseTh.Add($"include header/{incName}");
+                }
+                else if (File.Exists(thDir + path))
+                {
+                    string incName = CreateIncludeFile(thDir + path, out IHeaderData headerData);
+                    MainCompiler.GetRunData().AddHeaderData(headerData);
+                    if(e.IsHeader)
+                        e.CodeCompiled.UseTh.Add($"include {incName}");
+                    else
+                        e.CodeCompiled.UseTh.Add($"include header/{incName}");
+                }
+                else
+                {
+                    ConsoleColor consoleColor = Console.ForegroundColor;
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"{path} header not find");
+                    Console.WriteLine($"{pathCompile + "/" + path} header not find");
+                    Console.WriteLine($"{thDir + path} header not find");
+                    Console.ForegroundColor = consoleColor;
+                }
+            }
+        }
+    }
+
     static void Compile_UseFn(object? sender, CompilerArgs e)
     {
         int totalKey = 0;
@@ -431,40 +488,44 @@ internal static class Program
         }
     }
 
-    static void Compile_UseTh(object? sender, CompilerArgs e)
+    static void Compile_Typedef(object? sender, CompilerArgs e)
     {
-        for (int i = 0; i < e.Lines.Length; i++)
+        int totalKey = 0;
+        bool isInsideFunc = false, isInsideStruct = false, isInsideUnion = false;
+        foreach (var line in e.Lines)
         {
-            string line = e.Lines[i];
-            if (line.StartsWith("useth "))
+            string[] terms = e.GetTermsLine(line);
+            UpdateInsideFunc(terms, ref totalKey, ref isInsideFunc);
+            UpdateInsideStruct(terms, ref isInsideStruct);
+            UpdateInsideStruct(terms, ref isInsideUnion);
+            if (terms.Length < 2 || isInsideFunc || isInsideStruct || isInsideUnion) continue;
+
+            if (terms[0] == "typedef")
             {
-                string path = line.Replace("useth ", "").Replace("<", "").Replace(">", "");
-                if (File.Exists(path))
+                if (e.RunData.GetTypedefByName(terms[2]) is null) continue;
+                e.CodeCompiled.Typedef.Add($"{terms[2]} typedef {terms[1]}");
+
+                if (e.ReadOnlyData.TupiTypes.Contains(terms[2]))
                 {
-                    string incName = CreateIncludeFile(path, out IHeaderData headerData);
-                    MainCompiler.GetRunData().AddHeaderData(headerData);
-                    e.CodeCompiled.UseTh.Add($"include header/{incName}");
+                    int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
+                    e.RunData.Typedef.Add(new(terms[2], e.ReadOnlyData.TypeSize[pos]));
                 }
-                else if (File.Exists(pathCompile + "/" + path))
+                else if (e.ReadOnlyData.AsmTypes.Contains(terms[2]))
                 {
-                    string incName = CreateIncludeFile(pathCompile + "/" + path, out IHeaderData headerData);
-                    MainCompiler.GetRunData().AddHeaderData(headerData);
-                    e.CodeCompiled.UseTh.Add($"include header/{incName}");
+                    int pos = Array.IndexOf(e.ReadOnlyData.AsmTypes, terms[0]);
+                    e.RunData.Typedef.Add(new(terms[2], e.ReadOnlyData.TypeSize[pos]));
                 }
-                else if (File.Exists(thDir + path))
+                else if(e.RunData.GetTypedefByName(terms[1]) is TypedefData typedefData)
                 {
-                    string incName = CreateIncludeFile(thDir + path, out IHeaderData headerData);
-                    MainCompiler.GetRunData().AddHeaderData(headerData);
-                    e.CodeCompiled.UseTh.Add($"include header/{incName}");
+                    e.RunData.Typedef.Add(new(terms[2], typedefData.Size));
                 }
-                else
+                else if (e.RunData.GetStructByName(terms[1]) is StructData structData)
                 {
-                    ConsoleColor consoleColor = Console.ForegroundColor;
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"{path} header not find");
-                    Console.WriteLine($"{pathCompile + "/" + path} header not find");
-                    Console.WriteLine($"{thDir + path} header not find");
-                    Console.ForegroundColor = consoleColor;
+                    e.RunData.Typedef.Add(new(terms[2], structData.Size));
+                }
+                else if (e.RunData.GetUnionByName(terms[1]) is UnionData unionData)
+                {
+                    e.RunData.Typedef.Add(new(terms[2], unionData.Size));
                 }
             }
         }
@@ -497,15 +558,28 @@ internal static class Program
                 if (e.ReadOnlyData.TupiTypes.Contains(terms[0]))
                 {
                     int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
-                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {e.ReadOnlyData.AsmTypes[pos]}") + "\n";
-                    currentStruct.Vars.Add(new VarData(terms[1], terms[0], e.ReadOnlyData.TupiTypeSize[pos]));
-                    currentStruct.Size += e.ReadOnlyData.TupiTypeSize[pos];
+                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
+                    currentStruct.Vars.Add(new VarData(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
+                    currentStruct.Size += e.ReadOnlyData.TypeSize[pos];
+                }
+                else if (e.ReadOnlyData.AsmTypes.Contains(terms[0]))
+                {
+                    int pos = Array.IndexOf(e.ReadOnlyData.AsmTypes, terms[0]);
+                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
+                    currentStruct.Vars.Add(new VarData(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
+                    currentStruct.Size += e.ReadOnlyData.TypeSize[pos];
                 }
                 else if (e.RunData.GetStructByName(terms[0]) is StructData @struct)
                 {
                     structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
                     currentStruct.Vars.Add(new VarData(terms[1], terms[0], @struct.Size));
                     currentStruct.Size += @struct.Size;
+                }
+                else if (e.RunData.GetUnionByName(terms[0]) is UnionData union)
+                {
+                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
+                    currentStruct.Vars.Add(new VarData(terms[1], terms[0], union.Size));
+                    currentStruct.Size += union.Size;
                 }
 
                 if (!isInsideStruct)
@@ -546,10 +620,25 @@ internal static class Program
                 if (e.ReadOnlyData.TupiTypes.Contains(terms[0]))
                 {
                     int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
-                    unionCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {e.ReadOnlyData.AsmTypes[pos]}") + "\n";
-                    currentUnion.Vars.Add(new VarData(terms[1], terms[0], e.ReadOnlyData.TupiTypeSize[pos]));
-                    if(currentUnion.Size < e.ReadOnlyData.TupiTypeSize[pos])
-                        currentUnion.Size = e.ReadOnlyData.TupiTypeSize[pos];
+                    unionCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
+                    currentUnion.Vars.Add(new VarData(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
+                    if(currentUnion.Size < e.ReadOnlyData.TypeSize[pos])
+                        currentUnion.Size = e.ReadOnlyData.TypeSize[pos];
+                }
+                else if (e.ReadOnlyData.AsmTypes.Contains(terms[0]))
+                {
+                    int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
+                    unionCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
+                    currentUnion.Vars.Add(new VarData(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
+                    if (currentUnion.Size < e.ReadOnlyData.TypeSize[pos])
+                        currentUnion.Size = e.ReadOnlyData.TypeSize[pos];
+                }
+                else if (e.RunData.GetStructByName(terms[0]) is StructData @struct)
+                {
+                    unionCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
+                    currentUnion.Vars.Add(new VarData(terms[1], terms[0], @struct.Size));
+                    if (currentUnion.Size < @struct.Size)
+                        currentUnion.Size = @struct.Size;
                 }
                 else if (e.RunData.GetUnionByName(terms[0]) is UnionData union)
                 {
@@ -572,13 +661,14 @@ internal static class Program
     static void Compile_GlobalVar(object? sender, CompilerArgs e)
     {
         int totalKey = 0;
-        bool isInsideFunc = false, isInsideStruct = false;
+        bool isInsideFunc = false, isInsideStruct = false, isInsideUnion = false;
         foreach (var line in e.Lines)
         {
             string[] terms = e.GetTermsLine(line);
             UpdateInsideFunc(terms, ref totalKey, ref isInsideFunc);
             UpdateInsideStruct(terms, ref isInsideStruct);
-            if (terms.Length < 3 || isInsideFunc || isInsideStruct) continue;
+            UpdateInsideUnion(terms, ref isInsideUnion);
+            if (terms.Length < 3 || isInsideFunc || isInsideStruct || isInsideUnion) continue;
             if (e.ReadOnlyData.TupiTypes.Contains(terms[0]))
             {
                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
@@ -593,6 +683,8 @@ internal static class Program
 
     static void Compile_Func(object? sender, CompilerArgs e)
     {
+        if (e.IsHeader) return;
+
         FuncData? currentFunc = null;
         string fnCode = string.Empty;
 
@@ -629,9 +721,9 @@ internal static class Program
 
                         int _pos2 = Array.IndexOf(e.ReadOnlyData.TupiTypes, type);
                         fnCode += $"\tlocal {name}: {e.ReadOnlyData.AsmTypes[_pos2]}\n";
-                        VarData varData = new VarData(name, type, e.ReadOnlyData.TupiTypeSize[_pos2], $"\tmov {name}, {val}\n");
+                        VarData varData = new VarData(name, type, e.ReadOnlyData.TypeSize[_pos2], $"\tmov {name}, {val}\n");
                         currentFunc.Args.Add(varData);
-                        currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, e.ReadOnlyData.TupiTypeSize[_pos2]);
+                        currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, e.ReadOnlyData.TypeSize[_pos2]);
                     }
                 }
             }
@@ -675,7 +767,7 @@ internal static class Program
                         {
                             int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
                             fnCode += $"\tlocal {terms[1]}: {e.ReadOnlyData.AsmTypes[pos]}\n";
-                            varData = new VarData(terms[1], terms[0], e.ReadOnlyData.TupiTypeSize[pos], $"\tmov {terms[1]}, {terms[3]}\n");
+                            varData = new VarData(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos], $"\tmov {terms[1]}, {terms[3]}\n");
                         }
                     }
                     else
@@ -689,7 +781,7 @@ internal static class Program
                         {
                             int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
                             fnCode += $"\tlocal {terms[1]}: {e.ReadOnlyData.AsmTypes[pos]}\n";
-                            varData = new VarData(terms[1], terms[0], e.ReadOnlyData.TupiTypeSize[pos]);
+                            varData = new VarData(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]);
                         }
                     }
                     currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);

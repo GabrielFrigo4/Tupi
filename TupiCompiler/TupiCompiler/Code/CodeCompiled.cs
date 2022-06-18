@@ -1,8 +1,9 @@
 ﻿namespace TupiCompiler.Code;
 internal class CodeCompiled
 {
-    internal List<string> UseFn { get; private set; }
     internal List<string> UseTh { get; private set; }
+    internal List<string> UseFn { get; private set; }
+    internal List<string> Typedef { get; private set; }
     internal List<string> Struct { get; private set; }
     internal List<string> Union { get; private set; }
     internal List<string> GlobalVar { get; private set; }
@@ -10,26 +11,30 @@ internal class CodeCompiled
 
     internal CodeCompiled()
     {
-        UseFn = new List<string>();
-        UseTh = new List<string>();
-        Struct = new List<string>();
-        Union = new List<string>();
-        GlobalVar = new List<string>();
-        Func = new List<string>();
+        UseFn = new();
+        UseTh = new();
+        Typedef = new();
+        Struct = new();
+        Union = new();
+        GlobalVar = new();
+        Func = new();
     }
 
-    internal string CreateAsmCode(bool isHeader = false)
+    internal string CreateAsmCode(bool isHeader)
     {
         string code = string.Empty;
-        foreach(var usefn in UseFn)
-        {
-            code += usefn + "\n";
-        }
         foreach (var useth in UseTh)
         {
             code += useth + "\n";
         }
-        code += ".data\n";
+        foreach (var usefn in UseFn)
+        {
+            code += usefn + "\n";
+        }
+        foreach (var typedef in Typedef)
+        {
+            code += typedef + "\n";
+        }
         foreach (var @struct in Struct)
         {
             code += @struct + "\n";
@@ -38,6 +43,7 @@ internal class CodeCompiled
         {
             code += union + "\n";
         }
+        code += ".data\n";
         foreach (var globalVar in GlobalVar)
         {
             code += globalVar + "\n";
@@ -49,7 +55,7 @@ internal class CodeCompiled
             {
                 code += func + "\n";
             }
-            code += "End";
+            code += "end";
         }
         return code;
     }

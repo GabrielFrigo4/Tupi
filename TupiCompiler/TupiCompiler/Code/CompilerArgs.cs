@@ -8,13 +8,15 @@ internal class CompilerArgs : EventArgs
     internal string[] Lines { get; private set; }
     internal RunData RunData { get; private set; }
     internal ReadOnlyData ReadOnlyData { get; private set; }
+    internal bool IsHeader { get; private set; }
 
-    internal CompilerArgs(string[] lines, RunData runData, CodeCompiled codeCompiled, ReadOnlyData readOnlyData)
+    internal CompilerArgs(string[] lines, RunData runData, CodeCompiled codeCompiled, ReadOnlyData readOnlyData, bool isHeader)
     {
-        this.CodeCompiled = codeCompiled;
-        this.Lines = lines;
-        this.RunData = runData;
-        this.ReadOnlyData = readOnlyData;
+        CodeCompiled = codeCompiled;
+        Lines = lines;
+        RunData = runData;
+        ReadOnlyData = readOnlyData;
+        IsHeader = isHeader;
     }
 
     internal string[] GetTermsLine(string line)

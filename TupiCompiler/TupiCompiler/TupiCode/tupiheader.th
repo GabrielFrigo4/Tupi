@@ -1,4 +1,6 @@
-﻿struct myStruct 
+﻿useth <tupilib.th>
+
+struct myStruct 
 {
 	i8 myByte1 ?
 	i64 myLong1 ?
