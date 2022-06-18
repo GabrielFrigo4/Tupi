@@ -11,8 +11,6 @@ struct ungabunga2
 	i64 myLong2 ?
 }
 $)
-typedef i32 int32_1
-typedef dword int32_2
 
 i8 pularLinha "\n\0"
 i8 msg1 'myInt is ', 0
@@ -29,6 +27,9 @@ struct ungabunga
 	i64 myLong2 ?
 }
 
+typedef i32 int32_1
+typedef dword int32_2
+
 fn main(i32 argc, iptr argv) 
 {
 	byte myByteByte = 2;
@@ -42,19 +43,34 @@ fn main(i32 argc, iptr argv)
 	i64 myLongLoop = 0;
 	myStruct myStructVar;
 
-	print_i64(myInt)
-	print_i64(-53)
-	print_i64(myStructTest.mylong1)
+	$print_i64(myInt)
+	$print_i64(-53)
+	$print_i64(myStructTest.mylong1)
 	
 	loop
 	{
 		consoleWriteStr(&msgLoop)
 		consoleWriteInt(myLongLoop)
-		consoleWriteFloat(10.23)
+		myLongLoop-=10;
+		consoleWriteStr(&pularLinha)
+		loop
+		{
+			consoleWriteStr(&msgLoop)
+			consoleWriteInt(myLongLoop)
+			myLongLoop-=10;
+			consoleWriteStr(&pularLinha)
+			break;
+		}
+		break;
+	}
+	loop
+	{
+		consoleWriteStr(&msgLoop)
+		consoleWriteInt(myLongLoop)
 		myLongLoop-=10;
 		consoleWriteStr(&pularLinha)
 		break;
-	}
+	}	
 	return 0
 }
 

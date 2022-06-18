@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Reflection;
 using TupiCompiler.Data;
-using TupiCompiler.Utility;
 
 namespace TupiCompiler.Code;
 internal static class Program
@@ -25,9 +24,11 @@ internal static class Program
     }
 
     public readonly static string
-        libPath = "_tupi/x64/lib/",
+        x64Path = "_tupi/x64/",
+        x86Path = "_tupi/x86/",
         thPath = "_tupi/headers/",
-        libDir = Path.GetFullPath(libPath),
+        x64Dir = Path.GetFullPath(x64Path),
+        x86Dir = Path.GetFullPath(x86Path),
         thDir = Path.GetFullPath(thPath),
         pathDir = "./build";
 
@@ -51,8 +52,6 @@ internal static class Program
 
     static int Main(string[] args)
     {
-        WinUtils.AddEnvironmentPath(libPath);
-
 #if DEBUG
         args = new string[1];
         args[0] = "TupiCode/mycode.tp";
@@ -86,7 +85,7 @@ internal static class Program
         files.Add(tupiFileName);
         if (File.Exists(pathDir + "\\header\\std_tupi_def.inc"))
             File.Delete(pathDir + "\\header\\std_tupi_def.inc");
-        File.Copy("./_tupi/x64/std_tupi_def.inc", pathDir + "\\header\\std_tupi_def.inc");
+        File.Copy($"{x64Dir}std_tupi_def.inc", pathDir + "\\header\\std_tupi_def.inc");
         CompileAsm(pathDir, files);
     }
 
@@ -132,7 +131,7 @@ internal static class Program
         {
             linkCommand += $" {objFile}.obj";
         }
-        linkCommand += $" /entry:main /subsystem:console /defaultlib:{libDir}TupiLib.lib";
+        linkCommand += $" /entry:main /subsystem:console /defaultlib:{x64Dir}lib/TupiLib.lib";
         startInfo.Arguments += linkCommand;
         if (run)
         {
@@ -703,6 +702,8 @@ internal static class Program
 
         int keysInd = 0;
         int totalKeys = 0;
+        List<Tuple<int, string>> keysData = new();
+
         bool isInsideFunc = false, isInsideStruct = false, isInsideUnion = false, isDefVarEnd = false;
         foreach (var line in e.Lines)
         {
@@ -986,21 +987,88 @@ internal static class Program
                     fnCode += $"\tjmp {terms[1]}\n";
                 }
 
-                //loop
-                if (terms[0] == "loop" && terms.Length == 2 && totalKeys == 2)
+                //keyData add
+                if (terms[^1] == "{")
                 {
                     keysInd++;
+                    keysData.Add(new(keysInd, string.Empty));
+                }
+
+                //loop
+                if (terms[0] == "loop" && terms.Length == 2)
+                {
+                    keysData[^1] = new(keysInd, "loop");
                     fnCode += $"$loop{keysInd}:\n";
                 }
-                else if (terms[0] == "}" && terms.Length == 1 && totalKeys == 1)
+
+                //while
+                if (terms[0] == "while" && terms.Length == 2)
                 {
-                    fnCode += $"\tjmp $loop{keysInd}\n$break{keysInd}:\n";
+                    keysData[^1] = new(keysInd, "while");
+                    fnCode += $"while{keysInd}:\n";
+                }
+
+                //for
+                if (terms[0] == "while" && terms.Length == 2)
+                {
+                    keysData[^1] = new(keysInd, "while");
+                    fnCode += $"while{keysInd}:\n";
+                }
+
+                //if
+                if (terms[0] == "if" && terms.Length == 2)
+                {
+                    keysData[^1] = new(keysInd, "if");
+                    fnCode += $"if{keysInd}:\n";
                 }
 
                 //break
-                if (terms[0] == "break" && terms.Length == 1 && totalKeys == 2)
+                if (terms[0] == "break" && terms.Length == 1)
                 {
-                    fnCode += $"\tjmp $break{keysInd}\n";
+                    int i = keysData.Count - 1;
+                    var key = keysData[i];
+                backStart:
+                    if (key.Item2 == string.Empty ||
+                        key.Item2 == "if" ||
+                        key.Item2 == "elseif" ||
+                        key.Item2 == "else")
+                    {
+                        key = keysData[--i];
+                        goto backStart;
+                    }
+                    else
+                    {
+                        fnCode += $"\tjmp $break{key.Item1}\n";
+                    }
+                }
+
+                //continue
+                if (terms[0] == "continue" && terms.Length == 1)
+                {
+                    int i = keysData.Count - 1;
+                    var key = keysData[i];
+                backStart:
+                    if (key.Item2 == string.Empty ||
+                        key.Item2 == "if" ||
+                        key.Item2 == "elseif" ||
+                        key.Item2 == "else")
+                    {
+                        key = keysData[--i];
+                        goto backStart;
+                    }
+                    else
+                    {
+                        fnCode += $"\tjmp ${key.Item2}{key.Item1}\n";
+                    }
+                }
+
+                //keyData remove
+                if (terms[^1] == "}" && terms.Length == 1 && keysData.Count > 0)
+                {
+                    var key = keysData.Last();
+                    fnCode += $"\tjmp ${key.Item2}{key.Item1}\n$break{key.Item1}:\n";
+                    keysData.Remove(key);
+                    keysInd++;
                 }
 
                 //return
