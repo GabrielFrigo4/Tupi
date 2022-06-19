@@ -23,17 +23,6 @@ internal static class Program
         }
     }
 
-    public readonly static string
-        x64Path = "_tupi/x64/",
-        x86Path = "_tupi/x86/",
-        thPath = "_tupi/headers/",
-        x64Dir = Path.GetFullPath(x64Path),
-        x86Dir = Path.GetFullPath(x86Path),
-        thDir = Path.GetFullPath(thPath),
-        pathDir = "./build";
-
-    static private string pathCompile = string.Empty;
-
     static readonly string? exePath = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
     internal static string EXE_PATH
     {
@@ -50,13 +39,21 @@ internal static class Program
         }
     }
 
+    public readonly static string
+        x64Path = EXE_PATH + "/_tupi/x64/",
+        x86Path = EXE_PATH + "/_tupi/x86/",
+        thPath = EXE_PATH + "/_tupi/headers/",
+        pathDir = "./build";
+
+    static private string pathCompile = string.Empty;
+
     static int Main(string[] args)
     {
 #if DEBUG
         args = new string[1];
         args[0] = "TupiCode/mycode.tp";
 #endif
-        string? _pathCompile = Path.GetDirectoryName(args[0]);
+        string? _pathCompile = Path.GetDirectoryName(Path.GetFullPath(args[0]));
         if (_pathCompile is not null)
             pathCompile = Path.GetFullPath(_pathCompile);
 
@@ -85,7 +82,7 @@ internal static class Program
         files.Add(tupiFileName);
         if (File.Exists(pathDir + "\\header\\std_tupi_def.inc"))
             File.Delete(pathDir + "\\header\\std_tupi_def.inc");
-        File.Copy($"{x64Dir}std_tupi_def.inc", pathDir + "\\header\\std_tupi_def.inc");
+        File.Copy($"{x64Path}std_tupi_def.inc", pathDir + "\\header\\std_tupi_def.inc");
         CompileAsm(pathDir, files);
     }
 
@@ -131,7 +128,7 @@ internal static class Program
         {
             linkCommand += $" {objFile}.obj";
         }
-        linkCommand += $" /entry:main /subsystem:console /defaultlib:{x64Dir}lib/TupiLib.lib";
+        linkCommand += $" /entry:main /subsystem:console /defaultlib:{x64Path}lib/TupiLib.lib";
         startInfo.Arguments += linkCommand;
         if (run)
         {
@@ -442,9 +439,9 @@ internal static class Program
                     else
                         e.CodeCompiled.UseTh.Add($"include header/{incName}");
                 }
-                else if (File.Exists(thDir + path))
+                else if (File.Exists(thPath + path))
                 {
-                    string incName = CreateIncludeFile(thDir + path, out IHeaderData headerData);
+                    string incName = CreateIncludeFile(thPath + path, out IHeaderData headerData);
                     MainCompiler.GetRunData().AddHeaderData(headerData);
                     e.SetLines(ReplaceMacro(e.Lines, e.RunData.Macros));
 
@@ -459,7 +456,7 @@ internal static class Program
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"{path} header not find");
                     Console.WriteLine($"{pathCompile + "/" + path} header not find");
-                    Console.WriteLine($"{thDir + path} header not find");
+                    Console.WriteLine($"{thPath + path} header not find");
                     Console.ForegroundColor = consoleColor;
                 }
             }
