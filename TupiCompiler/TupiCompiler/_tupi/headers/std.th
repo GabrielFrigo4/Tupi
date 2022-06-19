@@ -7,3 +7,6 @@ usefn FToStr
 usefn createMem
 usefn recreateMem
 usefn deleteMem
+
+#macro true 1
+#macro false 0

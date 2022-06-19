@@ -406,6 +406,8 @@ internal static class Program
     #region Compile
     static void Compile_UseTh(object? sender, CompilerArgs e)
     {
+        bool isMacrosSet = false;
+
         if (e.IsHeader)
             e.CodeCompiled.UseTh.Add("include std_tupi_def.inc");
         else
@@ -421,7 +423,7 @@ internal static class Program
                 {
                     string incName = CreateIncludeFile(path, out IHeaderData headerData);
                     MainCompiler.GetRunData().AddHeaderData(headerData);
-                    e.SetLines(ReplaceMacro(e.Lines, e.RunData.Macros));
+                    isMacrosSet = true;
 
                     if (e.IsHeader)
                         e.CodeCompiled.UseTh.Add($"include {incName}");
@@ -432,7 +434,7 @@ internal static class Program
                 {
                     string incName = CreateIncludeFile(pathCompile + "/" + path, out IHeaderData headerData);
                     MainCompiler.GetRunData().AddHeaderData(headerData);
-                    e.SetLines(ReplaceMacro(e.Lines, e.RunData.Macros));
+                    isMacrosSet = true;
 
                     if (e.IsHeader)
                         e.CodeCompiled.UseTh.Add($"include {incName}");
@@ -443,7 +445,7 @@ internal static class Program
                 {
                     string incName = CreateIncludeFile(thPath + path, out IHeaderData headerData);
                     MainCompiler.GetRunData().AddHeaderData(headerData);
-                    e.SetLines(ReplaceMacro(e.Lines, e.RunData.Macros));
+                    isMacrosSet = true;
 
                     if (e.IsHeader)
                         e.CodeCompiled.UseTh.Add($"include {incName}");
@@ -461,6 +463,9 @@ internal static class Program
                 }
             }
         }
+
+        if (isMacrosSet)
+            e.SetLines(ReplaceMacro(e.Lines, e.RunData.Macros));
     }
 
     static void Compile_UseFn(object? sender, CompilerArgs e)

@@ -23,7 +23,7 @@
     <None Update="TupiCode\tupiheader.th">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="_tupi\headers\tupilib.th">
+    <None Update="_tupi\headers\std.th">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="_tupi\x64\lib\InternalTupiOperators.lib">
