@@ -26,9 +26,6 @@
     <None Update="_tupi\headers\std.th">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="_tupi\x64\lib\InternalTupiOperators.lib">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="_tupi\x64\lib\TupiLib.lib">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
