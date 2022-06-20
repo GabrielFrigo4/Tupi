@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "proc.h"
 
-EXTC void startProcess(char* appName, char* args, WORD nCmdShow) {
+EXTC BOOL createProcess(char* appName, char* args, WORD nCmdShow) {
 	STARTUPINFOA info = { sizeof(info) };
 	info.dwFlags = STARTF_USESHOWWINDOW;
 	info.wShowWindow = nCmdShow;
@@ -23,11 +23,13 @@ EXTC void startProcess(char* appName, char* args, WORD nCmdShow) {
 	}
 	cmd[i] = '\0';
 
-	if (CreateProcessA(NULL, (LPSTR)appName, NULL, NULL, TRUE, 0, NULL, NULL, &info, &processInfo))
+	BOOL ret = CreateProcessA(NULL, (LPSTR)appName, NULL, NULL, TRUE, 0, NULL, NULL, &info, &processInfo);
+	if (ret)
 	{
 		WaitForSingleObject(processInfo.hProcess, INFINITE);
 		CloseHandle(processInfo.hProcess);
 		CloseHandle(processInfo.hThread);
 	}
 	deleteMem(cmd);
+	return ret;
 }

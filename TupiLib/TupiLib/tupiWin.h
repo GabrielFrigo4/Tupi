@@ -20,6 +20,17 @@
 #define SW_RESTORE 9
 #define SW_SHOWDEFAULT 10
 #define SW_FORCEMINIMIZE 11
+#define FILE_SHARE_DELETE 0x00000004
+#define FILE_SHARE_READ 0x00000001
+#define FILE_SHARE_WRITE 0x00000002
+#define CREATE_ALWAYS 2
+#define CREATE_NEW 1
+#define OPEN_ALWAYS 4
+#define OPEN_EXISTING 3
+#define TRUNCATE_EXISTING 5
+#define GENERIC_BOTH (GENERIC_READ | GENERIC_WRITE)
+#define GENERIC_WRITE 30
+#define GENERIC_READ 31
 #define STARTF_USESHOWWINDOW 0x00000001
 #define VOID void
 #define WINAPI __stdcall
@@ -121,4 +132,16 @@ EXTC DWORD WaitForSingleObject(
 );
 EXTC BOOL CloseHandle(
 	HANDLE hObject
+);
+EXTC HANDLE CreateFileA(
+	LPCSTR	lpFileName,
+	DWORD	dwDesiredAccess,
+	DWORD	dwShareMode,
+	LPSECURITY_ATTRIBUTES	lpSecurityAttributes,
+	DWORD	dwCreationDisposition,
+	DWORD	dwFlagsAndAttributes,
+	HANDLE	hTemplateFile
+);
+EXTC BOOL DeleteFileA(
+	LPCSTR	lpFileName
 );

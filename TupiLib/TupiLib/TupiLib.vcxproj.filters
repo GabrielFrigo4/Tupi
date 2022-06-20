@@ -45,6 +45,9 @@
     <ClInclude Include="cmd.h">
       <Filter>Arquivos de Cabeçalho\tupicode</Filter>
     </ClInclude>
+    <ClInclude Include="io.h">
+      <Filter>Arquivos de Cabeçalho\tupicode</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cmd.cpp">
@@ -60,6 +63,9 @@
       <Filter>Arquivos de Origem\syscode</Filter>
     </ClCompile>
     <ClCompile Include="proc.cpp">
+      <Filter>Arquivos de Origem\tupicode</Filter>
+    </ClCompile>
+    <ClCompile Include="io.cpp">
       <Filter>Arquivos de Origem\tupicode</Filter>
     </ClCompile>
   </ItemGroup>

@@ -500,9 +500,12 @@ internal static class Program
             {
                 UpdateInsideStruct(terms, ref isInsideStruct);
                 if (terms.Length < 2 || isInsideFunc) continue;
-                if (terms[0] == "struct")
+                if (terms[0] == "struct" || terms[0] == "cstruct")
                 {
-                    currentStruct = new StructData(terms[1]);
+                    if(terms[0] == "struct")
+                        currentStruct = new StructData(terms[1], false);
+                    else
+                        currentStruct = new StructData(terms[1], true);
                     e.RunData.Structs.Add(currentStruct);
                     structCode = $"{currentStruct.Name} struct\n";
                 }
@@ -513,34 +516,74 @@ internal static class Program
                 if (e.ReadOnlyData.TupiTypes.Contains(terms[0]))
                 {
                     int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, terms[0]);
-                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
                     currentStruct.Vars.Add(new(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
+                    int mod = currentStruct.Size % e.ReadOnlyData.TypeSize[pos];
+                    if (mod != 0 && currentStruct.IsCStruct)
+                    {
+                        int dist = e.ReadOnlyData.TypeSize[pos] - mod;
+                        structCode += $"db {dist} dup(?)\n";
+                        currentStruct.CStructSpaces.Add(new(currentStruct.Vars.Count, dist));
+                        currentStruct.Size += dist;
+                    }
                     currentStruct.Size += e.ReadOnlyData.TypeSize[pos];
+                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
                 }
                 else if (e.ReadOnlyData.AsmTypes.Contains(terms[0]))
                 {
                     int pos = Array.IndexOf(e.ReadOnlyData.AsmTypes, terms[0]);
-                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
                     currentStruct.Vars.Add(new(terms[1], terms[0], e.ReadOnlyData.TypeSize[pos]));
+                    int mod = currentStruct.Size % e.ReadOnlyData.TypeSize[pos];
+                    if (mod != 0 && currentStruct.IsCStruct)
+                    {
+                        int dist = e.ReadOnlyData.TypeSize[pos] - mod;
+                        structCode += $"db {dist} dup(?)\n";
+                        currentStruct.CStructSpaces.Add(new(currentStruct.Vars.Count, dist));
+                        currentStruct.Size += dist;
+                    }
                     currentStruct.Size += e.ReadOnlyData.TypeSize[pos];
+                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
                 }
                 else if (e.RunData.GetTypedefByName(terms[0]) is TypedefData typedef)
                 {
-                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
                     currentStruct.Vars.Add(new(terms[1], terms[0], typedef.Size));
+                    int mod = currentStruct.Size % typedef.Size;
+                    if (mod != 0 && currentStruct.IsCStruct)
+                    {
+                        int dist = typedef.Size - mod;
+                        structCode += $"db {dist} dup(?)\n";
+                        currentStruct.CStructSpaces.Add(new(currentStruct.Vars.Count, dist));
+                        currentStruct.Size += dist;
+                    }
                     currentStruct.Size += typedef.Size;
+                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
                 }
                 else if (e.RunData.GetStructByName(terms[0]) is StructData @struct)
                 {
-                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
                     currentStruct.Vars.Add(new(terms[1], terms[0], @struct.Size));
+                    int mod = currentStruct.Size % @struct.Size;
+                    if (mod != 0 && currentStruct.IsCStruct)
+                    {
+                        int dist = @struct.Size - mod;
+                        structCode += $"db {dist} dup(?)\n";
+                        currentStruct.CStructSpaces.Add(new(currentStruct.Vars.Count, dist));
+                        currentStruct.Size += dist;
+                    }
                     currentStruct.Size += @struct.Size;
+                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
                 }
                 else if (e.RunData.GetUnionByName(terms[0]) is UnionData union)
                 {
-                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
                     currentStruct.Vars.Add(new(terms[1], terms[0], union.Size));
+                    int mod = currentStruct.Size % union.Size;
+                    if (mod != 0 && currentStruct.IsCStruct)
+                    {
+                        int dist = union.Size - mod;
+                        structCode += $"db {dist} dup(?)\n";
+                        currentStruct.CStructSpaces.Add(new(currentStruct.Vars.Count, dist));
+                        currentStruct.Size += dist;
+                    }
                     currentStruct.Size += union.Size;
+                    structCode += line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}") + "\n";
                 }
 
                 if (!isInsideStruct)
@@ -688,9 +731,31 @@ internal static class Program
             {
                 e.CodeCompiled.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}"));
             }
-            else if (e.RunData.GetStructByName(terms[0]) is not null)
+            else if (e.RunData.GetStructByName(terms[0]) is StructData @struct)
             {
-                e.CodeCompiled.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}"));
+                if (@struct.IsCStruct && @struct.CStructSpaces.Count > 0)
+                {
+                    string init = $"{terms[1]} {terms[0]} ";
+                    string declare = line.Replace($"{terms[0]} {terms[1]} ","");
+                    for (int _i = 0, i = 0, brk = 0; _i < declare.Length; _i++)
+                    {
+                        if (@struct.CStructSpaces.Count <= i) break;
+                        if (declare[_i] == ',' && !IsInsideString(declare, _i, out _, out _))
+                        {
+                            brk++;
+                            if (brk == @struct.CStructSpaces[i].Item1 - 1 + i)
+                            {
+                                i++;
+                                declare = declare.Insert(_i+1, " ' ',");
+                            }
+                        }
+                    }
+                    e.CodeCompiled.GlobalVar.Add(init + declare);
+                }
+                else
+                {
+                    e.CodeCompiled.GlobalVar.Add(line.Replace($"{terms[0]} {terms[1]}", $"{terms[1]} {terms[0]}"));
+                }
             }
             else if (e.RunData.GetTypedefByName(terms[0]) is not null)
             {
@@ -1200,7 +1265,7 @@ internal static class Program
     private static void UpdateInsideStruct(string[] terms, ref bool isInsideStruct)
     {
         if (terms.Length == 0) return;
-        if (terms[0] == "struct")
+        if (terms[0] == "struct" || terms[0] == "cstruct")
         {
             isInsideStruct = true;
         }
