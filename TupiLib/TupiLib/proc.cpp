@@ -29,4 +29,5 @@ EXTC void startProcess(char* appName, char* args, WORD nCmdShow) {
 		CloseHandle(processInfo.hProcess);
 		CloseHandle(processInfo.hThread);
 	}
+	deleteMem(cmd);
 }
