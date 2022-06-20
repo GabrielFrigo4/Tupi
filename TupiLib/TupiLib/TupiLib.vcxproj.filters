@@ -13,33 +13,54 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Arquivos de Cabeçalho\tupicode">
+      <UniqueIdentifier>{45794550-1125-4809-b95c-da69f2336723}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Arquivos de Cabeçalho\syscode">
+      <UniqueIdentifier>{d2cfb667-7097-451d-8e4a-79e15b33005e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Arquivos de Origem\tupicode">
+      <UniqueIdentifier>{c65ce489-93af-4e7c-b24a-a53cc9a4b3e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Arquivos de Origem\syscode">
+      <UniqueIdentifier>{862cc867-659b-4391-bf0b-86a4bc8f8ef2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h">
-      <Filter>Arquivos de Cabeçalho</Filter>
+    <ClInclude Include="mem.h">
+      <Filter>Arquivos de Cabeçalho\tupicode</Filter>
     </ClInclude>
-    <ClInclude Include="pch.h">
-      <Filter>Arquivos de Cabeçalho</Filter>
+    <ClInclude Include="proc.h">
+      <Filter>Arquivos de Cabeçalho\tupicode</Filter>
     </ClInclude>
     <ClInclude Include="tupiWin.h">
-      <Filter>Arquivos de Cabeçalho</Filter>
+      <Filter>Arquivos de Cabeçalho\tupicode</Filter>
     </ClInclude>
-    <ClInclude Include="mem.h">
-      <Filter>Arquivos de Cabeçalho</Filter>
+    <ClInclude Include="framework.h">
+      <Filter>Arquivos de Cabeçalho\syscode</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Arquivos de Cabeçalho\syscode</Filter>
+    </ClInclude>
+    <ClInclude Include="cmd.h">
+      <Filter>Arquivos de Cabeçalho\tupicode</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="mem.cpp">
-      <Filter>Arquivos de Origem</Filter>
-    </ClCompile>
-    <ClCompile Include="pch.cpp">
-      <Filter>Arquivos de Origem</Filter>
-    </ClCompile>
     <ClCompile Include="cmd.cpp">
-      <Filter>Arquivos de Origem</Filter>
+      <Filter>Arquivos de Origem\tupicode</Filter>
     </ClCompile>
     <ClCompile Include="math.cpp">
-      <Filter>Arquivos de Origem</Filter>
+      <Filter>Arquivos de Origem\tupicode</Filter>
+    </ClCompile>
+    <ClCompile Include="mem.cpp">
+      <Filter>Arquivos de Origem\tupicode</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Arquivos de Origem\syscode</Filter>
+    </ClCompile>
+    <ClCompile Include="proc.cpp">
+      <Filter>Arquivos de Origem\tupicode</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

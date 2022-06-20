@@ -1,18 +1,16 @@
 #include "pch.h"
 #include "framework.h"
-#include "mem.h"
-extern "C" double floor(double x);
-extern "C" double abs(double x);
+#include "cmd.h"
 
-extern "C" const char* IToStr(long long int val);
-extern "C" const char* FToStr(double val);
+EXTC double floor(double x);
+EXTC double abs(double x);
 
-extern "C" BOOL consoleWrite(const VOID * lpBuffer, DWORD nNumberOfCharsToWrite, LPDWORD lpNumberOfCharsWritten) {
+EXTC BOOL consoleWrite(const VOID * lpBuffer, DWORD nNumberOfCharsToWrite, LPDWORD lpNumberOfCharsWritten) {
     HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     return WriteConsoleA(hConsoleOutput, lpBuffer, nNumberOfCharsToWrite, lpNumberOfCharsWritten, NULL);
 }
 
-extern "C" BOOL consoleWriteStr(const char* str) {
+EXTC BOOL consoleWriteStr(const char* str) {
     DWORD length = 0;
     while (str[length] != '\0')
     {
@@ -21,21 +19,21 @@ extern "C" BOOL consoleWriteStr(const char* str) {
     return consoleWrite(str, length, NULL);
 }
 
-extern "C" BOOL consoleWriteInt(long long int number) {
-    const char* strInt = IToStr(number);
+EXTC BOOL consoleWriteInt(long long int number) {
+    const char* strInt = iToStr(number);
     BOOL ret = consoleWriteStr(strInt);
     deleteMem((char*)strInt);
     return ret;
 }
 
-extern "C" BOOL consoleWriteFloat(double number) {
-    const char* strFloat = FToStr(number);
+EXTC BOOL consoleWriteFloat(double number) {
+    const char* strFloat = fToStr(number);
     BOOL ret = consoleWriteStr(strFloat);
     deleteMem((char*)strFloat);
     return ret;
 }
 
-extern "C" const char* IToStr(long long int number) {
+EXTC const char* iToStr(long long int number) {
     bool isNegative = false;
     char* strInt = (char*)createMem(1);
     char* strSignIntIvert = (char*)createMem(2);
@@ -96,7 +94,7 @@ extern "C" const char* IToStr(long long int number) {
     return strInt;
 }
 
-extern "C" const char* FToStr(double number) {
+EXTC const char* fToStr(double number) {
     long long int IntPart = floor(abs(number));
     double DecimalPart = abs(number) - IntPart;
     bool isNegative = false;

@@ -2,11 +2,27 @@
 usefn consoleWriteInt
 usefn consoleWriteFloat
 usefn consoleWriteStr
-usefn IToStr
-usefn FToStr
+usefn iToStr
+usefn fToStr
 usefn createMem
 usefn recreateMem
 usefn deleteMem
+usefn startProcess
 
-#macro true 1
-#macro false 0
+#macro TRUE 1
+#macro FALSE 0
+#macro NULL 0
+#macro SW_HIDE 0
+#macro SW_SHOWNORMAL 1
+#macro SW_NORMAL 1
+#macro SW_SHOWMINIMIZED 2
+#macro SW_SHOWMAXIMIZED 3
+#macro SW_MAXIMIZE 3
+#macro SW_SHOWNOACTIVATE 4
+#macro SW_SHOW 5
+#macro SW_MINIMIZE 6
+#macro SW_SHOWMINNOACTIVE 7
+#macro SW_SHOWNA 8
+#macro SW_RESTORE 9
+#macro SW_SHOWDEFAULT 10
+#macro SW_FORCEMINIMIZE 11
