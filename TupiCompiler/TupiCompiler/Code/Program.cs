@@ -746,7 +746,7 @@ internal static class Program
                             if (brk == @struct.CStructSpaces[i].Item1 - 1 + i)
                             {
                                 i++;
-                                declare = declare.Insert(_i+1, " ' ',");
+                                declare = declare.Insert(_i+1, " {},");
                             }
                         }
                     }
