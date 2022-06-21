@@ -11,9 +11,6 @@ usefn createProcess
 usefn createFile
 usefn deleteFile
 
-#macro TRUE 1
-#macro FALSE 0
-#macro NULL 0
 #macro SW_HIDE 0
 #macro SW_SHOWNORMAL 1
 #macro SW_NORMAL 1
