@@ -31,10 +31,18 @@ internal class ReadOnlyData
         TupiTypes = new string[] { "i8", "i16", "i32", "i64", "f32", "f64", "iptr" };
 
         int iptrSize = 8;
-        if (architecture == Architecture.X64)
-            iptrSize = 8;
-        else if (architecture == Architecture.X86)
-            iptrSize = 4;
+        switch (architecture)
+        {
+            case Architecture.X86_64:
+                iptrSize = 8;
+                break;
+            case Architecture.X86:
+                iptrSize = 4;
+                break;
+            case Architecture.X86_16:
+                iptrSize = 2;
+                break;
+        }
         TypeSize = new int[] { 1, 2, 4, 8, 4, 8, iptrSize };
     }
 }

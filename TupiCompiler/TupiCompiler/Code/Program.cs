@@ -2,13 +2,14 @@
 using System.Diagnostics;
 using System.Reflection;
 using TupiCompiler.Data;
+using Masm64 = TupiCompiler.Code.Masm64;
 
 namespace TupiCompiler.Code;
 internal static class Program
 {
-    static Compiler? mainCompiler;
+    static Masm64.Compiler? mainCompiler;
 
-    internal static Compiler MainCompiler
+    internal static Masm64.Compiler MainCompiler
     {
         get
         {
@@ -86,9 +87,9 @@ internal static class Program
         CompileAsm(pathDir, files);
     }
 
-    static string CompileTupiFile(string pathTupiCode, out Compiler compiler, bool isHeader = false)
+    static string CompileTupiFile(string pathTupiCode, out Masm64.Compiler compiler, bool isHeader = false)
     {
-        compiler = new Compiler(pathTupiCode, isHeader);
+        compiler = new Masm64.Compiler(pathTupiCode, isHeader);
         compiler.PreCompilerEvent += PreCompileLines_GrammarSub;
         compiler.PreCompilerEvent += PreCompileLines_GrammarAdd;
         compiler.PreCompilerEvent += PreCompileLines_Comment;
@@ -1324,7 +1325,7 @@ internal static class Program
         string fileName = Path.GetFileNameWithoutExtension(path);
         Directory.CreateDirectory($"{pathDir}/header/");
         StreamWriter writer = File.CreateText($"{pathDir}/header/{fileName}.inc");
-        writer.Write(CompileTupiFile(path, out Compiler compiler, true));
+        writer.Write(CompileTupiFile(path, out Masm64.Compiler compiler, true));
         writer.Close();
         headerData = compiler.GetRunData().GetHeaderData();
         return fileName + ".inc";

@@ -1,6 +1,7 @@
 ﻿namespace TupiCompiler.Code;
 internal enum Architecture
 {
-    X64,
+    X86_64,
     X86,
+    X86_16,
 }

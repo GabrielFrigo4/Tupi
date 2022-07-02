@@ -1,8 +1,8 @@
 ﻿using TupiCompiler.Data;
 
-namespace TupiCompiler.Code;
+namespace TupiCompiler.Code.Masm64;
 
-internal class Compiler
+internal class Compiler : ICompiler
 {
     internal event EventHandler<PreCompilerArgs>? PreCompilerEvent;
     internal event EventHandler<CompilerArgs>? CompilerEvent;
@@ -11,16 +11,14 @@ internal class Compiler
     private readonly RunData runData;
     private readonly CodeCompiled codeCompiled;
     private readonly bool isHeader;
-    private readonly Architecture architecture;
 
-    internal Compiler(string tupiCodePath, bool isHeader = false, Architecture architecture = Architecture.X64)
+    internal Compiler(string tupiCodePath, bool isHeader = false)
     {
         tupiCode = File.ReadAllText(tupiCodePath);
-        readonlyData = new(architecture);
+        readonlyData = new(Architecture.X86_64);
         runData = new();
         codeCompiled = new();
         this.isHeader = isHeader;
-        this.architecture = architecture;
     }
 
     internal string Start()
@@ -35,7 +33,7 @@ internal class Compiler
         PreCompilerArgs preCompilerArgs = new(code);
         PreCompilerEvent?.Invoke(this, preCompilerArgs);
 
-        var codeLines = preCompilerArgs.Code.Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
+        var codeLines = preCompilerArgs.Code.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
         foreach (var macro in preCompilerArgs.Macros)
             runData.Macros.TryAdd(macro.Key, macro.Value);
         return codeLines;
