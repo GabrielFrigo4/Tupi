@@ -846,7 +846,11 @@ internal static class Program
                             comand[i] = "lea";
                             varPath = varPath.Remove(0, 1);
                             param[i] = varPath;
-                            registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                            param[i] = varPath;
+                            if (i < 4)
+                                registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                            else
+                                registorsType[i] = e.ReadOnlyData.RegistorsB[3];
                         }
                         else if (currentFunc.Args.Find(x => x.Name == varSemiPath[0]) is VarData argVar)
                         {
@@ -855,7 +859,11 @@ internal static class Program
                             else
                                 comand[i] = "mov";
                             param[i] = varPath;
-                            registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                            param[i] = varPath;
+                            if (i < 4)
+                                registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                            else
+                                registorsType[i] = e.ReadOnlyData.RegistorsB[3];
                         }
                         else if (currentFunc.GetLocalVarByName(varSemiPath[0]) is VarData localVar)
                         {
@@ -864,7 +872,11 @@ internal static class Program
                             else
                                 comand[i] = "mov";
                             param[i] = varPath;
-                            registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                            param[i] = varPath;
+                            if (i < 4)
+                                registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                            else
+                                registorsType[i] = e.ReadOnlyData.RegistorsB[3];
                         }
                         else if (e.RunData.GlobalVars.ContainsKey(varSemiPath[0]))
                         {
@@ -874,55 +886,11 @@ internal static class Program
                             else
                                 comand[i] = "mov";
                             param[i] = varPath;
-                            registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                            if (i < 4)
+                                registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                            else
+                                registorsType[i] = e.ReadOnlyData.RegistorsB[3];
                         }
-                        //else
-                        //{
-                        //    comand[i] = "mov";
-
-                        //    string this_func_name = currentFunc.Name;
-                        //    if (currentFunc.LocalVars.Select((VarData var) => var.Name).Contains(varName))
-                        //    {
-                        //        string var_type = string.Empty;
-                        //        if (currentFunc.GetLocalVarByName(varName) is VarData var_data)
-                        //        {
-                        //            var_type = var_data.Type;
-                        //        }
-                        //        int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, var_type);
-                        //        if (i < 5)
-                        //        {
-                        //            registorsType[i] = e.ReadOnlyData.RegistorsAll[pos][i];
-                        //        }
-                        //        else
-                        //        {
-                        //            varType[i - 4] = e.ReadOnlyData.AsmTypes[pos];
-                        //            registorsType[i] = e.ReadOnlyData.RegistorsB[pos];
-                        //        }
-                        //    }
-                        //    else if (e.RunData.GlobalVars.ContainsKey(varName))
-                        //    {
-                        //        string var_type = e.RunData.GlobalVars[varName].Type;
-                        //        int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, var_type);
-                        //        if (i < 5)
-                        //        {
-                        //            registorsType[i] = e.ReadOnlyData.RegistorsAll[pos][i];
-                        //        }
-                        //        else
-                        //        {
-                        //            varType[i - 4] = e.ReadOnlyData.AsmTypes[pos];
-                        //            registorsType[i] = e.ReadOnlyData.RegistorsB[pos];
-                        //        }
-                        //    }
-                        //    else if (i < 4)
-                        //    {
-                        //        registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
-                        //    }
-                        //    else
-                        //    {
-                        //        varType[i - 4] = e.ReadOnlyData.AsmTypes[3];
-                        //        registorsType[i] = e.ReadOnlyData.RegistorsB[3];
-                        //    }
-                        //}
                     }
 
                     if (param.Length == 0)
