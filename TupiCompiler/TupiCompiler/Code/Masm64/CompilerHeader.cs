@@ -2,13 +2,13 @@
 
 namespace TupiCompiler.Code.Masm64;
 
-internal class Compiler : CompilerAbstract, ICompiler
+internal class CompilerHeader : CompilerAbstract, ICompilerHeader
 {
-    internal Compiler(string tupiCodePath)
+    internal CompilerHeader(string tupiCodePath)
     {
         TupiCode = File.ReadAllText(tupiCodePath);
         ReadonlyData = new(Architecture.X86_64);
         RunData = new();
-        CodeCompiled = new(false);
+        CodeCompiled = new(true);
     }
 }

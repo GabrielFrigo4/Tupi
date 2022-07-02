@@ -5,5 +5,5 @@ namespace TupiCompiler.Code;
 
 internal interface ICompiler: ICompilerHeader
 {
-    
+
 }

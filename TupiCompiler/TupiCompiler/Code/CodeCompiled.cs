@@ -8,8 +8,9 @@ internal class CodeCompiled
     internal List<string> Typedef { get; private set; }
     internal List<string> GlobalVar { get; private set; }
     internal List<string> Func { get; private set; }
+    private bool IsHeader { get; set; }
 
-    internal CodeCompiled()
+    internal CodeCompiled(bool isHeader)
     {
         UseFn = new();
         UseTh = new();
@@ -18,9 +19,10 @@ internal class CodeCompiled
         Typedef = new();
         GlobalVar = new();
         Func = new();
+        IsHeader = isHeader;
     }
 
-    internal string CreateAsmCode(bool isHeader)
+    internal string CreateAsmCode()
     {
         string code = string.Empty;
         foreach (var useth in UseTh)
@@ -48,7 +50,7 @@ internal class CodeCompiled
         {
             code += globalVar + "\n";
         }
-        if (!isHeader)
+        if (!IsHeader)
         {
             code += ".code\n";
             foreach (var func in Func)

@@ -2,14 +2,13 @@
 using System.Diagnostics;
 using System.Reflection;
 using TupiCompiler.Data;
-using Masm64 = TupiCompiler.Code.Masm64;
 
 namespace TupiCompiler.Code;
 internal static class Program
 {
-    static Masm64.Compiler? mainCompiler;
+    static ICompiler? mainCompiler;
 
-    internal static Masm64.Compiler MainCompiler
+    internal static ICompiler MainCompiler
     {
         get
         {
@@ -87,9 +86,9 @@ internal static class Program
         CompileAsm(pathDir, files);
     }
 
-    static string CompileTupiFile(string pathTupiCode, out Masm64.Compiler compiler, bool isHeader = false)
+    static string CompileTupiFile(string pathTupiCode, out ICompiler compiler)
     {
-        compiler = new Masm64.Compiler(pathTupiCode, isHeader);
+        compiler = new Masm64.Compiler(pathTupiCode);
         compiler.PreCompilerEvent += PreCompileLines_GrammarSub;
         compiler.PreCompilerEvent += PreCompileLines_GrammarAdd;
         compiler.PreCompilerEvent += PreCompileLines_Comment;
@@ -104,9 +103,28 @@ internal static class Program
         compiler.CompilerEvent += Compile_Typedef;
         compiler.CompilerEvent += Compile_GlobalVar;
         compiler.CompilerEvent += Compile_Func;
-        string asmCode = compiler.Start();
 
-        return asmCode;
+        return compiler.Start();
+    }
+
+    static string CompileTupiFileHeader(string pathTupiCode, out ICompilerHeader compiler)
+    {
+        compiler = new Masm64.CompilerHeader(pathTupiCode);
+        compiler.PreCompilerEvent += PreCompileLines_GrammarSub;
+        compiler.PreCompilerEvent += PreCompileLines_GrammarAdd;
+        compiler.PreCompilerEvent += PreCompileLines_Comment;
+        compiler.PreCompilerEvent += PreCompileLines_String;
+        compiler.PreCompilerEvent += PreCompileLines_Macro;
+        compiler.PreCompilerEvent += PreCompileLines_Empty;
+
+        compiler.CompilerEvent += Compile_UseTh;
+        compiler.CompilerEvent += Compile_UseFn;
+        compiler.CompilerEvent += Compile_Struct;
+        compiler.CompilerEvent += Compile_Union;
+        compiler.CompilerEvent += Compile_Typedef;
+        compiler.CompilerEvent += Compile_GlobalVar;
+
+        return compiler.Start();
     }
 
     static void CompileAsm(string path_dir_asm, List<string> nameFiles, bool run = false, bool assembler_warning = true)
@@ -1325,9 +1343,9 @@ internal static class Program
         string fileName = Path.GetFileNameWithoutExtension(path);
         Directory.CreateDirectory($"{pathDir}/header/");
         StreamWriter writer = File.CreateText($"{pathDir}/header/{fileName}.inc");
-        writer.Write(CompileTupiFile(path, out Masm64.Compiler compiler, true));
+        writer.Write(CompileTupiFileHeader(path, out ICompilerHeader compilerHeader));
         writer.Close();
-        headerData = compiler.GetRunData().GetHeaderData();
+        headerData = compilerHeader.GetRunData().GetHeaderData();
         return fileName + ".inc";
     }
 
