@@ -7,7 +7,7 @@ abstract internal class CompilerAbstract
     protected string TupiCode { get; set; }
     protected ReadOnlyData ReadonlyData { get; set; }
     protected RunData RunData { get; set; }
-    protected CodeCompiled CodeCompiled { get; set; }
+    protected CompiledCode CompiledCode { get; set; }
 
     public event EventHandler<PreCompilerArgs>? PreCompilerEvent;
     public event EventHandler<CompilerArgs>? CompilerEvent;
@@ -32,9 +32,9 @@ abstract internal class CompilerAbstract
 
     protected string CompilerCode(string[] tupiCodeLines)
     {
-        CompilerArgs compilerArgs = new(tupiCodeLines, RunData, CodeCompiled, ReadonlyData, false);
+        CompilerArgs compilerArgs = new(tupiCodeLines, RunData, CompiledCode, ReadonlyData, false);
         CompilerEvent?.Invoke(this, compilerArgs);
-        return CodeCompiled.CreateAsmCode();
+        return CompiledCode.CreateAsmCode();
     }
 
     public RunData GetRunData()

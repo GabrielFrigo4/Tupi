@@ -4,15 +4,15 @@ namespace TupiCompiler.Code;
 
 internal class CompilerArgs : EventArgs
 {
-    internal CodeCompiled CodeCompiled { get; private set; }
+    internal CompiledCode CompiledCode { get; private set; }
     internal string[] Lines { get; private set; }
     internal RunData RunData { get; private set; }
     internal ReadOnlyData ReadOnlyData { get; private set; }
     internal bool IsHeader { get; private set; }
 
-    internal CompilerArgs(string[] lines, RunData runData, CodeCompiled codeCompiled, ReadOnlyData readOnlyData, bool isHeader)
+    internal CompilerArgs(string[] lines, RunData runData, CompiledCode compiledCode, ReadOnlyData readOnlyData, bool isHeader)
     {
-        CodeCompiled = codeCompiled;
+        CompiledCode = compiledCode;
         Lines = lines;
         RunData = runData;
         ReadOnlyData = readOnlyData;

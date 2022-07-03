@@ -1,5 +1,5 @@
 ﻿namespace TupiCompiler.Code;
-internal class CodeCompiled
+internal class CompiledCode
 {
     internal List<string> UseTh { get; private set; }
     internal List<string> UseFn { get; private set; }
@@ -10,7 +10,7 @@ internal class CodeCompiled
     internal List<string> Func { get; private set; }
     private bool IsHeader { get; set; }
 
-    internal CodeCompiled(bool isHeader)
+    internal CompiledCode(bool isHeader)
     {
         UseFn = new();
         UseTh = new();

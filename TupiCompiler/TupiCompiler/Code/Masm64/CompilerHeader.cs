@@ -9,6 +9,13 @@ internal class CompilerHeader : CompilerAbstract, ICompilerHeader
         TupiCode = File.ReadAllText(tupiCodePath);
         ReadonlyData = new(Architecture.X86_64);
         RunData = new();
-        CodeCompiled = new(true);
+        CompiledCode = new(true);
+    }
+
+    public void SetCompilerFunc(ICompilerHeaderFunc compilerHeaderFunc)
+    {
+        ICompilerHeader compiler = this;
+        compilerHeaderFunc.PreCompilerEventAdd(ref compiler);
+        compilerHeaderFunc.CompilerEventAdd(ref compiler);
     }
 }
