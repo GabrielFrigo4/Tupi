@@ -79,6 +79,18 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 pos--;
                 continue;
             }
+            if (codeStr[pos] == ',' && codeStr[pos + 1] == ' ')
+            {
+                codeStr = codeStr.Remove(pos + 1, 1);
+                pos--;
+                continue;
+            }
+            if (codeStr[pos] == ' ' && codeStr[pos + 1] == ',')
+            {
+                codeStr = codeStr.Remove(pos, 1);
+                pos--;
+                continue;
+            }
             if (codeStr[pos] == '\n' && codeStr[pos + 1] == '{')
             {
                 codeStr = codeStr.Remove(pos, 1);
@@ -312,6 +324,7 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 e.Code += lines[i] + "\n";
             }
         }
+        Console.WriteLine(e.Code);
     }
     #endregion
 

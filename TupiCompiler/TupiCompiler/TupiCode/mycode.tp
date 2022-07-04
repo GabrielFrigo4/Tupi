@@ -45,7 +45,7 @@ fn main(i32 argc, iptr argv)
 	myStruct myStructVar;
 	
 	$createProcess(luaName,args);
-	myLongVar1 = sum(10,11)
+	myLongVar1 = sum(10, 11)
 	consoleWriteInt(myLongVar1)
 	consoleWriteStr(pularLinha)
 	print(luaName)
