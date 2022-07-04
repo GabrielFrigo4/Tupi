@@ -324,7 +324,6 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 e.Code += lines[i] + "\n";
             }
         }
-        Console.WriteLine(e.Code);
     }
     #endregion
 
