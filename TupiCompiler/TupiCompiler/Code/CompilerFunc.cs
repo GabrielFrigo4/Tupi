@@ -733,8 +733,6 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
 
     void Compile_Func(object? sender, CompilerArgs e)
     {
-        if (e.IsHeader) return;
-
         FuncData? currentFunc = null;
         string fnCode = string.Empty;
 
@@ -824,97 +822,8 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 }
 
                 // call funcs
-                if (terms[0].Contains('('))
-                {
-                    string func_name = terms[0].Remove(terms[0].IndexOf('('));
-                    string _param = terms[0].Substring(terms[0].IndexOf('(') + 1, terms[0].IndexOf(')') - terms[0].IndexOf('(') - 1);
-                    string[] param = _param.Split(new char[] { ',', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
-                    string[] comand = new string[param.Length];
-                    string[] registorsType = new string[param.Length];
-                    string[] varType = Array.Empty<string>();
-                    if (param.Length > 4)
-                        varType = new string[param.Length - 4];
-
-                    for (int i = 0; i < param.Length; i++)
-                    {
-                        string varPath = param[i];
-                        string[] varSemiPath = param[i].Split(new[] { '.' });
-                        if (varPath.ToCharArray()[0] == '&')
-                        {
-                            comand[i] = "lea";
-                            varPath = varPath.Remove(0, 1);
-                            param[i] = varPath;
-                            param[i] = varPath;
-                            if (i < 4)
-                                registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
-                            else
-                                registorsType[i] = e.ReadOnlyData.RegistorsB[3];
-                        }
-                        else if (currentFunc.Args.Find(x => x.Name == varSemiPath[0]) is VarData argVar)
-                        {
-                            if (argVar.Ref)
-                                comand[i] = "lea";
-                            else
-                                comand[i] = "mov";
-                            param[i] = varPath;
-                            param[i] = varPath;
-                            if (i < 4)
-                                registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
-                            else
-                                registorsType[i] = e.ReadOnlyData.RegistorsB[3];
-                        }
-                        else if (currentFunc.GetLocalVarByName(varSemiPath[0]) is VarData localVar)
-                        {
-                            if (localVar.Ref)
-                                comand[i] = "lea";
-                            else
-                                comand[i] = "mov";
-                            param[i] = varPath;
-                            param[i] = varPath;
-                            if (i < 4)
-                                registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
-                            else
-                                registorsType[i] = e.ReadOnlyData.RegistorsB[3];
-                        }
-                        else if (e.RunData.GlobalVars.ContainsKey(varSemiPath[0]))
-                        {
-                            VarData? globalData = e.RunData.GlobalVars[varSemiPath[0]];
-                            if (globalData.Ref)
-                                comand[i] = "lea";
-                            else
-                                comand[i] = "mov";
-                            param[i] = varPath;
-                            if (i < 4)
-                                registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
-                            else
-                                registorsType[i] = e.ReadOnlyData.RegistorsB[3];
-                        }
-                        else
-                        {
-                            ShowErrors($"var {varSemiPath[0]} dosn't exist in this context");
-                        }
-                    }
-
-                    if (param.Length <= 4)
-                    {
-                        for (int i = 0; i < param.Length; i++)
-                        {
-                            fnCode += $"\t{comand[i]} {registorsType[i]}, {param[i]}\n";
-                        }
-                        fnCode += $"\tcall {func_name}\n";
-                    }
-                    else
-                    {
-                        fnCode += line.Replace($"{terms[0]}", $"\t{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\t{comand[3]} {registorsType[3]}, {param[3]}") + "\n";
-                        for (int i = 4; i < param.Length; i++)
-                        {
-                            fnCode += $"\t{comand[i]} {registorsType[i]}, {param[i]}\n";
-                            fnCode += $"\tmov {varType[i - 4]} ptr [rsp+{i * 8}], {registorsType[i]}\n";
-                        }
-                        fnCode += $"\tcall {func_name}\n";
-                    }
+                if(CallFunc(line, currentFunc, e, ref fnCode))
                     fnCode += "\txor rax, rax\n";
-                }
 
                 //operator
                 if (terms.Length == 2)
@@ -929,18 +838,51 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                             break;
                     }
                 }
-                else if (terms.Length == 3)
+                else if (terms.Length >= 3)
                 {
                     switch (terms[1])
                     {
                         case "+=":
-                            fnCode += $"\tadd {terms[0]}, {terms[2]}\n";
+                            bool existFn = CallFunc(line, currentFunc, e, ref fnCode, 2);
+                            if (existFn)
+                            {
+                                fnCode += $"\tadd {terms[0]}, rax\n";
+                                fnCode += "\txor rax, rax\n";
+                            }
+                            else
+                            {
+                                fnCode += $"\tmov rbx, {terms[2]}\n";
+                                fnCode += $"\tadd {terms[0]}, rbx\n";
+                                fnCode += "\txor rbx, rbx\n";
+                            }
                             break;
                         case "-=":
-                            fnCode += $"\tsub {terms[0]}, {terms[2]}\n";
+                            existFn = CallFunc(line, currentFunc, e, ref fnCode, 2);
+                            if (existFn)
+                            {
+                                fnCode += $"\tsub {terms[0]}, rax\n";
+                                fnCode += "\tmov rax, rax\n";
+                            }
+                            else
+                            {
+                                fnCode += $"\tmov rbx, {terms[2]}\n";
+                                fnCode += $"\tsub {terms[0]}, rbx\n";
+                                fnCode += "\txor rbx, rbx\n";
+                            }
                             break;
                         case "=":
-                            fnCode += $"\tmov {terms[0]}, {terms[2]}\n";
+                            existFn = CallFunc(line, currentFunc, e, ref fnCode, 2);
+                            if (existFn)
+                            {
+                                fnCode += $"\tmov {terms[0]}, rax\n";
+                                fnCode += "\tmov rax, rax\n";
+                            }
+                            else
+                            {
+                                fnCode += $"\tmov rbx, {terms[2]}\n";
+                                fnCode += $"\tmov {terms[0]}, rbx\n";
+                                fnCode += "\txor rbx, rbx\n";
+                            }
                             break;
                     }
                 }
@@ -1504,6 +1446,116 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
         }
 
         return new(varName, varType, varSize, varDef, varRef);
+    }
+
+    private bool CallFunc(string line, FuncData currentFunc, CompilerArgs e, ref string fnCode, int start = 0)
+    {
+        string[] terms = e.GetTermsLine(line);
+        if (terms[start].Contains('('))
+        {
+            string func_name = terms[start].Remove(terms[start].IndexOf('('));
+            string _param = terms[start].Substring(terms[start].IndexOf('(') + 1, terms[start].IndexOf(')') - terms[start].IndexOf('(') - 1);
+            string[] param = _param.Split(new char[] { ',', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] comand = new string[param.Length];
+            string[] registorsType = new string[param.Length];
+            string[] varType = Array.Empty<string>();
+            if (param.Length > 4)
+                varType = new string[param.Length - 4];
+
+            for (int i = 0; i < param.Length; i++)
+            {
+                string varPath = param[i];
+                string[] varSemiPath = param[i].Split(new[] { '.' });
+                if (varPath.ToCharArray()[0] == '&')
+                {
+                    comand[i] = "lea";
+                    varPath = varPath.Remove(0, 1);
+                    param[i] = varPath;
+                    param[i] = varPath;
+                    if (i < 4)
+                        registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                    else
+                        registorsType[i] = e.ReadOnlyData.RegistorsB[3];
+                }
+                else if (currentFunc.Args.Find(x => x.Name == varSemiPath[0]) is VarData argVar)
+                {
+                    if (argVar.Ref)
+                        comand[i] = "lea";
+                    else
+                        comand[i] = "mov";
+                    param[i] = varPath;
+                    param[i] = varPath;
+                    if (i < 4)
+                        registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                    else
+                        registorsType[i] = e.ReadOnlyData.RegistorsB[3];
+                }
+                else if (currentFunc.GetLocalVarByName(varSemiPath[0]) is VarData localVar)
+                {
+                    if (localVar.Ref)
+                        comand[i] = "lea";
+                    else
+                        comand[i] = "mov";
+                    param[i] = varPath;
+                    param[i] = varPath;
+                    if (i < 4)
+                        registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                    else
+                        registorsType[i] = e.ReadOnlyData.RegistorsB[3];
+                }
+                else if (e.RunData.GlobalVars.ContainsKey(varSemiPath[0]))
+                {
+                    VarData? globalData = e.RunData.GlobalVars[varSemiPath[0]];
+                    if (globalData.Ref)
+                        comand[i] = "lea";
+                    else
+                        comand[i] = "mov";
+                    param[i] = varPath;
+                    if (i < 4)
+                        registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                    else
+                        registorsType[i] = e.ReadOnlyData.RegistorsB[3];
+                }
+                else if(long.TryParse(varSemiPath[0], out _) || double.TryParse(varSemiPath[0], out _))
+                {
+                    comand[i] = "mov";
+                    param[i] = varPath;
+                    param[i] = varPath;
+                    if (i < 4)
+                        registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                    else
+                        registorsType[i] = e.ReadOnlyData.RegistorsB[3];
+                }
+                else
+                {
+                    ShowErrors($"var {varSemiPath[0]} dosn't exist in this context");
+                }
+            }
+
+            if (param.Length <= 4)
+            {
+                for (int i = 0; i < param.Length; i++)
+                {
+                    fnCode += $"\t{comand[i]} {registorsType[i]}, {param[i]}\n";
+                }
+                fnCode += $"\tcall {func_name}\n";
+            }
+            else
+            {
+                fnCode += line.Replace($"{terms[0]}", $"\t{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\t{comand[3]} {registorsType[3]}, {param[3]}") + "\n";
+                for (int i = 4; i < param.Length; i++)
+                {
+                    fnCode += $"\t{comand[i]} {registorsType[i]}, {param[i]}\n";
+                    fnCode += $"\tmov {varType[i - 4]} ptr [rsp+{i * 8}], {registorsType[i]}\n";
+                }
+                fnCode += $"\tcall {func_name}\n";
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     private void ShowErrors(params string[] errors)
