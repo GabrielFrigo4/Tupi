@@ -53,18 +53,26 @@ internal static class Program
         args = new string[1];
         args[0] = "TupiCode/mycode.tp";
 #endif
-        string? _pathCompile = Path.GetDirectoryName(Path.GetFullPath(args[0]));
-        if (_pathCompile is not null)
-            pathCompile = Path.GetFullPath(_pathCompile);
-
-        Action<string> action = CompileTupiProj;
-        Argument<string> source = new("source", "source for tupi compile");
-        RootCommand cmd = new()
+        if (args.Length > 0)
         {
-            source,
-        };
-        cmd.SetHandler(action, source);
-        return cmd.Invoke(args);
+            string? _pathCompile = Path.GetDirectoryName(Path.GetFullPath(args[0]));
+            if (_pathCompile is not null)
+                pathCompile = Path.GetFullPath(_pathCompile);
+
+            Action<string> action = CompileTupiProj;
+            Argument<string> source = new("source", "source for tupi compile");
+            RootCommand cmd = new()
+            {
+                source,
+            };
+            cmd.SetHandler(action, source);
+            return cmd.Invoke(args);
+        }
+        else
+        {
+            Console.WriteLine("falta o comando ou argumento...");
+            return 0;
+        }
     }
 
     internal static void CompileTupiProj(string pathTupi)
@@ -80,6 +88,8 @@ internal static class Program
 
         List<string> files = new();
         files.Add(tupiFileName);
+        if (!Directory.Exists(pathDir + "\\header"))
+            Directory.CreateDirectory(pathDir + "\\header");
         if (File.Exists(pathDir + "\\header\\std_tupi_def.inc"))
             File.Delete(pathDir + "\\header\\std_tupi_def.inc");
         File.Copy($"{x64Path}std_tupi_def.inc", pathDir + "\\header\\std_tupi_def.inc");

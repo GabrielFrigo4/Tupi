@@ -1059,6 +1059,9 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 //end
                 if (!isInsideFunc)
                 {
+                    fnCode += $"\tadd rsp, {CorrectShadowSpaceFunc(currentFunc.ShadowSpace)}\t;Remove shadow space\n";
+                    fnCode += "\tpop rdi\n";
+                    fnCode += "\tret\n";
                     fnCode += $"{currentFunc.Name} endp";
                     e.CompiledCode.Func.Add(fnCode);
                     fnCode = string.Empty;
@@ -1343,16 +1346,14 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
         {
             varType = terms[1];
             varName = terms[2];
-            for (int i = 3; i < terms.Length; i++)
-                varDef += terms[i];
+            varDef = line.Remove(0, "ref".Length + varType.Length + varName.Length + 3);
             varRef = true;
         }
         else
         {
             varType = terms[0];
             varName = terms[1];
-            for (int i = 2; i < terms.Length; i++)
-                varDef += terms[i];
+            varDef = line.Remove(0, varType.Length + varName.Length + 2);
             varRef = false;
         }
 

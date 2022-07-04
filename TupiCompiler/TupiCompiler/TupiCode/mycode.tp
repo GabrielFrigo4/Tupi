@@ -50,7 +50,7 @@ fn main(i32 argc, iptr argv)
 	consoleWriteStr(pularLinha)
 	loop
 	{
-		consoleWriteStr(msgLoop)
+		consoleWriteStr(msg1)
 		consoleWriteInt(myLongLoop)
 		myLongLoop-=10;
 		consoleWriteStr(pularLinha)
@@ -80,5 +80,4 @@ fn print_i64(i64 integer)
 	consoleWriteStr(msg1)
 	consoleWriteInt(integer)
 	consoleWriteStr(pularLinha)
-	return
 }
