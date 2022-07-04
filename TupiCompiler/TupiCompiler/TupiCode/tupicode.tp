@@ -1,0 +1,11 @@
+﻿useth <tupiheader.th>
+ref i8 newln "\n\0"
+ref i8 printInit "print:\0"
+
+fn print(iptr string)
+{
+	consoleWriteStr(printInit)
+	consoleWriteStr(string)
+	consoleWriteStr(newln)
+	return
+}

@@ -4,13 +4,20 @@ namespace TupiCompiler.Code.Masm64;
 
 internal class CompilerCode : CompilerAbstract, ICompilerCode
 {
-    internal CompilerCode(string tupiCodePath)
+    internal CompilerCode(string tupiCodePath, bool isMainFile)
     {
         TupiCode = File.ReadAllText(tupiCodePath);
         ReadonlyData = new(Architecture.X86_64);
         RunData = new();
-        CompiledCode = new(false);
+        CompiledCode = new();
+        IsMainFile = isMainFile;
+        CreateCode = delegate
+        {
+            return CompiledCode.CreateAsmCode(isMainFile);
+        };
     }
+
+    public bool IsMainFile { get; private set; }
 
     public void SetCompilerFunc(ICompilerCodeFunc compilerCodeFunc)
     {

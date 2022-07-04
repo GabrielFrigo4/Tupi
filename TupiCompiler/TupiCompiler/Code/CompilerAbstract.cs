@@ -4,6 +4,8 @@ namespace TupiCompiler.Code;
 
 abstract internal class CompilerAbstract
 {
+    protected Func<string> CreateCode { get; set; }
+
     protected string TupiCode { get; set; }
     protected ReadOnlyData ReadonlyData { get; set; }
     protected RunData RunData { get; set; }
@@ -34,7 +36,7 @@ abstract internal class CompilerAbstract
     {
         CompilerArgs compilerArgs = new(tupiCodeLines, RunData, CompiledCode, ReadonlyData, false);
         CompilerEvent?.Invoke(this, compilerArgs);
-        return CompiledCode.CreateAsmCode();
+        return CreateCode.Invoke();
     }
 
     public RunData GetRunData()

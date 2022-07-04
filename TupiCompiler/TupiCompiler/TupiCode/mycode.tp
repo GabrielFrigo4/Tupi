@@ -1,4 +1,5 @@
 useth <tupiheader.th>
+usetp <tupicode.tp>
 
 ref i8 pularLinha "\n\0"
 ref i8 msg1 'myInt is ', 0
@@ -44,6 +45,7 @@ fn main(i32 argc, iptr argv)
 	myStruct myStructVar;
 	
 	$createProcess(luaName,args);
+	print(luaName)
 	consoleWriteInt(myStructCUnginha.myLong1)
 	consoleWriteStr(pularLinha)
 	loop

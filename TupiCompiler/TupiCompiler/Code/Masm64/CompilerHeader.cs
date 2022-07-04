@@ -9,7 +9,11 @@ internal class CompilerHeader : CompilerAbstract, ICompilerHeader
         TupiCode = File.ReadAllText(tupiCodePath);
         ReadonlyData = new(Architecture.X86_64);
         RunData = new();
-        CompiledCode = new(true);
+        CompiledCode = new();
+        CreateCode = delegate
+        {
+            return CompiledCode.CreateIncCode();
+        };
     }
 
     public void SetCompilerFunc(ICompilerHeaderFunc compilerHeaderFunc)

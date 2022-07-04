@@ -41,7 +41,8 @@ internal static class Program
     internal readonly static string
         x64Path = EXE_PATH + "/_tupi/x64/",
         x86Path = EXE_PATH + "/_tupi/x86/",
-        thPath = EXE_PATH + "/_tupi/headers/",
+        thPath = EXE_PATH + "/_tupi/header/",
+        tpPath = EXE_PATH + "/_tupi/code/",
         pathDir = "./build";
 
     internal static string pathCompile = string.Empty;
@@ -74,7 +75,7 @@ internal static class Program
 
         Directory.CreateDirectory(pathDir);
         StreamWriter write = File.CreateText(pathDir + $"\\{tupiFileName}.asm");
-        write.Write(CompileTupiCodeFile(pathTupi, out mainCompiler));
+        write.Write(CompileTupiCodeFile(pathTupi, out mainCompiler, true));
         write.Close();
 
         List<string> files = new();
@@ -85,14 +86,14 @@ internal static class Program
         CompileAsm(pathDir, files);
     }
 
-    internal static string CompileTupiCodeFile(string pathTupiCode, out ICompilerCode compiler)
+    internal static string CompileTupiCodeFile(string pathTupiCode, out ICompilerCode compiler, bool isMainFile)
     {
-        compiler = new Masm64.CompilerCode(pathTupiCode);
+        compiler = new Masm64.CompilerCode(pathTupiCode, isMainFile);
         compiler.SetCompilerFunc(new CompilerFunc());
         return compiler.Start();
     }
 
-    internal static string CompileTupiFileHeader(string pathTupiCode, out ICompilerHeader compiler)
+    internal static string CompileTupiHeaderFile(string pathTupiCode, out ICompilerHeader compiler)
     {
         compiler = new Masm64.CompilerHeader(pathTupiCode);
         compiler.SetCompilerFunc(new CompilerFunc());

@@ -18,7 +18,9 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
     void ICompilerCodeFunc.CompilerEventAdd(ref ICompilerCode compilerCode)
     {
         compilerCode.CompilerEvent += Compile_UseTh;
+        compilerCode.CompilerEvent += Compile_UseTp;
         compilerCode.CompilerEvent += Compile_UseFn;
+        compilerCode.CompilerEvent += Compile_UseLib;
         compilerCode.CompilerEvent += Compile_Struct;
         compilerCode.CompilerEvent += Compile_Union;
         compilerCode.CompilerEvent += Compile_Typedef;
@@ -42,6 +44,7 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
     {
         compilerHeader.CompilerEvent += Compile_UseTh;
         compilerHeader.CompilerEvent += Compile_UseFn;
+        compilerHeader.CompilerEvent += Compile_UseLib;
         compilerHeader.CompilerEvent += Compile_Struct;
         compilerHeader.CompilerEvent += Compile_Union;
         compilerHeader.CompilerEvent += Compile_Typedef;
@@ -363,12 +366,56 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 }
                 else
                 {
-                    ConsoleColor consoleColor = Console.ForegroundColor;
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"{path} header not find");
-                    Console.WriteLine($"{Program.pathCompile + "/" + path} header not find");
-                    Console.WriteLine($"{Program.thPath + path} header not find");
-                    Console.ForegroundColor = consoleColor;
+                    ShowErrors($"{path} tupiheader not find", 
+                        $"{Program.pathCompile + "/" + path} tupiheader not find", 
+                        $"{Program.thPath + path} tupiheader not find");
+                }
+            }
+        }
+
+        if (isMacrosSet)
+            e.SetLines(ReplaceMacro(e.Lines, e.RunData.Macros));
+    }
+
+    void Compile_UseTp(object? sender, CompilerArgs e)
+    {
+        bool isMacrosSet = false;
+
+        for (int i = 0; i < e.Lines.Length; i++)
+        {
+            string line = e.Lines[i];
+            if (line.StartsWith("usetp "))
+            {
+                string path = line.Replace("usetp ", "").Replace("<", "").Replace(">", "");
+                if (File.Exists(path))
+                {
+                    string asmName = CreateAssemblyFile(path, out ICodeData codeData);
+                    Program.MainCompiler.GetRunData().AddCodeData(codeData);
+                    isMacrosSet = true;
+
+                    e.CompiledCode.UseTh.Add($"include {asmName}");
+                }
+                else if (File.Exists(Program.pathCompile + "/" + path))
+                {
+                    string asmName = CreateAssemblyFile(Program.pathCompile + "/" + path, out ICodeData codeData);
+                    Program.MainCompiler.GetRunData().AddCodeData(codeData);
+                    isMacrosSet = true;
+
+                    e.CompiledCode.UseTh.Add($"include {asmName}");
+                }
+                else if (File.Exists(Program.tpPath + path))
+                {
+                    string asmName = CreateAssemblyFile(Program.tpPath + path, out ICodeData codeData);
+                    Program.MainCompiler.GetRunData().AddCodeData(codeData);
+                    isMacrosSet = true;
+
+                    e.CompiledCode.UseTh.Add($"include {asmName}");
+                }
+                else
+                {
+                    ShowErrors($"{path} tupicode not find",
+                        $"{Program.pathCompile + "/" + path} tupicode not find",
+                        $"{Program.tpPath + path} tupicode not find");
                 }
             }
         }
@@ -391,6 +438,39 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
             if (terms[0] == "usefn")
             {
                 e.CompiledCode.UseFn.Add($"extern {terms[1]}: proc");
+            }
+        }
+    }
+
+    void Compile_UseLib(object? sender, CompilerArgs e)
+    {
+        for (int i = 0; i < e.Lines.Length; i++)
+        {
+            string line = e.Lines[i];
+            if (line.StartsWith("uselib "))
+            {
+                string path = line.Replace("uselib ", "").Replace("<", "").Replace(">", "");
+                if (File.Exists(path))
+                {
+
+                }
+                else if (File.Exists(Program.pathCompile + "/" + path))
+                {
+                  
+                }
+                else if (File.Exists(Program.thPath + path))
+                {
+
+                }
+                else
+                {
+                    ConsoleColor consoleColor = Console.ForegroundColor;
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"{path} lib not find");
+                    Console.WriteLine($"{Program.pathCompile + "/" + path} lib not find");
+                    Console.WriteLine($"{Program.thPath + path} lib not find");
+                    Console.ForegroundColor = consoleColor;
+                }
             }
         }
     }
@@ -799,6 +879,10 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                                 registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
                             else
                                 registorsType[i] = e.ReadOnlyData.RegistorsB[3];
+                        }
+                        else
+                        {
+                            ShowErrors($"var {varSemiPath[0]} dosn't exist in this context");
                         }
                     }
 
@@ -1221,10 +1305,20 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
         string fileName = Path.GetFileNameWithoutExtension(path);
         Directory.CreateDirectory($"{Program.pathDir}/header/");
         StreamWriter writer = File.CreateText($"{Program.pathDir}/header/{fileName}.inc");
-        writer.Write(Program.CompileTupiFileHeader(path, out ICompilerHeader compilerHeader));
+        writer.Write(Program.CompileTupiHeaderFile(path, out ICompilerHeader compilerHeader));
         writer.Close();
         headerData = compilerHeader.GetRunData().GetHeaderData();
         return fileName + ".inc";
+    }
+
+    private string CreateAssemblyFile(string path, out ICodeData codeData)
+    {
+        string fileName = Path.GetFileNameWithoutExtension(path);
+        StreamWriter writer = File.CreateText($"{Program.pathDir}/{fileName}.asm");
+        writer.Write(Program.CompileTupiCodeFile(path, out ICompilerCode compilerCode, false));
+        writer.Close();
+        codeData = compilerCode.GetRunData().GetCodeData();
+        return fileName + ".asm";
     }
 
     private VarData? GetMetaGlobalVar(string line, ref CompilerArgs e)
@@ -1398,6 +1492,24 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
         }
 
         return new(varName, varType, varSize, varDef, varRef);
+    }
+
+    private void ShowErrors(params string[] errors)
+    {
+        ConsoleColor consoleColor = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.Red;
+        foreach(string error in errors)
+            Console.WriteLine(error);
+        Console.ForegroundColor = consoleColor;
+    }
+
+    private void ShowWarnigns(params string[] warnigns)
+    {
+        ConsoleColor consoleColor = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        foreach (string warnign in warnigns)
+            Console.WriteLine(warnign);
+        Console.ForegroundColor = consoleColor;
     }
     #endregion
 }

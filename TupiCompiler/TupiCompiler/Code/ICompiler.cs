@@ -4,6 +4,7 @@ namespace TupiCompiler.Code;
 
 internal interface ICompilerCode
 {
+    bool IsMainFile { get; }
     public event EventHandler<PreCompilerArgs>? PreCompilerEvent;
     public event EventHandler<CompilerArgs>? CompilerEvent;
 
