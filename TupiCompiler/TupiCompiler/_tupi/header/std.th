@@ -10,7 +10,7 @@ usefn deleteMem
 usefn createProcess
 usefn createFile
 usefn deleteFile
-uselib <TupiLib>
+uselib <TupiLib.lib>
 
 #macro SW_HIDE 0
 #macro SW_SHOWNORMAL 1

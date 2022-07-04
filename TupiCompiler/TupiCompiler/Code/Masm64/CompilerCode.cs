@@ -15,9 +15,11 @@ internal class CompilerCode : CompilerAbstract, ICompilerCode
         {
             return CompiledCode.CreateAsmCode(isMainFile);
         };
+        LinkLibs = new();
     }
 
     public bool IsMainFile { get; private set; }
+    public List<string> LinkLibs { get; private set; }
 
     public void SetCompilerFunc(ICompilerCodeFunc compilerCodeFunc)
     {

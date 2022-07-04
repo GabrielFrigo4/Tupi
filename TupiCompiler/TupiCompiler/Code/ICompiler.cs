@@ -2,23 +2,23 @@
 
 namespace TupiCompiler.Code;
 
-internal interface ICompilerCode
+internal interface ICompiler
 {
-    bool IsMainFile { get; }
+    List<string> LinkLibs { get; }
     public event EventHandler<PreCompilerArgs>? PreCompilerEvent;
     public event EventHandler<CompilerArgs>? CompilerEvent;
 
     string Start();
     RunData GetRunData();
+}
+
+internal interface ICompilerCode: ICompiler
+{
+    bool IsMainFile { get; }
     void SetCompilerFunc(ICompilerCodeFunc compilerCodeFunc);
 }
 
-internal interface ICompilerHeader
+internal interface ICompilerHeader: ICompiler
 {
-    public event EventHandler<PreCompilerArgs>? PreCompilerEvent;
-    public event EventHandler<CompilerArgs>? CompilerEvent;
-
-    string Start();
-    RunData GetRunData();
     void SetCompilerFunc(ICompilerHeaderFunc compilerCodeFunc);
 }

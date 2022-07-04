@@ -14,7 +14,10 @@ internal class CompilerHeader : CompilerAbstract, ICompilerHeader
         {
             return CompiledCode.CreateIncCode();
         };
+        LinkLibs = new();
     }
+
+    public List<string> LinkLibs { get; private set; }
 
     public void SetCompilerFunc(ICompilerHeaderFunc compilerHeaderFunc)
     {

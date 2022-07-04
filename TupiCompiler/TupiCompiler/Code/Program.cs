@@ -83,7 +83,7 @@ internal static class Program
         if (File.Exists(pathDir + "\\header\\std_tupi_def.inc"))
             File.Delete(pathDir + "\\header\\std_tupi_def.inc");
         File.Copy($"{x64Path}std_tupi_def.inc", pathDir + "\\header\\std_tupi_def.inc");
-        CompileAsm(pathDir, files);
+        CompileAsm(pathDir, files, MainCompiler.LinkLibs);
     }
 
     internal static string CompileTupiCodeFile(string pathTupiCode, out ICompilerCode compiler, bool isMainFile)
@@ -100,7 +100,7 @@ internal static class Program
         return compiler.Start();
     }
 
-    internal static void CompileAsm(string path_dir_asm, List<string> nameFiles, bool run = false, bool assembler_warning = true)
+    internal static void CompileAsm(string path_dir_asm, List<string> nameFiles, List<string> libFiles, bool run = false, bool assembler_warning = true)
     {
         Console.WriteLine("tranform assembly to binary file");
         Process process = new();
@@ -120,7 +120,11 @@ internal static class Program
         {
             linkCommand += $" {objFile}.obj";
         }
-        linkCommand += $" /entry:main /subsystem:console /defaultlib:{x64Path}lib/TupiLib.lib";
+        linkCommand += $" /entry:main /subsystem:console";// /defaultlib:{x64Path}lib/TupiLib.lib";
+        foreach (string libFile in libFiles.Distinct())
+        {
+            linkCommand += $" /defaultlib:{libFile}";
+        }
         startInfo.Arguments += linkCommand;
         if (run)
         {

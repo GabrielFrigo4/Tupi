@@ -333,8 +333,9 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 string path = line.Replace("useth ", "").Replace("<", "").Replace(">", "");
                 if (File.Exists(path))
                 {
-                    string incName = CreateIncludeFile(path, out IHeaderData headerData);
+                    string incName = CreateIncludeFile(path, out IHeaderData headerData, out List<string> linkLibs);
                     Program.MainCompiler.GetRunData().AddHeaderData(headerData);
+                    Program.MainCompiler.LinkLibs.AddRange(linkLibs);
                     isMacrosSet = true;
 
                     if (e.IsHeader)
@@ -344,8 +345,9 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 }
                 else if (File.Exists(Program.pathCompile + "/" + path))
                 {
-                    string incName = CreateIncludeFile(Program.pathCompile + "/" + path, out IHeaderData headerData);
+                    string incName = CreateIncludeFile(Program.pathCompile + "/" + path, out IHeaderData headerData, out List<string> linkLibs);
                     Program.MainCompiler.GetRunData().AddHeaderData(headerData);
+                    Program.MainCompiler.LinkLibs.AddRange(linkLibs);
                     isMacrosSet = true;
 
                     if (e.IsHeader)
@@ -355,8 +357,9 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 }
                 else if (File.Exists(Program.thPath + path))
                 {
-                    string incName = CreateIncludeFile(Program.thPath + path, out IHeaderData headerData);
+                    string incName = CreateIncludeFile(Program.thPath + path, out IHeaderData headerData, out List<string> linkLibs);
                     Program.MainCompiler.GetRunData().AddHeaderData(headerData);
+                    Program.MainCompiler.LinkLibs.AddRange(linkLibs);
                     isMacrosSet = true;
 
                     if (e.IsHeader)
@@ -389,24 +392,27 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 string path = line.Replace("usetp ", "").Replace("<", "").Replace(">", "");
                 if (File.Exists(path))
                 {
-                    string asmName = CreateAssemblyFile(path, out ICodeData codeData);
+                    string asmName = CreateAssemblyFile(path, out ICodeData codeData, out List<string> linkLibs);
                     Program.MainCompiler.GetRunData().AddCodeData(codeData);
+                    Program.MainCompiler.LinkLibs.AddRange(linkLibs);
                     isMacrosSet = true;
 
                     e.CompiledCode.UseTh.Add($"include {asmName}");
                 }
                 else if (File.Exists(Program.pathCompile + "/" + path))
                 {
-                    string asmName = CreateAssemblyFile(Program.pathCompile + "/" + path, out ICodeData codeData);
+                    string asmName = CreateAssemblyFile(Program.pathCompile + "/" + path, out ICodeData codeData, out List<string> linkLibs);
                     Program.MainCompiler.GetRunData().AddCodeData(codeData);
+                    Program.MainCompiler.LinkLibs.AddRange(linkLibs);
                     isMacrosSet = true;
 
                     e.CompiledCode.UseTh.Add($"include {asmName}");
                 }
                 else if (File.Exists(Program.tpPath + path))
                 {
-                    string asmName = CreateAssemblyFile(Program.tpPath + path, out ICodeData codeData);
+                    string asmName = CreateAssemblyFile(Program.tpPath + path, out ICodeData codeData, out List<string> linkLibs);
                     Program.MainCompiler.GetRunData().AddCodeData(codeData);
+                    Program.MainCompiler.LinkLibs.AddRange(linkLibs);
                     isMacrosSet = true;
 
                     e.CompiledCode.UseTh.Add($"include {asmName}");
@@ -444,6 +450,9 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
 
     void Compile_UseLib(object? sender, CompilerArgs e)
     {
+        ICompiler? compiler = (ICompiler?)sender;
+        if (compiler is null) return;
+
         for (int i = 0; i < e.Lines.Length; i++)
         {
             string line = e.Lines[i];
@@ -452,23 +461,23 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 string path = line.Replace("uselib ", "").Replace("<", "").Replace(">", "");
                 if (File.Exists(path))
                 {
-
+                    compiler.LinkLibs.Add(path);
                 }
-                else if (File.Exists(Program.pathCompile + "/" + path))
+                else if (File.Exists($"{Program.pathCompile}/{path}"))
                 {
-                  
+                    compiler.LinkLibs.Add($"{Program.pathCompile}/{path}");
                 }
-                else if (File.Exists(Program.thPath + path))
+                else if (File.Exists($"{Program.x64Path}lib/{path}"))
                 {
-
+                    compiler.LinkLibs.Add($"{Program.x64Path}lib/{path}");
                 }
                 else
                 {
                     ConsoleColor consoleColor = Console.ForegroundColor;
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine($"{path} lib not find");
-                    Console.WriteLine($"{Program.pathCompile + "/" + path} lib not find");
-                    Console.WriteLine($"{Program.thPath + path} lib not find");
+                    Console.WriteLine($"{Program.pathCompile}/{path} lib not find");
+                    Console.WriteLine($"{Program.x64Path}lib/{path} lib not find");
                     Console.ForegroundColor = consoleColor;
                 }
             }
@@ -1300,7 +1309,7 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
         return lines;
     }
 
-    private string CreateIncludeFile(string path, out IHeaderData headerData)
+    private string CreateIncludeFile(string path, out IHeaderData headerData, out List<string> linkLibs)
     {
         string fileName = Path.GetFileNameWithoutExtension(path);
         Directory.CreateDirectory($"{Program.pathDir}/header/");
@@ -1308,16 +1317,18 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
         writer.Write(Program.CompileTupiHeaderFile(path, out ICompilerHeader compilerHeader));
         writer.Close();
         headerData = compilerHeader.GetRunData().GetHeaderData();
+        linkLibs = compilerHeader.LinkLibs;
         return fileName + ".inc";
     }
 
-    private string CreateAssemblyFile(string path, out ICodeData codeData)
+    private string CreateAssemblyFile(string path, out ICodeData codeData, out List<string> linkLibs)
     {
         string fileName = Path.GetFileNameWithoutExtension(path);
         StreamWriter writer = File.CreateText($"{Program.pathDir}/{fileName}.asm");
         writer.Write(Program.CompileTupiCodeFile(path, out ICompilerCode compilerCode, false));
         writer.Close();
         codeData = compilerCode.GetRunData().GetCodeData();
+        linkLibs = compilerCode.LinkLibs;
         return fileName + ".asm";
     }
 
