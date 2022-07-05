@@ -734,7 +734,6 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             UpdateInsideUnion(terms, ref isInsideUnion);
             if (terms.Length < 3 || isInsideFunc || isInsideStruct || isInsideUnion) continue;
 
-            string varType = string.Empty, varName = string.Empty;
             VarData? varData = GetMetaGlobalVar(line, e);
             if (varData is not null)
             {
@@ -1299,7 +1298,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
     {
         string[] terms = e.GetTermsLine(line);
         string varType = string.Empty, varName = string.Empty, varDef = string.Empty;
-        int varSize = 0;
+        int varSize;
         bool varRef = false;
 
         if (terms[0] == "ref" && terms.Length > 3)
@@ -1309,7 +1308,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             varDef = line.Remove(0, "ref".Length + varType.Length + varName.Length + 3);
             varRef = true;
         }
-        else
+        else if(terms.Length > 2)
         {
             varType = terms[0];
             varName = terms[1];
@@ -1325,7 +1324,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         }
         else if (e.ReadOnlyData.AsmTypes.Contains(varType))
         {
-            int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, varType);
+            int pos = Array.IndexOf(e.ReadOnlyData.AsmTypes, varType);
             varSize = e.ReadOnlyData.TypeSize[pos];
             e.CompiledCode.GlobalVar.Add($"{varName} {varType} {varDef}");
         }
