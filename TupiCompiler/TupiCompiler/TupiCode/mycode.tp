@@ -33,6 +33,7 @@ typedef dword int32_2
 
 fn main(i32 argc, iptr argv) 
 {
+	byte myBool = 1;
 	byte myByteByte = 2;
 	int32_1 unini = 3;
 	i64 myLongVar1 = 10;
@@ -42,40 +43,40 @@ fn main(i32 argc, iptr argv)
 	i64 myLongVar2 = 13;
 	i8 myShortVar3 = 14;
 	i64 myLongVar3 = 13;
-	i64 myLongLoop = 120;
+	i64 myLongLoop = 5;
 	myStruct myStructVar;
 	
 	$createProcess(luaName,args);
-	myLongVar1 = sum64(10, 11)
-	consoleWriteInt(myLongVar1)
-	consoleWriteStr(pularLinha)
-	myIntVar1 = sum32(20, 22)
-	consoleWriteInt(myIntVar1)
-	consoleWriteStr(pularLinha)
+	if(myBool){
+		myLongVar1 = sum64(10, 11)
+		consoleWriteInt(myLongVar1)
+		consoleWriteStr(pularLinha)
+		myIntVar1 = sum32(20, 22)
+		consoleWriteInt(myIntVar1)
+		consoleWriteStr(pularLinha)
+	}
 	print(luaName)
 	consoleWriteInt(myStructCUnginha.myLong1)
 	consoleWriteStr(pularLinha)
-	loop
+	while(myLongLoop >= 3)
 	{
+		myLongLoop--;
 		consoleWriteStr(msg1)
 		consoleWriteInt(myLongLoop)
-		myLongLoop-=10;
 		consoleWriteStr(pularLinha)
+	}
+	loop
+	{
 		loop
 		{
 			consoleWriteStr(msgLoop)
 			consoleWriteInt(myLongLoop)
-			myLongLoop-=10;
 			consoleWriteStr(pularLinha)
 			break;
 		}
 		break;
-	}
-	loop
-	{
 		consoleWriteStr(msgLoop)
 		consoleWriteInt(myLongLoop)
-		myLongLoop-=10;
 		consoleWriteStr(pularLinha)
 		break;
 	}	

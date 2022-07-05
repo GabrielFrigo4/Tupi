@@ -141,7 +141,9 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             }
 
             if (codeStr[pos] != ' ' && codeStr[pos] != '+' &&
-                codeStr[pos] != '-' && codeStr[pos + 1] == '=')
+                codeStr[pos] != '>' && codeStr[pos] != '=' &&
+                codeStr[pos] != '<' && codeStr[pos] != '-' &&
+                codeStr[pos + 1] == '=')
             {
                 codeStr = codeStr.Insert(pos + 1, " ");
                 continue;
@@ -149,7 +151,17 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
 
             if (codeStr.Length <= pos + 2) break;
             if (codeStr[pos] != ' ' && codeStr[pos + 2] == '=' &&
-                (codeStr[pos + 1] == '-' || codeStr[pos + 1] == '+'))
+                (codeStr[pos + 1] == '-' || codeStr[pos + 1] == '+' ||
+                codeStr[pos + 1] == '>' || codeStr[pos + 1] == '=' || 
+                codeStr[pos + 1] == '<'))
+            {
+                codeStr = codeStr.Insert(pos + 1, " ");
+                continue;
+            }
+
+            if (codeStr.Length <= pos + 2) break;
+            if ((codeStr[pos] != ' ' && codeStr[pos + 1] == '-' && codeStr[pos + 2] == '-') ||
+                (codeStr[pos] != ' ' && codeStr[pos + 1] == '+' && codeStr[pos + 2] == '+'))
             {
                 codeStr = codeStr.Insert(pos + 1, " ");
                 continue;
@@ -324,6 +336,8 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 e.Code += lines[i] + "\n";
             }
         }
+
+        //Console.WriteLine(e.Code);
     }
     #endregion
 
@@ -898,10 +912,6 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                             break;
                     }
                 }
-                else if (terms.Length >= 3)
-                {
-                    //ShowErrors($"var {terms[0]} dosn't exist in this context");
-                }
 
                 //mark
                 if (terms[0] == "mark" && terms.Length == 2)
@@ -930,24 +940,72 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 }
 
                 //while
-                if (terms[0] == "while" && terms.Length == 2)
+                if (terms[0].StartsWith("while(") && terms.Length > 1)
                 {
+                    List<string> args = GetArgs(terms);
+                    string term1 = args[0], compare = "je", term2 = "1";
+                    if (args.Count >= 3)
+                    {
+                        compare = GetCompare(terms[1]);
+                        term2 = args[2];
+                    }
                     keysData[^1] = new(keysInd, "while");
-                    fnCode += $"while{keysInd}:\n";
-                }
-
-                //for
-                if (terms[0] == "while" && terms.Length == 2)
-                {
-                    keysData[^1] = new(keysInd, "while");
-                    fnCode += $"while{keysInd}:\n";
+                    fnCode += $"$while{keysInd}:\n";
+                    fnCode += $"\tcmp {args[0]}, {term2}\n";
+                    fnCode += $"\t{compare} $contunie_while{keysInd}\n";
+                    fnCode += $"\tjmp $break{keysInd}\n";
+                    fnCode += $"$contunie_while{keysInd}:\n";
                 }
 
                 //if
-                if (terms[0] == "if" && terms.Length == 2)
+                if (terms[0].StartsWith("if(") && terms.Length > 1)
                 {
+                    List<string> args = GetArgs(terms);
+                    string term1 = args[0], compare = "je", term2 = "1";
+                    if (args.Count >= 3)
+                    {
+                        compare = GetCompare(terms[1]);
+                        term2 = args[2];
+                    }
                     keysData[^1] = new(keysInd, "if");
-                    fnCode += $"if{keysInd}:\n";
+                    fnCode += $"\tcmp {args[0]}, {term2}\n";
+                    fnCode += $"\t{compare} $if{keysInd}\n";
+                    fnCode += $"\tjmp $endif{keysInd}\n";
+                    fnCode += $"$if{keysInd}:\n";
+                }
+
+                //elseif
+                if (terms[0].StartsWith("elseif(") && terms.Length > 1)
+                {
+                    List<string> args = GetArgs(terms);
+                    string term1 = args[0], compare = "je", term2 = "1";
+                    if (args.Count >= 3)
+                    {
+                        compare = GetCompare(terms[1]);
+                        term2 = args[2];
+                    }
+                    keysData[^1] = new(keysInd, "elseif");
+                    fnCode += $"\tcmp {args[0]}, {term2}\n";
+                    fnCode += $"\t{compare} $elseif{keysInd}\n";
+                    fnCode += $"\tjmp $endelseif{keysInd}\n";
+                    fnCode += $"$elseif{keysInd}:\n";
+                }
+
+                //else
+                if (terms[0].StartsWith("else") && terms.Length > 1)
+                {
+                    List<string> args = GetArgs(terms);
+                    string term1 = args[0], compare = "je", term2 = "1";
+                    if (args.Count >= 3)
+                    {
+                        compare = GetCompare(terms[1]);
+                        term2 = args[2];
+                    }
+                    keysData[^1] = new(keysInd, "elseif");
+                    fnCode += $"\tcmp {args[0]}, {term2}\n";
+                    fnCode += $"\t{compare} $elseif{keysInd}\n";
+                    fnCode += $"\tjmp $endelseif{keysInd}\n";
+                    fnCode += $"$elseif{keysInd}:\n";
                 }
 
                 //break
@@ -994,7 +1052,10 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 if (terms[^1] == "}" && terms.Length == 1 && keysData.Count > 0)
                 {
                     var key = keysData.Last();
-                    fnCode += $"\tjmp ${key.Item2}{key.Item1}\n$break{key.Item1}:\n";
+                    if(key.Item2 == "if" || key.Item2 == "elseif")
+                        fnCode += $"\t$end{key.Item2}{key.Item1}:\n";
+                    else
+                        fnCode += $"\tjmp ${key.Item2}{key.Item1}\n$break{key.Item1}:\n";
                     keysData.Remove(key);
                     keysInd++;
                 }
@@ -1489,7 +1550,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
     private bool CallFunc(string line, FuncData currentFunc, CompilerArgs e, ref string fnCode, int start = 0)
     {
         string[] terms = e.GetTermsLine(line);
-        if (terms[start].Contains('('))
+        if (terms[start].Contains('(') && !terms[start].StartsWith("if(") && !terms[start].StartsWith("elseif(") && !terms[start].StartsWith("while("))
         {
             string func_name = terms[start].Remove(terms[start].IndexOf('('));
             string _param = terms[start].Substring(terms[start].IndexOf('(') + 1, terms[start].IndexOf(')') - terms[start].IndexOf('(') - 1);
@@ -1593,6 +1654,37 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             4 => 2,
             8 => 3,
             _ => -1,
+        };
+    }
+
+    private List<string> GetArgs(string[] terms)
+    {
+        List<string> args = new();
+        for (int i = 0; i < terms.Length - 1; i++)
+        {
+            string arg = terms[i];
+            arg = arg.Replace("while(", "");
+            arg = arg.Replace("if(", "");
+            arg = arg.Replace("elseif(", "");
+            arg = arg.Replace(",", "");
+            arg = arg.Replace(")", "");
+            arg = arg.Replace("}", "");
+            if (arg != string.Empty)
+                args.Add(arg);
+        }
+        return args;
+    }
+
+    private string GetCompare(string term)
+    {
+        return term switch
+        {
+            ">" => "jg",
+            ">=" => "jge",
+            "==" => "je",
+            "<=" => "jle",
+            "<" => "jl",
+            _ => string.Empty,
         };
     }
 
