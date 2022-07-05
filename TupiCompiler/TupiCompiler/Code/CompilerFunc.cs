@@ -2,7 +2,7 @@
 
 namespace TupiCompiler.Code;
 
-internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
+internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
 {
     #region ICompilerCodeFunc
     void ICompilerCodeFunc.PreCompilerEventAdd(ref ICompilerCode compilerCode)
@@ -381,8 +381,8 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 }
                 else
                 {
-                    ShowErrors($"{path} tupiheader not find", 
-                        $"{Program.pathCompile + "/" + path} tupiheader not find", 
+                    ShowErrors($"{path} tupiheader not find",
+                        $"{Program.pathCompile + "/" + path} tupiheader not find",
                         $"{Program.thPath + path} tupiheader not find");
                 }
             }
@@ -735,7 +735,7 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
             if (terms.Length < 3 || isInsideFunc || isInsideStruct || isInsideUnion) continue;
 
             string varType = string.Empty, varName = string.Empty;
-            VarData? varData = GetMetaGlobalVar(line, ref e);
+            VarData? varData = GetMetaGlobalVar(line, e);
             if (varData is not null)
             {
                 e.RunData.GlobalVars.Add(varData.Name, varData);
@@ -806,7 +806,7 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 //local vars
                 if (contains && !isDefVarEnd)
                 {
-                    VarData? varData = GetMetaFnVar(line, ref fnCode, ref e);
+                    VarData? varData = GetMetaFnVar(line, ref fnCode, e);
 
                     if (varData is not null)
                     {
@@ -834,7 +834,7 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                 }
 
                 // call funcs
-                if(CallFunc(line, currentFunc, e, ref fnCode))
+                if (CallFunc(line, currentFunc, e, ref fnCode))
                     fnCode += "\txor rax, rax\n";
 
                 //operator
@@ -850,21 +850,22 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                             break;
                     }
                 }
-                else if (terms.Length >= 3)
+                else if (terms.Length >= 3 && GetVarData(terms[0], currentFunc, e) is VarData varData)
                 {
+                    int pos = GetPosRegistorBySize(varData.Size);
                     switch (terms[1])
                     {
                         case "+=":
                             bool existFn = CallFunc(line, currentFunc, e, ref fnCode, 2);
                             if (existFn)
                             {
-                                fnCode += $"\tadd {terms[0]}, rax\n";
+                                fnCode += $"\tadd {terms[0]}, {e.ReadOnlyData.RegistorsA[pos]}\n";
                                 fnCode += "\txor rax, rax\n";
                             }
                             else
                             {
-                                fnCode += $"\tmov rbx, {terms[2]}\n";
-                                fnCode += $"\tadd {terms[0]}, rbx\n";
+                                fnCode += $"\tmov {e.ReadOnlyData.RegistorsB[pos]}, {terms[2]}\n";
+                                fnCode += $"\tadd {terms[0]}, {e.ReadOnlyData.RegistorsB[pos]}\n";
                                 fnCode += "\txor rbx, rbx\n";
                             }
                             break;
@@ -872,13 +873,13 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                             existFn = CallFunc(line, currentFunc, e, ref fnCode, 2);
                             if (existFn)
                             {
-                                fnCode += $"\tsub {terms[0]}, rax\n";
-                                fnCode += "\tmov rax, rax\n";
+                                fnCode += $"\tsub {terms[0]}, {e.ReadOnlyData.RegistorsA[pos]}\n";
+                                fnCode += "\txor rax, rax\n";
                             }
                             else
                             {
-                                fnCode += $"\tmov rbx, {terms[2]}\n";
-                                fnCode += $"\tsub {terms[0]}, rbx\n";
+                                fnCode += $"\tmov {e.ReadOnlyData.RegistorsB[pos]}, {terms[2]}\n";
+                                fnCode += $"\tsub {terms[0]}, {e.ReadOnlyData.RegistorsB[pos]}\n";
                                 fnCode += "\txor rbx, rbx\n";
                             }
                             break;
@@ -886,17 +887,21 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                             existFn = CallFunc(line, currentFunc, e, ref fnCode, 2);
                             if (existFn)
                             {
-                                fnCode += $"\tmov {terms[0]}, rax\n";
-                                fnCode += "\tmov rax, rax\n";
+                                fnCode += $"\tmov {terms[0]}, {e.ReadOnlyData.RegistorsA[pos]}\n";
+                                fnCode += "\txor rax, rax\n";
                             }
                             else
                             {
-                                fnCode += $"\tmov rbx, {terms[2]}\n";
-                                fnCode += $"\tmov {terms[0]}, rbx\n";
+                                fnCode += $"\tmov {e.ReadOnlyData.RegistorsB[pos]}, {terms[2]}\n";
+                                fnCode += $"\tmov {terms[0]}, {e.ReadOnlyData.RegistorsB[pos]}\n";
                                 fnCode += "\txor rbx, rbx\n";
                             }
                             break;
                     }
+                }
+                else if (terms.Length >= 3)
+                {
+                    //ShowErrors($"var {terms[0]} dosn't exist in this context");
                 }
 
                 //mark
@@ -1002,9 +1007,10 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                     fnCode += "\tpop rdi\n";
                     fnCode += "\tret\n";
                 }
-                else if (terms[0] == "return" && terms.Length > 1)
+                else if (terms[0] == "return" && terms.Length > 1 && GetVarData(terms[1], currentFunc, e) is VarData varData)
                 {
-                    fnCode += line.Replace($"{terms[0]} ", "\tmov rax, ") + "\n";
+                    int pos = GetPosRegistorBySize(varData.Size);
+                    fnCode += line.Replace($"{terms[0]} ", $"\tmov {e.ReadOnlyData.RegistorsA[pos]}, ") + "\n";
                     fnCode += $"\tadd rsp, {CorrectShadowSpaceFunc(currentFunc.ShadowSpace)}\t;Remove shadow space\n";
                     fnCode += "\tpop rdi\n";
                     fnCode += "\tret\n";
@@ -1289,7 +1295,7 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
         return fileName + ".asm";
     }
 
-    private VarData? GetMetaGlobalVar(string line, ref CompilerArgs e)
+    private VarData? GetMetaGlobalVar(string line, CompilerArgs e)
     {
         string[] terms = e.GetTermsLine(line);
         string varType = string.Empty, varName = string.Empty, varDef = string.Empty;
@@ -1368,7 +1374,7 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
         return new(varName, varType, varSize, varDef, varRef);
     }
 
-    private VarData? GetMetaFnVar(string line, ref string fnCode, ref CompilerArgs e)
+    private VarData? GetMetaFnVar(string line, ref string fnCode, CompilerArgs e)
     {
         string[] terms = e.GetTermsLine(line);
         string varType = string.Empty, varName = string.Empty, varVal = string.Empty, varDef = string.Empty;
@@ -1460,6 +1466,27 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
         return new(varName, varType, varSize, varDef, varRef);
     }
 
+    private VarData? GetVarData(string varName, FuncData currentFunc, CompilerArgs e)
+    {
+        if (currentFunc.Args.Find(x => x.Name == varName) is VarData argVar)
+        {
+            return argVar;
+        }
+        else if (currentFunc.GetLocalVarByName(varName) is VarData localVar)
+        {
+            return localVar;
+        }
+        else if (e.RunData.GlobalVars.ContainsKey(varName))
+        {
+            VarData? globalVar = e.RunData.GlobalVars[varName];
+            return globalVar;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     private bool CallFunc(string line, FuncData currentFunc, CompilerArgs e, ref string fnCode, int start = 0)
     {
         string[] terms = e.GetTermsLine(line);
@@ -1489,46 +1516,34 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
                     else
                         registorsType[i] = e.ReadOnlyData.RegistorsB[3];
                 }
-                else if (currentFunc.Args.Find(x => x.Name == varSemiPath[0]) is VarData argVar)
+                else if (GetVarData(varSemiPath[0], currentFunc, e) is VarData varData)
                 {
-                    if (argVar.Ref)
+                    int pos;
+                    if (varData.Ref)
+                    {
                         comand[i] = "lea";
+                        pos = 3;
+                    }
                     else
+                    {
                         comand[i] = "mov";
+                        for (int p = 1; p < varSemiPath.Length; p++)
+                        {
+                            if (e.RunData.GetStructByName(varData.Type)?.GetVarByName(varSemiPath[p]) is VarData der)
+                                varData = der;
+                            else
+                                break;
+                        }
+                        pos = GetPosRegistorBySize(varData.Size);
+                    }
                     param[i] = varPath;
                     param[i] = varPath;
                     if (i < 4)
-                        registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                        registorsType[i] = e.ReadOnlyData.RegistorsAll[pos][i];
                     else
-                        registorsType[i] = e.ReadOnlyData.RegistorsB[3];
+                        registorsType[i] = e.ReadOnlyData.RegistorsB[pos];
                 }
-                else if (currentFunc.GetLocalVarByName(varSemiPath[0]) is VarData localVar)
-                {
-                    if (localVar.Ref)
-                        comand[i] = "lea";
-                    else
-                        comand[i] = "mov";
-                    param[i] = varPath;
-                    param[i] = varPath;
-                    if (i < 4)
-                        registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
-                    else
-                        registorsType[i] = e.ReadOnlyData.RegistorsB[3];
-                }
-                else if (e.RunData.GlobalVars.ContainsKey(varSemiPath[0]))
-                {
-                    VarData? globalData = e.RunData.GlobalVars[varSemiPath[0]];
-                    if (globalData.Ref)
-                        comand[i] = "lea";
-                    else
-                        comand[i] = "mov";
-                    param[i] = varPath;
-                    if (i < 4)
-                        registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
-                    else
-                        registorsType[i] = e.ReadOnlyData.RegistorsB[3];
-                }
-                else if(long.TryParse(varSemiPath[0], out _) || double.TryParse(varSemiPath[0], out _))
+                else if (long.TryParse(varSemiPath[0], out _) || double.TryParse(varSemiPath[0], out _))
                 {
                     comand[i] = "mov";
                     param[i] = varPath;
@@ -1570,11 +1585,23 @@ internal class CompilerFunc: ICompilerCodeFunc, ICompilerHeaderFunc
         }
     }
 
+    private int GetPosRegistorBySize(int size)
+    {
+        return size switch
+        {
+            1 => 0,
+            2 => 1,
+            4 => 2,
+            8 => 3,
+            _ => -1,
+        };
+    }
+
     private void ShowErrors(params string[] errors)
     {
         ConsoleColor consoleColor = Console.ForegroundColor;
         Console.ForegroundColor = ConsoleColor.Red;
-        foreach(string error in errors)
+        foreach (string error in errors)
             Console.WriteLine(error);
         Console.ForegroundColor = consoleColor;
     }

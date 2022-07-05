@@ -36,6 +36,7 @@ fn main(i32 argc, iptr argv)
 	byte myByteByte = 2;
 	int32_1 unini = 3;
 	i64 myLongVar1 = 10;
+	i32 myIntVar1 = 10;
 	i8 myShortVar1 = 11;
 	i8 myShortVar2 = 12;
 	i64 myLongVar2 = 13;
@@ -45,8 +46,11 @@ fn main(i32 argc, iptr argv)
 	myStruct myStructVar;
 	
 	$createProcess(luaName,args);
-	myLongVar1 = sum(10, 11)
+	myLongVar1 = sum64(10, 11)
 	consoleWriteInt(myLongVar1)
+	consoleWriteStr(pularLinha)
+	myIntVar1 = sum32(20, 22)
+	consoleWriteInt(myIntVar1)
 	consoleWriteStr(pularLinha)
 	print(luaName)
 	consoleWriteInt(myStructCUnginha.myLong1)
@@ -85,8 +89,15 @@ fn print_i64(i64 integer)
 	consoleWriteStr(pularLinha)
 }
 
-fn sum(i64 a, i64 b){
+fn sum64(i64 a, i64 b){
 	i64 r = 0
+	r = a
+	r += b
+	return r
+}
+
+fn sum32(i32 a, i32 b){
+	i32 r = 0
 	r = a
 	r += b
 	return r
