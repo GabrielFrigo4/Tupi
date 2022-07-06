@@ -855,63 +855,65 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 //operator
                 if (terms.Length == 2)
                 {
+                    string operate = string.Empty;
                     switch (terms[1])
                     {
                         case "++":
-                            fnCode += $"\tinc {terms[0]}\n";
+                            operate = "inc";
                             break;
                         case "--":
-                            fnCode += $"\tdec {terms[0]}\n";
+                            operate = "dec";
                             break;
+                    }
+                    if(operate != string.Empty)
+                    {
+                        ArgState state = GetArgState(terms[0], out string? var, out VarData? varData, currentFunc, e);
+                        if(state == ArgState.Var)
+                        {
+                            fnCode += $"\t{operate} {terms[0]}\n";
+                        }
+                        else if (state == ArgState.PtrData && var is not null && varData is not null)
+                        {
+                            int pos = GetPosRegistorBySize(varData.Size);
+                            fnCode += $"\tmov rbx, {var}\n";
+                            fnCode += $"\t{operate} {e.ReadOnlyData.AsmTypes[pos]} ptr [rbx]\n";
+                        }
                     }
                 }
                 else if (terms.Length >= 3 && GetVarData(terms[0], currentFunc, e) is VarData varData)
                 {
-                    int pos = GetPosRegistorBySize(varData.Size);
+                    string operate = string.Empty;
                     switch (terms[1])
                     {
                         case "+=":
-                            bool existFn = CallFunc(line, currentFunc, e, ref fnCode, 2);
-                            if (existFn)
-                            {
-                                fnCode += $"\tadd {terms[0]}, {e.ReadOnlyData.RegistorsA[pos]}\n";
-                                fnCode += "\txor rax, rax\n";
-                            }
-                            else
-                            {
-                                fnCode += $"\tmov {e.ReadOnlyData.RegistorsB[pos]}, {terms[2]}\n";
-                                fnCode += $"\tadd {terms[0]}, {e.ReadOnlyData.RegistorsB[pos]}\n";
-                                fnCode += "\txor rbx, rbx\n";
-                            }
+                            operate = "add";
                             break;
                         case "-=":
-                            existFn = CallFunc(line, currentFunc, e, ref fnCode, 2);
-                            if (existFn)
-                            {
-                                fnCode += $"\tsub {terms[0]}, {e.ReadOnlyData.RegistorsA[pos]}\n";
-                                fnCode += "\txor rax, rax\n";
-                            }
-                            else
-                            {
-                                fnCode += $"\tmov {e.ReadOnlyData.RegistorsB[pos]}, {terms[2]}\n";
-                                fnCode += $"\tsub {terms[0]}, {e.ReadOnlyData.RegistorsB[pos]}\n";
-                                fnCode += "\txor rbx, rbx\n";
-                            }
+                            operate = "sub";
                             break;
                         case "=":
-                            existFn = CallFunc(line, currentFunc, e, ref fnCode, 2);
-                            if (existFn)
-                            {
-                                fnCode += $"\tmov {terms[0]}, {e.ReadOnlyData.RegistorsA[pos]}\n";
-                                fnCode += "\txor rax, rax\n";
-                            }
-                            else
-                            {
-                                fnCode += $"\tmov {e.ReadOnlyData.RegistorsB[pos]}, {terms[2]}\n";
-                                fnCode += $"\tmov {terms[0]}, {e.ReadOnlyData.RegistorsB[pos]}\n";
-                                fnCode += "\txor rbx, rbx\n";
-                            }
+                            operate = "mov";
                             break;
+                    }
+                    if(operate != string.Empty)
+                    {
+                        int pos = GetPosRegistorBySize(varData.Size);
+                        bool existFn = CallFunc(line, currentFunc, e, ref fnCode, 2);
+                        if (existFn)
+                        {
+                            fnCode += $"\t{operate} {terms[0]}, {e.ReadOnlyData.RegistorsA[pos]}\n";
+                            fnCode += "\txor rax, rax\n";
+                        }
+                        else
+                        {
+                            string operate2 = "mov";
+                            if (GetArgState(terms[2], out string? varArg, out _, currentFunc, e) == ArgState.RefVar)
+                                operate2 = "lea";
+
+                            fnCode += $"\t{operate2} {e.ReadOnlyData.RegistorsB[pos]}, {varArg}\n";
+                            fnCode += $"\t{operate} {terms[0]}, {e.ReadOnlyData.RegistorsB[pos]}\n";
+                            fnCode += "\txor rbx, rbx\n";
+                        }
                     }
                 }
 
@@ -1568,8 +1570,11 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             string func_name = terms[start].Remove(terms[start].IndexOf('('));
             string _param = terms[start].Substring(terms[start].IndexOf('(') + 1, terms[start].IndexOf(')') - terms[start].IndexOf('(') - 1);
             string[] param = _param.Split(new char[] { ',', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] param1 = new string[param.Length];
+            string[] param2 = new string[param.Length];
             string[] comand = new string[param.Length];
-            string[] registorsType = new string[param.Length];
+            string[] registorsType = new string[4];
+            string[] registorsB = new string[param.Length];
             string[] varType = Array.Empty<string>();
             if (param.Length > 4)
                 varType = new string[param.Length - 4];
@@ -1578,54 +1583,62 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             {
                 string varPath = param[i];
                 string[] varSemiPath = param[i].Split(new[] { '.' });
-                if (varPath.ToCharArray()[0] == '&')
+                ArgState state = GetArgState(varSemiPath[0], out string? varArg, out VarData? varData, currentFunc, e);
+
+                if (state == ArgState.RefVar && varArg is not null)
                 {
                     comand[i] = "lea";
-                    varPath = varPath.Remove(0, 1);
-                    param[i] = varPath;
-                    param[i] = varPath;
+                    param1[i] = varArg;
                     if (i < 4)
+                    {
                         registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
-                    else
-                        registorsType[i] = e.ReadOnlyData.RegistorsB[3];
+                    }
+                    registorsB[i] = e.ReadOnlyData.RegistorsB[3];
+                    param2[i] = registorsB[i];
                 }
-                else if (GetVarData(varSemiPath[0], currentFunc, e) is VarData varData)
+                else if (state == ArgState.Var && varData is not null)
                 {
                     int pos;
-                    if (varData.Ref)
+
+                    comand[i] = "mov";
+                    for (int p = 1; p < varSemiPath.Length; p++)
                     {
-                        comand[i] = "lea";
-                        pos = 3;
+                        if (e.RunData.GetStructByName(varData.Type)?.GetVarByName(varSemiPath[p]) is VarData der)
+                            varData = der;
+                        else
+                            break;
                     }
-                    else
-                    {
-                        comand[i] = "mov";
-                        for (int p = 1; p < varSemiPath.Length; p++)
-                        {
-                            if (e.RunData.GetStructByName(varData.Type)?.GetVarByName(varSemiPath[p]) is VarData der)
-                                varData = der;
-                            else
-                                break;
-                        }
-                        pos = GetPosRegistorBySize(varData.Size);
-                    }
-                    param[i] = varPath;
-                    param[i] = varPath;
+                    pos = GetPosRegistorBySize(varData.Size);
+
+                    param1[i] = varPath;
                     if (i < 4)
+                    {
                         registorsType[i] = e.ReadOnlyData.RegistorsAll[pos][i];
-                    else
-                        registorsType[i] = e.ReadOnlyData.RegistorsB[pos];
+                    }
+                    registorsB[i] = e.ReadOnlyData.RegistorsB[pos];
+                    param2[i] = registorsB[i];
                 }
-                else if (long.TryParse(varSemiPath[0], out _) || double.TryParse(varSemiPath[0], out _) ||
-                    varSemiPath[0] == "TRUE" || varSemiPath[0] == "FALSE" || varSemiPath[0] == "NULL")
+                else if(state == ArgState.PtrData && varArg is not null)
                 {
                     comand[i] = "mov";
-                    param[i] = varPath;
-                    param[i] = varPath;
+                    param1[i] = varArg;
                     if (i < 4)
+                    {
                         registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
-                    else
-                        registorsType[i] = e.ReadOnlyData.RegistorsB[3];
+                    }
+                    registorsB[i] = e.ReadOnlyData.RegistorsB[3];
+                    param2[i] = $"[{registorsB[i]}]";
+                }
+                else if (state == ArgState.Number || state == ArgState.BasicEqu)
+                {
+                    comand[i] = "mov";
+                    param1[i] = varPath;
+                    if (i < 4)
+                    {
+                        registorsType[i] = e.ReadOnlyData.RegistorsAll[3][i];
+                    }
+                    registorsB[i] = e.ReadOnlyData.RegistorsB[3];
+                    param2[i] = registorsB[i];
                 }
                 else
                 {
@@ -1633,24 +1646,17 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 }
             }
 
-            if (param.Length <= 4)
+            for (int i = 0; !(i >= 4 || i >= param.Length); i++)
             {
-                for (int i = 0; i < param.Length; i++)
-                {
-                    fnCode += $"\t{comand[i]} {registorsType[i]}, {param[i]}\n";
-                }
-                fnCode += $"\tcall {func_name}\n";
+                fnCode += $"\t{comand[i]} {registorsB[i]}, {param1[i]}\n";
+                fnCode += $"\tmov {registorsType[i]}, {param2[i]}\n";
             }
-            else
+            for (int i = 4; i < param.Length; i++)
             {
-                fnCode += line.Replace($"{terms[0]}", $"\t{comand[0]} {registorsType[0]}, {param[0]}\n\t{comand[1]} {registorsType[1]}, {param[1]}\n\t{comand[2]} {registorsType[2]}, {param[2]}\n\t{comand[3]} {registorsType[3]}, {param[3]}") + "\n";
-                for (int i = 4; i < param.Length; i++)
-                {
-                    fnCode += $"\t{comand[i]} {registorsType[i]}, {param[i]}\n";
-                    fnCode += $"\tmov {varType[i - 4]} ptr [rsp+{i * 8}], {registorsType[i]}\n";
-                }
-                fnCode += $"\tcall {func_name}\n";
+                fnCode += $"\t{comand[i]} {registorsB[i]}, {param1[i]}\n";
+                fnCode += $"\tmov {varType[i - 4]} ptr [rsp+{i * 8}], {param2[i]}\n";
             }
+            fnCode += $"\tcall {func_name}\n";
             return true;
         }
         else
@@ -1702,6 +1708,50 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         };
     }
 
+    private ArgState GetArgState(string arg, out string? var, out VarData? varData,
+        FuncData currentFunc, CompilerArgs e)
+    {
+        varData = GetVarData(arg, currentFunc, e);
+
+        if (varData != null && !varData.Ref)
+        {
+            var = arg;
+            return ArgState.Var;
+        }
+        else if (varData != null && varData.Ref)
+        {
+            var = arg;
+            return ArgState.RefVar;
+        }
+        else if (arg.StartsWith("&"))
+        {
+            var = arg.Remove(0, 1);
+            varData = GetVarData(var, currentFunc, e);
+            return ArgState.RefVar;
+        }
+        else if (arg.StartsWith("[") && arg.EndsWith("]"))
+        {
+            var = arg.Remove(arg.Length - 1).Remove(0, 1);
+            varData = GetVarData(var, currentFunc, e);
+            return ArgState.PtrData;
+        }
+        else if (long.TryParse(arg, out _) || double.TryParse(arg, out _))
+        {
+            var = null;
+            return ArgState.Number;
+        }
+        else if (arg == "TRUE" || arg == "FALSE" || arg == "NULL")
+        {
+            var = null;
+            return ArgState.BasicEqu;
+        }
+        else
+        {
+            var = null;
+            return ArgState.None;
+        }
+    }
+
     private void ShowErrors(params string[] errors)
     {
         ConsoleColor consoleColor = Console.ForegroundColor;
@@ -1718,6 +1768,18 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         foreach (string warnign in warnigns)
             Console.WriteLine(warnign);
         Console.ForegroundColor = consoleColor;
+    }
+    #endregion
+
+    #region MyEnums
+    enum ArgState
+    {
+        None,
+        Var,
+        RefVar,
+        PtrData,
+        Number,
+        BasicEqu,
     }
     #endregion
 }
