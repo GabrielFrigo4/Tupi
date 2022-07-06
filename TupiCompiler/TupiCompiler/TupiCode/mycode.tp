@@ -33,7 +33,7 @@ typedef dword int32_2
 
 fn main(i32 argc, iptr argv) 
 {
-	byte myBool = 1;
+	byte myBool = 0;
 	byte myByteByte = 2;
 	int32_1 unini = 3;
 	i64 myLongVar1 = 10;
@@ -51,11 +51,30 @@ fn main(i32 argc, iptr argv)
 		myLongVar1 = sum64(10, 11)
 		consoleWriteInt(myLongVar1)
 		consoleWriteStr(pularLinha)
+		myIntVar1 = sum32(10, 11)
+		consoleWriteInt(myIntVar1)
+		consoleWriteStr(pularLinha)
+	}
+	elseif(myByteByte == 0){
+		myLongVar1 = sum64(20, 22)
+		consoleWriteInt(myLongVar1)
+		consoleWriteStr(pularLinha)
 		myIntVar1 = sum32(20, 22)
 		consoleWriteInt(myIntVar1)
 		consoleWriteStr(pularLinha)
 	}
-	print(luaName)
+	elseif(myByteByte == 1){
+		myLongVar1 = sum64(40, 44)
+		consoleWriteInt(myLongVar1)
+		consoleWriteStr(pularLinha)
+		myIntVar1 = sum32(40, 44)
+		consoleWriteInt(myIntVar1)
+		consoleWriteStr(pularLinha)
+	}
+	else{
+		print(luaName)
+	}	
+
 	consoleWriteInt(myStructCUnginha.myLong1)
 	consoleWriteStr(pularLinha)
 	while(myLongLoop >= 3)
