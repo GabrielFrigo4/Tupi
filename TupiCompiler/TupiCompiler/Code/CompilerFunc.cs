@@ -1616,7 +1616,8 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                     else
                         registorsType[i] = e.ReadOnlyData.RegistorsB[pos];
                 }
-                else if (long.TryParse(varSemiPath[0], out _) || double.TryParse(varSemiPath[0], out _))
+                else if (long.TryParse(varSemiPath[0], out _) || double.TryParse(varSemiPath[0], out _) ||
+                    varSemiPath[0] == "TRUE" || varSemiPath[0] == "FALSE" || varSemiPath[0] == "NULL")
                 {
                     comand[i] = "mov";
                     param[i] = varPath;
