@@ -46,7 +46,7 @@ fn main(i32 argc, iptr argv)
 	i64 myLongLoop = 5;
 	myStruct myStructVar;
 	
-	createProcess(luaName,args,SW_HIDE);
+	startCommand(luaName,args,SW_HIDE);
 	if(myBool){
 		myLongVar1 = sum64(10, 11)
 		consoleWriteInt(myLongVar1)

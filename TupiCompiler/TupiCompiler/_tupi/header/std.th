@@ -2,14 +2,24 @@
 usefn consoleWriteInt
 usefn consoleWriteFloat
 usefn consoleWriteStr
+
 usefn iToStr
 usefn fToStr
+
 usefn createMem
 usefn recreateMem
 usefn deleteMem
-usefn createProcess
+
+usefn startProcess
+usefn startCommand
+
 usefn createFile
 usefn deleteFile
+
+usefn joinStr
+usefn joinStrWithChar
+usefn joinStrWithSpace
+
 uselib <TupiLib.lib>
 
 #macro SW_HIDE 0

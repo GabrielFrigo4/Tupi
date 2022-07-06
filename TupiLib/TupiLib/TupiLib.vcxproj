@@ -169,6 +169,7 @@
     <ClInclude Include="mem.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="proc.h" />
+    <ClInclude Include="str.h" />
     <ClInclude Include="tupiWin.h" />
   </ItemGroup>
   <ItemGroup>
@@ -183,6 +184,7 @@
     </ClCompile>
     <ClCompile Include="mem.cpp" />
     <ClCompile Include="proc.cpp" />
+    <ClCompile Include="str.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
