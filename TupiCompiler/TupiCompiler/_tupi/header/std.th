@@ -12,6 +12,7 @@ usefn deleteMem
 
 usefn startProcess
 usefn startCommand
+usefn exitProcess
 
 usefn createFile
 usefn deleteFile

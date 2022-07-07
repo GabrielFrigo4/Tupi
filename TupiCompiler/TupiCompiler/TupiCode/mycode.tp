@@ -5,8 +5,7 @@ ref byte pularLinha "\n\0"
 ref i8 msg1 'myInt is ', 0
 ref i8 msgLoop "myInt in loop is \0"
 ref i8 msg6 "myInts is %d %d %d %d %d\n\0"
-ref i8 luaName "lua\0" 
-ref i8 args "\0"
+ref i8 appName "python\0" 
 i64 myInt 120
 myStruct myStructTest {8, 8, 16, 16}
 Unginha myStructUnginha {8, 8, 16, 16}
@@ -40,21 +39,26 @@ fn main(i32 argc, iptr argv)
 	i32 myIntVar1 = 10;
 	i8 myShortVar1 = 11;
 	i8 myShortVar2 = 12;
-	i64 myLongVar2 = 4;
-	i8 myShortVar3 = 14;
-	i64 myLongVar3 = 13;
-	i64 myLongLoop = 5;
+	i64 myLongVar2 = 2;
+	i64 myLongLoop = 2;
 	iptr myPointer;
+	iptr myPointer2;
 	myStruct myStructVar;
 	
 	myPointer = &myLongVar2
+	myPointer2 = &myLongLoop
 	[myPointer]++;
-	$[myPointer] -= 2;
-	$myLongLoop += [myPointer]
+	$iptr myPointer3;
+	[myPointer] += sum64(1, 2);
+	[myPointer] -= 2;
+	myLongLoop += [myPointer]
+	[myPointer2] += [myPointer]
 	consoleWriteInt([myPointer])
 	consoleWriteStr(pularLinha)
-	startCommand(luaName,args,SW_HIDE);
+	startProcess(NULL,appName,SW_SHOW,TRUE);
 	if(myBool){
+		$i64 myIfVar = 10;
+		$local i64 myIfVar2 = 10;
 		myLongVar1 = sum64(10, 11)
 		consoleWriteInt(myLongVar1)
 		consoleWriteStr(pularLinha)
@@ -79,7 +83,7 @@ fn main(i32 argc, iptr argv)
 		consoleWriteStr(pularLinha)
 	}
 	else{
-		print(luaName)
+		print(appName)
 	}	
 
 	consoleWriteInt(myStructCUnginha.myLong1)
@@ -106,7 +110,7 @@ fn main(i32 argc, iptr argv)
 		consoleWriteStr(pularLinha)
 		break;
 	}	
-	return 0
+	return 0;
 }
 
 fn print_i64(i64 integer)
@@ -117,7 +121,7 @@ fn print_i64(i64 integer)
 }
 
 fn sum64(i64 a, i64 b){
-	i64 r = 0
+	i64 r = 0;
 	
 	r = a
 	r += b
@@ -125,7 +129,7 @@ fn sum64(i64 a, i64 b){
 }
 
 fn sum32(i32 a, i32 b){
-	i32 r = 0
+	i32 r = 0;
 	
 	r = a
 	r += b

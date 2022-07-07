@@ -54,6 +54,7 @@ typedef DWORD* LPDWORD;
 typedef const char* LPCSTR;
 typedef char* PSTR, * LPSTR;
 typedef BYTE* LPBYTE;
+typedef unsigned int UINT;
 
 typedef struct _SECURITY_ATTRIBUTES {
 	DWORD	nLength;
@@ -144,4 +145,7 @@ EXTC HANDLE CreateFileA(
 );
 EXTC BOOL DeleteFileA(
 	LPCSTR	lpFileName
+);
+EXTC void ExitProcess(
+	UINT uExitCode
 );

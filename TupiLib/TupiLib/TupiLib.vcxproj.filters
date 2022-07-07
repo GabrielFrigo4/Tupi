@@ -19,11 +19,11 @@
     <Filter Include="Arquivos de Cabeçalho\syscode">
       <UniqueIdentifier>{d2cfb667-7097-451d-8e4a-79e15b33005e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Arquivos de Origem\tupicode">
-      <UniqueIdentifier>{c65ce489-93af-4e7c-b24a-a53cc9a4b3e8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Arquivos de Origem\syscode">
       <UniqueIdentifier>{862cc867-659b-4391-bf0b-86a4bc8f8ef2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Arquivos de Origem\tupicode">
+      <UniqueIdentifier>{c65ce489-93af-4e7c-b24a-a53cc9a4b3e8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
