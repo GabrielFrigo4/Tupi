@@ -769,23 +769,19 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             UpdateInsideUnion(terms, ref isInsideUnion);
             if (terms.Length < 3 || isInsideFunc || isInsideStruct || isInsideUnion) continue;
 
-            if (terms[0] == "const" && !e.RunData.ExistConst(terms[1]) &&
-                !(terms[2] == "size" || terms[2] == "length"))
+            if (terms[0] == "const" && !e.RunData.ExistConst(terms[1]) && terms.Length == 3 &&
+                !(terms[2] == "sizeof" || terms[2] == "size" || terms[2] == "lengthof" ||
+                terms[2] == "length" || terms[2] == "offset"))
             {
                 e.RunData.Const.Add(terms[1]);
                 e.CompiledCode.Const.Add($"{terms[1]} equ {terms[2]}");
             }
-            else if (terms[0] == "const" && !e.RunData.ExistConst(terms[1]) &&
-                terms[2] == "size")
+            else if (terms[0] == "const" && !e.RunData.ExistConst(terms[1]) && terms.Length == 4 &&
+                terms[2] == "sizeof" || terms[2] == "size" || terms[2] == "lengthof" ||
+                terms[2] == "length" || terms[2] == "offset")
             {
                 e.RunData.Const.Add(terms[1]);
-                e.CompiledCode.Const.Add($"{terms[1]} equ $size_{terms[3]}");
-            }
-            else if (terms[0] == "const" && !e.RunData.ExistConst(terms[1]) &&
-                terms[2] == "length")
-            {
-                e.RunData.Const.Add(terms[1]);
-                e.CompiledCode.Const.Add($"{terms[1]} equ $length_{terms[3]}");
+                e.CompiledCode.Const.Add($"{terms[1]} equ {terms[2]} {terms[3]}");
             }
         }
     }
@@ -1537,8 +1533,6 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         {
             return null;
         }
-        e.CompiledCode.GlobalVar.Add($"$size_{varName} equ $-{varName}");
-        e.CompiledCode.GlobalVar.Add($"$length_{varName} equ $size_{varName}");
 
         return new(varName, varType, varSize, varDef, varRef);
     }

@@ -2,17 +2,17 @@ useth <tupiheader.th>
 usetp <tupicode.tp>
 
 ref byte pularLinha "\n\0"
-ref i8 msg1 'myInt is ', 0
+ref i8 msg 'myInt is ', 0
 ref i8 msgLoop "myInt in loop is \0"
-ref i8 msg2 "myInts is %d %d %d %d %d\n\0"
+ref i8 msgInt "myInts is %d %d %d %d %d\n\0"
 ref i8 appName "python\0" 
 i64 myInt 120
 myStruct myStructTest {8, 8, 16, 16}
 Unginha myStructUnginha {8, 8, 16, 16}
 CUnginha myStructCUnginha {8, 8, 8, 16}
 const euquero 123
-const msg1Len1 length msg1
-const msg1Len2 size msg1
+const msgLen lengthof msg
+const msgSize sizeof msg
 
 struct Unginha
 {
@@ -60,7 +60,9 @@ fn main(i32 argc, iptr argv)
 	consoleWriteStr(pularLinha)
 	consoleWriteInt(euquero)
 	consoleWriteStr(pularLinha)
-	consoleWriteInt(msg1Len1)
+	consoleWriteInt(msgLen)
+	consoleWriteStr(pularLinha)
+	consoleWriteInt(msgSize)
 	consoleWriteStr(pularLinha)
 	startProcess(NULL,appName,SW_SHOW,TRUE);
 	if(myBool){
@@ -98,7 +100,7 @@ fn main(i32 argc, iptr argv)
 	while(myLongLoop >= 3)
 	{
 		myLongLoop--;
-		consoleWriteStr(msg1)
+		consoleWriteStr(msg)
 		consoleWriteInt(myLongLoop)
 		consoleWriteStr(pularLinha)
 	}
@@ -122,7 +124,7 @@ fn main(i32 argc, iptr argv)
 
 fn print_i64(i64 integer)
 {
-	consoleWriteStr(msg1)
+	consoleWriteStr(msg)
 	consoleWriteInt(integer)
 	consoleWriteStr(pularLinha)
 }
