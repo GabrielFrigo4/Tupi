@@ -6,6 +6,7 @@ internal class RunData: ICodeData, IHeaderData
     public List<UnionData> Unions { get; private set; }
     public List<TypedefData> Typedef { get; private set; }
     public Dictionary<string, VarData> GlobalVars { get; private set; }
+    public List<string> Const { get; private set; }
     public Dictionary<string, string> Macros { get; private set; }
 
     internal RunData()
@@ -14,6 +15,7 @@ internal class RunData: ICodeData, IHeaderData
         Structs = new();
         Unions = new();
         Typedef = new();
+        Const = new();
         GlobalVars = new();
         Macros = new();
     }
@@ -58,6 +60,11 @@ internal class RunData: ICodeData, IHeaderData
         return null;
     }
 
+    internal bool ExistConst(string name)
+    {
+        return Const.Contains(name);
+    }
+
     internal ICodeData GetCodeData()
     {
         return this;
@@ -74,6 +81,7 @@ internal class RunData: ICodeData, IHeaderData
         Structs.AddRange(codeData.Structs);
         Unions.AddRange(codeData.Unions);
         Typedef.AddRange(codeData.Typedef);
+        Const.AddRange(codeData.Const);
         foreach (var globalVar in codeData.GlobalVars)
             GlobalVars.TryAdd(globalVar.Key, globalVar.Value);
         foreach (var macro in codeData.Macros)
@@ -85,6 +93,7 @@ internal class RunData: ICodeData, IHeaderData
         Structs.AddRange(headerData.Structs);
         Unions.AddRange(headerData.Unions);
         Typedef.AddRange(headerData.Typedef);
+        Const.AddRange(headerData.Const);
         foreach (var macro in headerData.Macros)
             Macros.TryAdd(macro.Key, macro.Value);
     }

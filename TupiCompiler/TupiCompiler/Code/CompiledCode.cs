@@ -8,6 +8,7 @@ internal class CompiledCode
     internal List<string> Union { get; private set; }
     internal List<string> Typedef { get; private set; }
     internal List<string> GlobalVar { get; private set; }
+    internal List<string> Const { get; private set; }
     internal List<string> Func { get; private set; }
 
     internal CompiledCode()
@@ -19,6 +20,7 @@ internal class CompiledCode
         Union = new();
         Typedef = new();
         GlobalVar = new();
+        Const = new();
         Func = new();
     }
 
@@ -53,6 +55,10 @@ internal class CompiledCode
         foreach (var globalVar in GlobalVar)
         {
             code += globalVar + "\n";
+        }
+        foreach (var @const in Const)
+        {
+            code += @const + "\n";
         }
         code += ".code\n";
         foreach (var func in Func)

@@ -25,6 +25,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         compilerCode.CompilerEvent += Compile_Union;
         compilerCode.CompilerEvent += Compile_Typedef;
         compilerCode.CompilerEvent += Compile_GlobalVar;
+        compilerCode.CompilerEvent += Compile_Const;
         compilerCode.CompilerEvent += Compile_Func;
     }
     #endregion
@@ -48,7 +49,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         compilerHeader.CompilerEvent += Compile_Struct;
         compilerHeader.CompilerEvent += Compile_Union;
         compilerHeader.CompilerEvent += Compile_Typedef;
-        compilerHeader.CompilerEvent += Compile_GlobalVar;
+        compilerHeader.CompilerEvent += Compile_Const;
     }
     #endregion
 
@@ -756,17 +757,51 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         }
     }
 
+    void Compile_Const(object? sender, CompilerArgs e)
+    {
+        int totalKey = 0;
+        bool isInsideFunc = false, isInsideStruct = false, isInsideUnion = false;
+        foreach (var line in e.Lines)
+        {
+            string[] terms = e.GetTermsLine(line);
+            UpdateInsideFunc(terms, ref totalKey, ref isInsideFunc);
+            UpdateInsideStruct(terms, ref isInsideStruct);
+            UpdateInsideUnion(terms, ref isInsideUnion);
+            if (terms.Length < 3 || isInsideFunc || isInsideStruct || isInsideUnion) continue;
+
+            if (terms[0] == "const" && !e.RunData.ExistConst(terms[1]) &&
+                !(terms[2] == "size" || terms[2] == "length"))
+            {
+                e.RunData.Const.Add(terms[1]);
+                e.CompiledCode.Const.Add($"{terms[1]} equ {terms[2]}");
+            }
+            else if (terms[0] == "const" && !e.RunData.ExistConst(terms[1]) &&
+                terms[2] == "size")
+            {
+                e.RunData.Const.Add(terms[1]);
+                e.CompiledCode.Const.Add($"{terms[1]} equ $size_{terms[3]}");
+            }
+            else if (terms[0] == "const" && !e.RunData.ExistConst(terms[1]) &&
+                terms[2] == "length")
+            {
+                e.RunData.Const.Add(terms[1]);
+                e.CompiledCode.Const.Add($"{terms[1]} equ $length_{terms[3]}");
+            }
+        }
+    }
+
     void Compile_Func(object? sender, CompilerArgs e)
     {
         FuncData? currentFunc = null;
         string fnCode = string.Empty;
+        int localVarPos = 0;
 
         int keysInd = 0;
         int totalKeys = 0;
         List<Tuple<int, string>> keysData = new();
         List<int> keysIf = new();
 
-        bool isInsideFunc = false, isInsideStruct = false, isInsideUnion = false, isDefVarEnd = false;
+        bool isInsideFunc = false, isInsideStruct = false, isInsideUnion = false;
         for (int lpos = 0; lpos < e.Lines.Length; lpos++)
         {
             string line = e.Lines[lpos];
@@ -806,22 +841,21 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                         currentFunc.Args.Add(varData);
                         currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
                     }
+                    localVarPos += fnCode.Length;
                 }
             }
             else if (currentFunc is not null)
             {
                 UpdateInsideFunc(terms, ref totalKeys, ref isInsideFunc);
 
-                bool contains = false;
-                if (!isDefVarEnd)
-                {
-                    contains = ContainsDefVar(terms, e);
-                }
+                bool contains = ContainsDefVar(terms, e); ;
 
-                //local vars
-                if (contains && !isDefVarEnd)
+                //fn vars
+                if (contains)
                 {
-                    VarData? varData = GetMetaFnVar(line, ref fnCode, e);
+                    VarData? varData = GetMetaFnVar(line, out string varCode, e);
+                    fnCode = fnCode.Insert(localVarPos, varCode);
+                    localVarPos += varCode.Length;
 
                     if (varData is not null)
                     {
@@ -829,23 +863,37 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                         currentFunc.LocalVars.Add(varData);
                     }
                 }
-                else if (!isDefVarEnd)   //def vars(local and args)
+
+                //fn vars def
+                if (!isInsideFunc)
                 {
-                    isDefVarEnd = true;
                     foreach (string _line in currentFunc.Args.Select((VarData var) => var.Def))
                     {
                         if (_line != string.Empty)
-                            fnCode += _line;
+                        {
+                            fnCode = fnCode.Insert(localVarPos, _line);
+                            localVarPos += _line.Length;
+                        }
                     }
                     foreach (string _line in currentFunc.LocalVars.Select((VarData var) => var.Def))
                     {
                         if (_line != string.Empty)
-                            fnCode += _line;
+                        {
+                            fnCode = fnCode.Insert(localVarPos, _line);
+                            localVarPos += _line.Length;
+                        }
                     }
 
-                    fnCode += "\tpush rdi\n";
-                    fnCode += $"\tsub rsp, {CorrectShadowSpaceFunc(currentFunc.ShadowSpace)}\t;Reserve the shadow space\n";
-                    fnCode += "\tmov rdi, rsp\n";
+                    string temp;
+                    temp = "\tpush rdi\n";
+                    fnCode = fnCode.Insert(localVarPos, temp);
+                    localVarPos += temp.Length;
+                    temp = $"\tsub rsp, {CorrectShadowSpaceFunc(currentFunc.ShadowSpace)}\t;Reserve the shadow space\n";
+                    fnCode = fnCode.Insert(localVarPos, temp);
+                    localVarPos += temp.Length;
+                    temp = "\tmov rdi, rsp\n";
+                    fnCode = fnCode.Insert(localVarPos, temp);
+                    localVarPos += temp.Length;
                 }
 
                 // call funcs
@@ -1143,7 +1191,8 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                     fnCode += $"{currentFunc.Name} endp";
                     e.CompiledCode.Func.Add(fnCode);
                     fnCode = string.Empty;
-                    isInsideFunc = isInsideStruct = isInsideUnion = isDefVarEnd = false;
+                    localVarPos = 0;
+                    isInsideFunc = isInsideStruct = isInsideUnion = false;
                     currentFunc = null;
                     totalKeys = 0;
                     keysInd = 0;
@@ -1488,11 +1537,13 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         {
             return null;
         }
+        e.CompiledCode.GlobalVar.Add($"$size_{varName} equ $-{varName}");
+        e.CompiledCode.GlobalVar.Add($"$length_{varName} equ $size_{varName}");
 
         return new(varName, varType, varSize, varDef, varRef);
     }
 
-    private VarData? GetMetaFnVar(string line, ref string fnCode, CompilerArgs e)
+    private VarData? GetMetaFnVar(string line, out string fnCode, CompilerArgs e)
     {
         string[] terms = e.GetTermsLine(line);
         string varType = string.Empty, varName = string.Empty, varVal = string.Empty, varDef = string.Empty;
@@ -1525,60 +1576,62 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             if (e.ReadOnlyData.TupiTypes.Contains(varType))
             {
                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, varType);
-                fnCode += $"\tlocal {varName}: {varType}\n";
                 varSize = e.ReadOnlyData.TypeSize[pos];
             }
             else if (e.ReadOnlyData.AsmTypes.Contains(varType))
             {
                 int pos = Array.IndexOf(e.ReadOnlyData.AsmTypes, varType);
-                fnCode += $"\tlocal {varName}: {varType}\n";
                 varSize = e.ReadOnlyData.TypeSize[pos];
             }
             else if (e.RunData.GetTypedefByName(varType) is TypedefData typedef)
             {
-                fnCode += $"\tlocal {varName}: {varType}\n";
                 varSize = typedef.Size;
             }
             else if (e.RunData.GetStructByName(varType) is StructData @struct)
             {
-                fnCode += $"\tlocal {varName}: {varType}\n";
                 varSize = @struct.Size;
             }
             else if (e.RunData.GetUnionByName(varType) is UnionData union)
             {
-                fnCode += $"\tlocal {varName}: {varType}\n";
                 varSize = union.Size;
             }
+            else
+            {
+                fnCode = string.Empty;
+                return null;
+            }
+            fnCode = $"\tlocal {varName}: {varType}\n";
         }
         else
         {
             if (e.ReadOnlyData.TupiTypes.Contains(varType))
             {
                 int pos = Array.IndexOf(e.ReadOnlyData.TupiTypes, varType);
-                fnCode += $"\tlocal {varName}: {varType}\n";
                 varSize = e.ReadOnlyData.TypeSize[pos];
             }
             else if (e.ReadOnlyData.AsmTypes.Contains(varType))
             {
                 int pos = Array.IndexOf(e.ReadOnlyData.AsmTypes, varType);
-                fnCode += $"\tlocal {varName}: {varType}\n";
                 varSize = e.ReadOnlyData.TypeSize[pos];
             }
             else if (e.RunData.GetTypedefByName(varType) is TypedefData typedef)
             {
-                fnCode += $"\tlocal {varName}: {varType}\n";
                 varSize = typedef.Size;
             }
             else if (e.RunData.GetStructByName(varType) is StructData @struct)
             {
-                fnCode += $"\tlocal {varName}: {varType}\n";
                 varSize = @struct.Size;
             }
             else if (e.RunData.GetUnionByName(varType) is UnionData union)
             {
-                fnCode += $"\tlocal {varName}: {varType}\n";
                 varSize = union.Size;
             }
+            else
+            {
+                fnCode = string.Empty;
+                return null;
+            }
+            fnCode = $"\tlocal {varName}: {varType}\n";
         }
 
         return new(varName, varType, varSize, varDef, varRef);
@@ -1672,7 +1725,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                     registorsB[i] = e.ReadOnlyData.RegistorsB[3];
                     param2[i] = $"[{registorsB[i]}]";
                 }
-                else if (state == ArgState.Number || state == ArgState.BasicEqu)
+                else if (state == ArgState.Number || state == ArgState.BasicEqu || state == ArgState.Const)
                 {
                     comand[i] = "mov";
                     param1[i] = varPath;
@@ -1788,6 +1841,11 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             var = null;
             return ArgState.BasicEqu;
         }
+        else if (e.RunData.ExistConst(arg))
+        {
+            var = null;
+            return ArgState.Const;
+        }
         else
         {
             var = null;
@@ -1823,6 +1881,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         PtrData,
         Number,
         BasicEqu,
+        Const,
     }
     #endregion
 }
