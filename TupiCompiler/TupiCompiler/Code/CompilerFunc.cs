@@ -383,7 +383,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             }
         }
 
-        Console.WriteLine(e.Code);
+        //Console.WriteLine(e.Code);
     }
     #endregion
 
