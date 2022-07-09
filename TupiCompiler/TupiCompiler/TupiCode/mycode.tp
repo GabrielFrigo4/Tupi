@@ -54,7 +54,7 @@ fn main(i32 argc, iptr argv)
 	iptr myPointer3;
 	[myPointer] += sum64(1, 2);
 	[myPointer] -= 2;
-	myLongLoop += [myPointer]
+	myLongLoop += 10 + [myPointer]
 	[myPointer2] += [myPointer]
 	consoleWriteInt([myPointer])
 	consoleWriteStr(pularLinha)
@@ -69,19 +69,19 @@ fn main(i32 argc, iptr argv)
 	i64 myVarSumTeste = 0;
 	i64 myVarSumTeste1 = 3;
 	i64 myVarSumTeste2 = 5;
-	consoleWriteInt(myVarSumTeste)
+	consoleWriteInt(myVarSumTeste)				$0
 	consoleWriteStr(pularLinha)
 	myVarSumTeste = myVarSumTeste + 10
+	consoleWriteInt(myVarSumTeste)				$10
+	consoleWriteStr(pularLinha)
+	myVarSumTeste = myVarSumTeste1 + 10			$13
 	consoleWriteInt(myVarSumTeste)
 	consoleWriteStr(pularLinha)
-	myVarSumTeste = myVarSumTeste1 + 10
-	consoleWriteInt(myVarSumTeste)
-	consoleWriteStr(pularLinha)
-	myVarSumTeste=myVarSumTeste1+10     +	100
+	myVarSumTeste = myVarSumTeste1 + +10 - -100	$113
 	consoleWriteInt(myVarSumTeste)
 	consoleWriteStr(pularLinha)
 	myVarSumTeste = myVarSumTeste1 + myVarSumTeste2
-	consoleWriteInt(myVarSumTeste)
+	consoleWriteInt(myVarSumTeste)				$8
 	consoleWriteStr(pularLinha)
 	startProcess(NULL,appName,SW_SHOW,TRUE);
 	if(myBool){

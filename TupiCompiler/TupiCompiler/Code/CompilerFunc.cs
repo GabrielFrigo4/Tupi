@@ -383,7 +383,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             }
         }
 
-        //Console.WriteLine(e.Code);
+        Console.WriteLine(e.Code);
     }
     #endregion
 
@@ -954,6 +954,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                             operate = "dec";
                             break;
                     }
+
                     if (operate != string.Empty)
                     {
                         ArgState state = GetArgState(terms[0], out string? var, out VarData? varData, currentFunc, e);
@@ -971,81 +972,113 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 }
                 else if (terms.Length >= 3)
                 {
-                    string operate = string.Empty;
-                    switch (terms[1])
+                    bool itsWorks = false;
+                    ArgState state1 = ArgState.None;
+                    VarData? varData1 = null;
+                    string? var1 = null;
+                    for (int i = 1; i < terms.Length; i += 2)
                     {
-                        case "+=":
-                            operate = "add";
-                            break;
-                        case "-=":
-                            operate = "sub";
-                            break;
-                        case "=":
-                            operate = "mov";
-                            break;
-                    }
-                    if (operate != string.Empty)
-                    {
-                        ArgState state1 = GetArgState(terms[0], out string? var1, out VarData? varData1, currentFunc, e);
-                        int pos1 = -1;
-                        if (varData1 is not null)
-                            pos1 = GetPosRegistorBySize(varData1.Size);
-                        bool existFn = CallFunc(line, currentFunc, e, ref fnCode, 2);
-
-                        if (existFn && pos1 != -1)
+                        string operate = string.Empty;
+                        if (i == 1)
                         {
-                            string fistArg = terms[0];
-                            if (state1 == ArgState.PtrData && var1 is not null)
+                            switch (terms[i])
                             {
-                                fistArg = $"{e.ReadOnlyData.AsmTypes[pos1]} ptr [rbx]";
-                                fnCode += $"\tmov rbx, {var1}\n";
+                                case "+=":
+                                    operate = "add";
+                                    break;
+                                case "-=":
+                                    operate = "sub";
+                                    break;
+                                case "=":
+                                    operate = "mov";
+                                    break;
                             }
-
-                            fnCode += $"\t{operate} {fistArg}, {e.ReadOnlyData.RegistorsA[pos1]}\n";
-                            fnCode += "\txor rax, rax\n";
-                            if (state1 == ArgState.PtrData && var1 is not null)
-                                fnCode += "\txor rbx, rbx\n";
                         }
-                        else if(pos1 != -1)
+                        else if (i >= 3)
                         {
-                            ArgState state2 = GetArgState(terms[2], out string? var2, out VarData? varData2, currentFunc, e);
+                            switch (terms[i])
+                            {
+                                case "+":
+                                    operate = "add";
+                                    break;
+                                case "-":
+                                    operate = "sub";
+                                    break;
+                            }
+                        }
 
-                            string thirdArg = terms[0];
-                            if (state1 == ArgState.PtrData && var1 is not null)
-                            {
-                                thirdArg = $"{e.ReadOnlyData.AsmTypes[pos1]} ptr [rax]";
-                                fnCode += $"\tmov rax, {var1}\n";
-                            }
+                        if(operate != string.Empty && i == 1)
+                        {
+                            state1 = GetArgState(terms[0], out var1, out varData1, currentFunc, e);
+                        }
 
-                            string fistOp = "mov", secondArg = terms[2],
-                                fistArg = e.ReadOnlyData.RegistorsB[pos1],
-                                quadArg = e.ReadOnlyData.RegistorsB[pos1];
-                            string thirdArg2 = thirdArg;
-                            if (state2 == ArgState.RefVar && var2 is not null)
-                            {
-                                fistOp = "lea";
-                                secondArg = var2;
-                            }
-                            else if (state2 == ArgState.PtrData && var2 is not null)
-                            {
-                                secondArg = var2;
-                                quadArg = "[rbx]";
-                                fistArg = "rbx";
-                                fnCode += $"\tmov rcx, {thirdArg}\n";
-                                thirdArg = "rcx";
-                            }
+                        if (operate != string.Empty)
+                        {
+                            itsWorks = true;
+                            int pos1 = -1;
+                            if (varData1 is not null)
+                                pos1 = GetPosRegistorBySize(varData1.Size);
+                            bool existFn = CallFunc(line, currentFunc, e, ref fnCode, i + 1);
 
-                            fnCode += $"\t{fistOp} {fistArg}, {secondArg}\n";
-                            fnCode += $"\t{operate} {thirdArg}, {quadArg}\n";
-                            if (state2 == ArgState.PtrData && var2 is not null)
+                            if (existFn && pos1 != -1)
                             {
-                                fnCode += $"\tmov {thirdArg2}, rcx\n";
-                                fnCode += $"\txor rcx, rcx\n";
-                            }
-                            fnCode += "\txor rbx, rbx\n";
-                            if (state1 == ArgState.PtrData && var1 is not null)
+                                string fistArg = terms[0];
+                                if (state1 == ArgState.PtrData && var1 is not null)
+                                {
+                                    fistArg = $"{e.ReadOnlyData.AsmTypes[pos1]} ptr [rbx]";
+                                    fnCode += $"\tmov rbx, {var1}\n";
+                                }
+
+                                fnCode += $"\t{operate} {fistArg}, {e.ReadOnlyData.RegistorsA[pos1]}\n";
                                 fnCode += "\txor rax, rax\n";
+                                if (state1 == ArgState.PtrData && var1 is not null)
+                                    fnCode += "\txor rbx, rbx\n";
+                            }
+                            else if (pos1 != -1)
+                            {
+                                ArgState state2 = GetArgState(terms[i + 1], out string? var2, out VarData? varData2, currentFunc, e);
+
+                                string thirdArg = terms[0];
+                                if (state1 == ArgState.PtrData && var1 is not null)
+                                {
+                                    thirdArg = $"{e.ReadOnlyData.AsmTypes[pos1]} ptr [rax]";
+                                    fnCode += $"\tmov rax, {var1}\n";
+                                }
+
+                                string fistOp = "mov", secondArg = terms[i + 1],
+                                    fistArg = e.ReadOnlyData.RegistorsB[pos1],
+                                    quadArg = e.ReadOnlyData.RegistorsB[pos1];
+                                string thirdArg2 = thirdArg;
+                                if (state2 == ArgState.RefVar && var2 is not null)
+                                {
+                                    fistOp = "lea";
+                                    secondArg = var2;
+                                }
+                                else if (state2 == ArgState.PtrData && var2 is not null)
+                                {
+                                    secondArg = var2;
+                                    quadArg = "[rbx]";
+                                    fistArg = "rbx";
+                                    fnCode += $"\tmov rcx, {thirdArg}\n";
+                                    thirdArg = "rcx";
+                                }
+
+                                fnCode += $"\t{fistOp} {fistArg}, {secondArg}\n";
+                                fnCode += $"\t{operate} {thirdArg}, {quadArg}\n";
+                                if (state2 == ArgState.PtrData && var2 is not null)
+                                {
+                                    fnCode += $"\tmov {thirdArg2}, rcx\n";
+                                    fnCode += $"\txor rcx, rcx\n";
+                                }
+                            }
                         }
+                    }
+
+                    if (itsWorks)
+                    {
+                        fnCode += "\txor rbx, rbx\n";
+                        if (state1 == ArgState.PtrData && var1 is not null)
+                            fnCode += "\txor rax, rax\n";
                     }
                 }
 
