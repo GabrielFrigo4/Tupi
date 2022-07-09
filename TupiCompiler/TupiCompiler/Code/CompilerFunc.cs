@@ -60,15 +60,22 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         for (int pos = 0; pos < codeStr.Length - 1; pos++)
         {
             if (IsInsideString(codeStr, pos, out _, out _)) continue;
-            if (codeStr[pos] == '\t')
+            if (codeStr[pos] == '\r')
             {
                 codeStr = codeStr.Remove(pos, 1);
                 pos--;
                 continue;
             }
-            if (codeStr[pos] == '\r')
+            if (codeStr[pos] == '\t' && (pos == 0 || codeStr[pos - 1] == ' ' || codeStr[pos - 1] == '\n'))
             {
                 codeStr = codeStr.Remove(pos, 1);
+                pos--;
+                continue;
+            }
+            else if (codeStr[pos] == '\t')
+            {
+                codeStr = codeStr.Remove(pos, 1);
+                codeStr = codeStr.Insert(pos, " ");
                 pos--;
                 continue;
             }
@@ -124,6 +131,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
 
     void PreCompileLines_GrammarAdd(object? sender, PreCompilerArgs e)
     {
+        bool isSign = false;
         string codeStr = e.Code;
         for (int pos = 0; pos < codeStr.Length - 1; pos++)
         {
@@ -133,6 +141,35 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             {
                 codeStr = codeStr.Insert(pos + 1, " ");
                 continue;
+            }
+
+            char[] spaceSign = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '=', ' '};
+            if (!isSign)
+            {
+                if (codeStr[pos] == '+' && !spaceSign.Contains(codeStr[pos + 1]) && codeStr[pos + 1] != '+')
+                {
+                    codeStr = codeStr.Insert(pos + 1, " ");
+                    continue;
+                }
+                if (codeStr[pos] == '-' && !spaceSign.Contains(codeStr[pos + 1]) && codeStr[pos + 1] != '-')
+                {
+                    codeStr = codeStr.Insert(pos + 1, " ");
+                    continue;
+                }
+                isSign = false;
+            }
+            else
+            {
+                if (codeStr[pos] == '+' && codeStr[pos + 1] != ' ' && codeStr[pos + 1] != '=' && codeStr[pos + 1] != '+')
+                {
+                    codeStr = codeStr.Insert(pos + 1, " ");
+                    continue;
+                }
+                if (codeStr[pos] == '-' && codeStr[pos + 1] != ' ' && codeStr[pos + 1] != '=' && codeStr[pos + 1] != '-')
+                {
+                    codeStr = codeStr.Insert(pos + 1, " ");
+                    continue;
+                }
             }
 
             if (codeStr[pos] != ' ' && codeStr[pos] != '\n' && codeStr[pos + 1] == '{')
@@ -156,6 +193,14 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 codeStr[pos + 1] == '>' || codeStr[pos + 1] == '=' ||
                 codeStr[pos + 1] == '<'))
             {
+                codeStr = codeStr.Insert(pos + 1, " ");
+                continue;
+            }
+
+            if (codeStr[pos] != ' ' && spaceSign.Contains(codeStr[pos + 2]) &&
+                (codeStr[pos + 1] == '-' || codeStr[pos + 1] == '+'))
+            {
+                isSign = true;
                 codeStr = codeStr.Insert(pos + 1, " ");
                 continue;
             }
@@ -338,7 +383,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             }
         }
 
-        //Console.WriteLine(e.Code);
+        Console.WriteLine(e.Code);
     }
     #endregion
 

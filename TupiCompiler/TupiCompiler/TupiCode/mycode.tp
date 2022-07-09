@@ -64,6 +64,25 @@ fn main(i32 argc, iptr argv)
 	consoleWriteStr(pularLinha)
 	consoleWriteInt(msgSize)
 	consoleWriteStr(pularLinha)
+	consoleWriteStr(pularLinha)
+	
+	i64 myVarSumTeste = 0;
+	i64 myVarSumTeste1 = 3;
+	i64 myVarSumTeste2 = 5;
+	consoleWriteInt(myVarSumTeste)
+	consoleWriteStr(pularLinha)
+	myVarSumTeste = myVarSumTeste + 10
+	consoleWriteInt(myVarSumTeste)
+	consoleWriteStr(pularLinha)
+	myVarSumTeste = myVarSumTeste1 + 10
+	consoleWriteInt(myVarSumTeste)
+	consoleWriteStr(pularLinha)
+	myVarSumTeste=myVarSumTeste1 +10     +	100
+	consoleWriteInt(myVarSumTeste)
+	consoleWriteStr(pularLinha)
+	myVarSumTeste = myVarSumTeste1 + myVarSumTeste2
+	consoleWriteInt(myVarSumTeste)
+	consoleWriteStr(pularLinha)
 	startProcess(NULL,appName,SW_SHOW,TRUE);
 	if(myBool){
 		$i64 myIfVar = 10;
