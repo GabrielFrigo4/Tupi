@@ -48,6 +48,28 @@ fn main(i32 argc, iptr argv)
 	iptr myPointer2;
 	myStruct myStructVar;
 	
+	asm 
+	{
+		;start asm
+		sub rsp, 8	;Reserve the shadow space
+		
+		mov rcx, 123
+		mov [rsp], rcx
+	pontoDePartida:
+		mov rcx, qword ptr [rsp]
+		inc rcx
+		mov [rsp], rcx
+		call print_i64
+		xor rax, rax
+		mov rcx, myLongVar1
+		call print_i64
+		xor rax, rax
+		jmp pontoDePartida
+		
+		add rsp, 8	;Remove shadow space
+		;end asm
+	}	
+	
 	myPointer = &myLongVar2
 	myPointer2 = &myLongLoop
 	[myPointer]++;

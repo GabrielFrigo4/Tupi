@@ -836,6 +836,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         FuncData? currentFunc = null;
         string fnCode = string.Empty;
         int localVarPos = 0;
+        bool isAsmCode = false;
 
         int keysInd = 0;
         int totalKeys = 0;
@@ -884,6 +885,20 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                     }
                     localVarPos += fnCode.Length;
                 }
+            }
+            else if (currentFunc is not null && isAsmCode)
+            {
+                UpdateInsideFunc(terms, ref totalKeys, ref isInsideFunc);
+                if (terms[0] == "}")
+                {
+                    isAsmCode = false;
+                    continue;
+                }
+
+                if (line.EndsWith(":") && !line.Contains(";"))
+                    fnCode += $"{line}\n";
+                else
+                    fnCode += $"\t{line}\n";
             }
             else if (currentFunc is not null)
             {
@@ -1097,6 +1112,11 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 //keyData add
                 if (terms[^1] == "{")
                 {
+                    if (terms[0] == "asm")
+                    {
+                        isAsmCode = true;
+                        continue;
+                    }
                     keysInd++;
                     keysData.Add(new(keysInd, string.Empty));
                 }
