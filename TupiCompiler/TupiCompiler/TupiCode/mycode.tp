@@ -64,12 +64,13 @@ fn main(i32 argc, iptr argv)
 		mov rcx, myLongVar1
 		call print_i64
 		xor rax, rax
-		jmp pontoDePartida
+		;jmp pontoDePartida
 		
 		add rsp, 8	;Remove shadow space
 		;end asm
 	}	
 	
+
 	myPointer = &myLongVar2
 	myPointer2 = &myLongLoop
 	[myPointer]++;
@@ -90,21 +91,45 @@ fn main(i32 argc, iptr argv)
 	
 	i64 myVarSumTeste = 0;
 	i64 myVarSumTeste1 = 3;
-	i64 myVarSumTeste2 = 5;
+	i64 myVarSumTeste2 = 100;
 	consoleWriteInt(myVarSumTeste)				$0
 	consoleWriteStr(pularLinha)
+	
 	myVarSumTeste = myVarSumTeste + 10
 	consoleWriteInt(myVarSumTeste)				$10
 	consoleWriteStr(pularLinha)
+	
 	myVarSumTeste = myVarSumTeste1 + 10			$13
 	consoleWriteInt(myVarSumTeste)
 	consoleWriteStr(pularLinha)
+	
 	myVarSumTeste = myVarSumTeste1 + +10 - -100	$113
 	consoleWriteInt(myVarSumTeste)
 	consoleWriteStr(pularLinha)
+	
 	myVarSumTeste = myVarSumTeste1 + myVarSumTeste2
-	consoleWriteInt(myVarSumTeste)				$8
+	consoleWriteInt(myVarSumTeste)				$103
 	consoleWriteStr(pularLinha)
+	
+	iptr myOpetate2pointer;
+	iptr myOpetate2pointer2;
+	i64 myVarOpetate2Teste = 9;
+	myOpetate2pointer2 = &myVarSumTeste
+	myOpetate2pointer = &myVarSumTeste1
+	consoleWriteStr(pularLinha)
+	myVarSumTeste = myVarSumTeste2
+	myVarSumTeste %= [myOpetate2pointer]
+	consoleWriteInt(myVarSumTeste)				$1
+	consoleWriteStr(pularLinha)
+	
+	myVarSumTeste *= myVarOpetate2Teste
+	consoleWriteInt(myVarSumTeste)				$9
+	consoleWriteStr(pularLinha)
+	
+	[myOpetate2pointer2] /= 3
+	consoleWriteInt(myVarSumTeste)				$3
+	consoleWriteStr(pularLinha)
+	
 	startProcess(NULL,appName,SW_SHOW,TRUE);
 	if(myBool){
 		$i64 myIfVar = 10;

@@ -160,12 +160,14 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             }
             else
             {
-                if (codeStr[pos] == '+' && codeStr[pos + 1] != ' ' && codeStr[pos + 1] != '=' && codeStr[pos + 1] != '+')
+                if (codeStr[pos] == '+' && codeStr[pos + 1] != ' ' && 
+                    codeStr[pos + 1] != '=' && codeStr[pos + 1] != '+')
                 {
                     codeStr = codeStr.Insert(pos + 1, " ");
                     continue;
                 }
-                if (codeStr[pos] == '-' && codeStr[pos + 1] != ' ' && codeStr[pos + 1] != '=' && codeStr[pos + 1] != '-')
+                if (codeStr[pos] == '-' && codeStr[pos + 1] != ' ' &&
+                    codeStr[pos + 1] != '=' && codeStr[pos + 1] != '-')
                 {
                     codeStr = codeStr.Insert(pos + 1, " ");
                     continue;
@@ -178,20 +180,15 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 continue;
             }
 
-            if (codeStr[pos] != ' ' && codeStr[pos] != '+' &&
-                codeStr[pos] != '>' && codeStr[pos] != '=' &&
-                codeStr[pos] != '<' && codeStr[pos] != '-' &&
-                codeStr[pos + 1] == '=')
+            char[] spaceOpComp = { '+', '-', '>', '=', '<', '*', '/', '%'};
+            if (codeStr[pos] != ' ' && !spaceOpComp.Contains(codeStr[pos]) && codeStr[pos + 1] == '=')
             {
                 codeStr = codeStr.Insert(pos + 1, " ");
                 continue;
             }
 
             if (codeStr.Length <= pos + 2) break;
-            if (codeStr[pos] != ' ' && codeStr[pos + 2] == '=' &&
-                (codeStr[pos + 1] == '-' || codeStr[pos + 1] == '+' ||
-                codeStr[pos + 1] == '>' || codeStr[pos + 1] == '=' ||
-                codeStr[pos + 1] == '<'))
+            if (codeStr[pos] != ' ' && spaceOpComp.Contains(codeStr[pos + 1]) && codeStr[pos + 2] == '=')
             {
                 codeStr = codeStr.Insert(pos + 1, " ");
                 continue;
@@ -956,7 +953,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 if (CallFunc(line, currentFunc, e, ref fnCode))
                     fnCode += "\txor rax, rax\n";
 
-                //operator
+                //operator (+ - =)
                 if (terms.Length == 2)
                 {
                     string operate = string.Empty;
@@ -1094,6 +1091,94 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                         fnCode += "\txor rbx, rbx\n";
                         if (state1 == ArgState.PtrData && var1 is not null)
                             fnCode += "\txor rax, rax\n";
+                    }
+                }
+
+                //operator (/ * %)
+                if (terms.Length == 3)
+                {
+                    ArgState state1 = GetArgState(terms[0], out string? var1, out VarData? varData1, currentFunc, e);
+                    ArgState state2 = GetArgState(terms[2], out string? var2, out VarData? varData2, currentFunc, e);
+                    string operate = string.Empty;
+                    string result = string.Empty;
+                    string fistArg = string.Empty;
+                    string secondArg = string.Empty;
+                    switch (terms[1])
+                    {
+                        case "/=":
+                            operate = "div";
+                            result = "rax";
+                            fistArg = "rax";
+                            secondArg = "rcx";
+                            break;
+                        case "*=":
+                            operate = "mul";
+                            result = "rax";
+                            fistArg = "rax";
+                            secondArg = "rcx";
+                            break;
+                        case "%=":
+                            operate = "div";
+                            result = "rdx";
+                            fistArg = "rax";
+                            secondArg = "rcx";
+                            break;
+                    }
+
+                    if(operate != string.Empty && result != string.Empty)
+                    {
+                        if(operate == "div")
+                            fnCode += "\txor rdx, rdx\n";
+
+                        //get fist arg
+                        if (state1 == ArgState.Var)
+                        {
+                            fnCode += $"\tmov {fistArg}, {terms[0]}\n";
+                        }
+                        else if (state1 == ArgState.PtrData && varData1 is not null)
+                        {
+                            fnCode += "\txor rbx, rbx\n";
+                            int pos1 = GetPosRegistorBySize(varData1.Size);
+                            fnCode += $"\tmov {e.ReadOnlyData.RegistorsB[pos1]}, {var1}\n";
+                            fnCode += $"\tmov {fistArg}, {e.ReadOnlyData.AsmTypes[pos1]} ptr [rbx]\n";
+                        }
+
+                        //get second arg and operate result
+                        if (state2 == ArgState.Number || state2 == ArgState.Var ||
+                            state2 == ArgState.Const || state2 == ArgState.BasicEqu)
+                        {
+                            fnCode += $"\tmov {secondArg}, {terms[2]}\n";
+                            fnCode += $"\t{operate} {secondArg}\n";
+                        }
+                        else if (state2 == ArgState.RefVar)
+                        {
+                            fnCode += $"\tlea {secondArg}, {var2}\n";
+                            fnCode += $"\t{operate} {secondArg}\n";
+                        }
+                        else if (state2 == ArgState.PtrData && varData2 is not null)
+                        {
+                            int pos2 = GetPosRegistorBySize(varData2.Size);
+                            fnCode += $"\tmov {secondArg}, {var2}\n";
+                            fnCode += $"\t{operate} {e.ReadOnlyData.AsmTypes[pos2]} ptr [{secondArg}]\n";
+                        }
+
+                        //set val to result
+                        if (state1 == ArgState.Var)
+                        {
+                            fnCode += $"\tmov {terms[0]}, {result}\n";
+                        }
+                        else if (state1 == ArgState.PtrData && varData1 is not null)
+                        {
+                            int pos1 = GetPosRegistorBySize(varData1.Size);
+                            fnCode += $"\tmov {e.ReadOnlyData.AsmTypes[pos1]} ptr [rbx], {result}\n";
+                            fnCode += "\txor rbx, rbx\n";
+                        }
+
+                        //end of operate
+                        fnCode += "\txor rax, rax\n";
+                        fnCode += "\txor rcx, rcx\n";
+                        if (operate == "div")
+                            fnCode += "\txor rdx, rdx\n";
                     }
                 }
 
