@@ -7,10 +7,11 @@ ref i8 msgLoop "myInt in loop is \0"
 ref i8 msgInt "myInts is %d %d %d %d %d\n\0"
 ref i8 appName "python\0" 
 i64 myInt 120
+f64 myFloat 0.1
 myStruct myStructTest {8, 8, 16, 16}
 Unginha myStructUnginha {8, 8, 16, 16}
 CUnginha myStructCUnginha {8, 8, 8, 16}
-const euquero 123
+const euquero 123456789
 const msgLen lengthof msg
 const msgSize sizeof msg
 
@@ -70,16 +71,35 @@ fn main(i32 argc, iptr argv)
 		;end asm
 	}	
 	
+	consoleWriteStr(pularLinha)
+	consoleWriteStr(pularLinha)
+	consoleWriteStr(pularLinha)
 
-	myPointer = &myLongVar2
-	myPointer2 = &myLongLoop
-	[myPointer]++;
-	iptr myPointer3;
-	[myPointer] += sum64(1, 2);
-	[myPointer] -= 2;
-	myLongLoop += 10 + [myPointer]
-	[myPointer2] += [myPointer]
+	myPointer = &myLongVar2;        $myLongVar2 == 2
+	
 	consoleWriteInt([myPointer])
+	consoleWriteStr(pularLinha)
+	
+	myPointer2 = &myLongLoop		$myLongLoop == 2
+	asm{
+	;asdasdasdasdasdasdasdasdasdasd
+	}
+	[myPointer]++;					$myLongVar2 == 3
+	asm{
+	;asdasdasdasdasdasdasdasdasdasd
+	}
+	consoleWriteInt([myPointer])
+	consoleWriteStr(pularLinha)
+	
+	iptr myPointer3;				
+	[myPointer] += sum64(1, 2);		$myLongVar2 == 6
+	[myPointer] -= 2;				$myLongVar2 == 4
+	myLongLoop += 10 + [myPointer]	$myLongLoop == 2 + 10 + 4 = 16
+	[myPointer2] += [myPointer] 	$myLongLoop == 16 + 4 = 20
+	
+	consoleWriteInt([myPointer])
+	consoleWriteStr(pularLinha)
+	consoleWriteInt([myPointer2])
 	consoleWriteStr(pularLinha)
 	consoleWriteInt(euquero)
 	consoleWriteStr(pularLinha)
@@ -111,9 +131,24 @@ fn main(i32 argc, iptr argv)
 	consoleWriteInt(myVarSumTeste)				$103
 	consoleWriteStr(pularLinha)
 	
-	iptr myOpetate2pointer;
-	iptr myOpetate2pointer2;
+	f64 myLocalFloat;
+	
+	($
+	lea rax, myLocalFloat
+	mov qword ptr [rax], 987321 
+	movsd xmm0, qword ptr [rsp]
+	movsd myLocalFloat, xmm0
+	$)
+	
+	iptr myOpetate2pointer = 0;
+	iptr myOpetate2pointer2 = 0;
 	i64 myVarOpetate2Teste = 9;
+	consoleWriteInt(myOpetate2pointer)				$1
+	consoleWriteStr(pularLinha)
+	consoleWriteInt(myOpetate2pointer2)				$1
+	consoleWriteStr(pularLinha)
+	consoleWriteInt(myVarOpetate2Teste)				$1
+	consoleWriteStr(pularLinha)
 	myOpetate2pointer2 = &myVarSumTeste
 	myOpetate2pointer = &myVarSumTeste1
 	consoleWriteStr(pularLinha)

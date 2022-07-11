@@ -66,10 +66,19 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 pos--;
                 continue;
             }
-            if (codeStr[pos] == '\t' && (pos == 0 || codeStr[pos - 1] == ' ' || codeStr[pos - 1] == '\n'))
+
+            char[] removeTab = { ' ', '\n', '\r', '\t', '$' }; 
+            char[] removeSemicolon = { '\n', '\r', '$' };
+            if (codeStr[pos] == '\t' && (pos == 0 || removeTab.Contains(codeStr[pos + 1]) || removeTab.Contains(codeStr[pos - 1])))
             {
                 codeStr = codeStr.Remove(pos, 1);
                 pos--;
+                if (codeStr[pos] == ';' && removeSemicolon.Contains(codeStr[pos + 1]))
+                {
+                    codeStr = codeStr.Remove(pos, 1);
+                    pos--;
+                    continue;
+                }
                 continue;
             }
             else if (codeStr[pos] == '\t')
@@ -81,21 +90,22 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             }
 
             if (pos == e.Code.Length - 1) break;
-            if (codeStr[pos] == ' ' && codeStr[pos + 1] == ' ')
+            char[] removeSpace = { ' ', ',', '\t', '$' };
+            if (codeStr[pos] == ' ' && removeSpace.Contains(codeStr[pos + 1]))
             {
                 codeStr = codeStr.Remove(pos, 1);
                 pos--;
+                if (codeStr[pos] == ';' && removeSemicolon.Contains(codeStr[pos + 1]))
+                {
+                    codeStr = codeStr.Remove(pos, 1);
+                    pos--;
+                    continue;
+                }
                 continue;
             }
             if (codeStr[pos] == ',' && codeStr[pos + 1] == ' ')
             {
                 codeStr = codeStr.Remove(pos + 1, 1);
-                pos--;
-                continue;
-            }
-            if (codeStr[pos] == ' ' && codeStr[pos + 1] == ',')
-            {
-                codeStr = codeStr.Remove(pos, 1);
                 pos--;
                 continue;
             }
@@ -105,13 +115,13 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 pos--;
                 continue;
             }
-            if (codeStr[pos] == ';' && (codeStr[pos + 1] == '\n' || codeStr[pos + 1] == '\r'))
+            if (codeStr[pos] == '\n' && (codeStr[pos + 1] == '\n' || codeStr[pos + 1] == ' '))
             {
                 codeStr = codeStr.Remove(pos, 1);
                 pos--;
                 continue;
             }
-            if (codeStr[pos] == '\n' && (codeStr[pos + 1] == '\n' || codeStr[pos + 1] == ' '))
+            if (codeStr[pos] == ';' && removeSemicolon.Contains(codeStr[pos + 1]))
             {
                 codeStr = codeStr.Remove(pos, 1);
                 pos--;
