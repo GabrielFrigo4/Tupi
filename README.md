@@ -16,6 +16,6 @@ Tupi is a compiled programming language that uses masm(microsoft assembly), so t
     const msgSize size msg
 
     i64 main(){
-        consoleWrite(msg, msgSize)
+        consoleWrite(msg, msgSize, NULL)
         return 0
     }
