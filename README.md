@@ -10,7 +10,6 @@ ref i8 msg "hello world", 0
 i64 main(){
 
     consoleWriteStr(msg)
-  
     return 0
   
 }
@@ -26,7 +25,6 @@ const msgSize size msg
 i64 main(){
 
     consoleWrite(msg, msgSize)
-  
     return 0
   
 }
