@@ -59,13 +59,19 @@ internal static class Program
             if (_pathCompile is not null)
                 pathCompile = Path.GetFullPath(_pathCompile);
 
-            Action<string> action = CompileTupiProj;
+            Action<string, bool, bool, bool> action = CompileTupiProj;
             Argument<string> source = new("source", "source for tupi compile");
+            Option<bool> lib = new(new[] { "--lib", "-l" }, "is a lib output file");
+            Option<bool> dll = new(new[] { "--dll", "-d" }, "is a dll output file");
+            Option<bool> exe = new(new[] { "--exe", "-e" }, "is a exe output file");
             RootCommand cmd = new()
             {
                 source,
+                lib,
+                dll,
+                exe,
             };
-            cmd.SetHandler(action, source);
+            cmd.SetHandler(action, source, lib, dll, exe);
             return cmd.Invoke(args);
         }
         else
@@ -75,7 +81,7 @@ internal static class Program
         }
     }
 
-    internal static void CompileTupiProj(string pathTupi)
+    internal static void CompileTupiProj(string pathTupi, bool isLib, bool isDll, bool isExe)
     {
         string tupiFileName = Path.GetFileNameWithoutExtension(pathTupi);
         Console.WriteLine("compile tupi proj:");

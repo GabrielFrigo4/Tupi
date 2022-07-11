@@ -2066,7 +2066,9 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         Var,
         RefVar,
         PtrData,
-        Number,
+        Integer,
+        Real,
+        Number = Integer | Real,
         BasicEqu,
         Const,
     }
