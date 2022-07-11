@@ -20,6 +20,15 @@
     <None Update="Build\mbld.bat">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="TupiCode\exemples\tupidll.tp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TupiCode\exemples\tupiexe.tp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TupiCode\exemples\tupilib.tp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TupiCode\tupicode.tp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

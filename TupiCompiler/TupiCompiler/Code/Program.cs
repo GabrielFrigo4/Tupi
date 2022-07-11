@@ -61,17 +61,17 @@ internal static class Program
 
             Action<string, bool, bool, bool> action = CompileTupiProj;
             Argument<string> source = new("source", "source for tupi compile");
-            Option<bool> lib = new(new[] { "--lib", "-l" }, "is a lib output file");
-            Option<bool> dll = new(new[] { "--dll", "-d" }, "is a dll output file");
             Option<bool> exe = new(new[] { "--exe", "-e" }, "is a exe output file");
+            Option<bool> dll = new(new[] { "--dll", "-d" }, "is a dll output file");
+            Option<bool> lib = new(new[] { "--lib", "-l" }, "is a lib output file");
             RootCommand cmd = new()
             {
                 source,
-                lib,
-                dll,
                 exe,
+                dll,
+                lib,
             };
-            cmd.SetHandler(action, source, lib, dll, exe);
+            cmd.SetHandler(action, source, exe, dll, lib);
             return cmd.Invoke(args);
         }
         else
@@ -81,8 +81,15 @@ internal static class Program
         }
     }
 
-    internal static void CompileTupiProj(string pathTupi, bool isLib, bool isDll, bool isExe)
+    internal static void CompileTupiProj(string pathTupi, bool isExe, bool isDll, bool isLib)
     {
+        OutputType outputType = OutputType.Exe;
+        if(isExe)
+            outputType = OutputType.Exe;
+        else if (isDll)
+            outputType = OutputType.Dll;
+        else if (isLib)
+            outputType = OutputType.Lib;
         string tupiFileName = Path.GetFileNameWithoutExtension(pathTupi);
         Console.WriteLine("compile tupi proj:");
         Console.WriteLine("tranform tupi code to assembly(masm)");
@@ -99,7 +106,7 @@ internal static class Program
         if (File.Exists(pathDir + "\\header\\std_tupi_def.inc"))
             File.Delete(pathDir + "\\header\\std_tupi_def.inc");
         File.Copy($"{x64Path}std_tupi_def.inc", pathDir + "\\header\\std_tupi_def.inc");
-        CompileAsm(pathDir, files, MainCompiler.LinkLibs);
+        CompileAsm(pathDir, files, MainCompiler.LinkLibs, MainCompiler.FnExport, outputType);
     }
 
     internal static string CompileTupiCodeFile(string pathTupiCode, out ICompilerCode compiler, bool isMainFile)
@@ -116,7 +123,8 @@ internal static class Program
         return compiler.Start();
     }
 
-    internal static void CompileAsm(string path_dir_asm, List<string> nameFiles, List<string> libFiles, bool run = false, bool assembler_warning = true)
+    internal static void CompileAsm(string path_dir_asm, List<string> nameFiles, List<string> libFiles, 
+        List<string> fnExport, OutputType output, bool run = false, bool assembler_warning = true)
     {
         Console.WriteLine("tranform assembly to binary file");
         Process process = new();
@@ -131,24 +139,80 @@ internal static class Program
         {
             startInfo.Arguments += $" ml64 {asmFile}.asm /c &&";
         }
-        string linkCommand = " link";
-        foreach (string objFile in nameFiles)
+
+        if (output == OutputType.Lib)
         {
-            linkCommand += $" {objFile}.obj";
+            string libCommand = " lib";
+            foreach (string objFile in nameFiles)
+            {
+                libCommand += $" {objFile}.obj";
+
+                {
+                    var libFilesDistinct = libFiles.Distinct();
+                    foreach (string libFile in libFilesDistinct)
+                    {
+                        libCommand += $" /nodefaultlib:{libFile}";
+                    }
+                }
+
+                {
+                    var fnExportDistinct = fnExport.Distinct();
+                    foreach (string fnExp in fnExportDistinct)
+                    {
+                        libCommand += $" /export:{fnExp}";
+                    }
+                }
+
+                startInfo.Arguments += libCommand;
+            }
         }
-        linkCommand += $" /entry:main /subsystem:console";// /defaultlib:{x64Path}lib/TupiLib.lib";
-        foreach (string libFile in libFiles.Distinct())
+        else
         {
-            linkCommand += $" /defaultlib:{libFile}";
+            string linkCommand = " link";
+            foreach (string objFile in nameFiles)
+            {
+                linkCommand += $" {objFile}.obj";
+            }
+
+            if (output == OutputType.Exe)
+                linkCommand += $" /entry:main /subsystem:console";
+            else if (output == OutputType.Dll)
+                linkCommand += $" /DLL /entry:DllMain";
+
+            {
+                var libFilesDistinct = libFiles.Distinct();
+                foreach (string libFile in libFilesDistinct)
+                {
+                    linkCommand += $" /defaultlib:{libFile}";
+                }
+            }
+
+            {
+                var fnExportDistinct = fnExport.Distinct();
+                foreach (string fnExp in fnExportDistinct)
+                {
+                    linkCommand += $" /export:{fnExp}";
+                }
+            }
+
+            startInfo.Arguments += linkCommand;
+            if (run)
+            {
+                startInfo.Arguments += " && main";
+            }
         }
-        startInfo.Arguments += linkCommand;
-        if (run)
-        {
-            startInfo.Arguments += " && main";
-        }
+
+        Console.WriteLine(startInfo.Arguments);
         process.StartInfo = startInfo;
         process.Start();
         process.WaitForExit();
         Console.WriteLine("compile finished!!");
     }
+}
+
+enum OutputType
+{
+    Exe,
+    Dll,
+    Lib,
 }

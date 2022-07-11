@@ -1,0 +1,9 @@
+useth <std.th>
+
+ref i8 msg "hello world"
+const msgSize size msg
+
+exp fn hello_world(){
+    consoleWrite(msg, msgSize, NULL)
+    return 0
+}

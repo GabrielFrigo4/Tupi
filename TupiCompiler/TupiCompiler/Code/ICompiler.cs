@@ -14,6 +14,7 @@ internal interface ICompiler
 
 internal interface ICompilerCode: ICompiler
 {
+    List<string> FnExport { get; }
     bool IsMainFile { get; }
     void SetCompilerFunc(ICompilerCodeFunc compilerCodeFunc);
 }

@@ -1,0 +1,10 @@
+useth <std.th>
+ref i8 msg "hello world"
+const msgSize size msg
+
+fn main(i32 argc, iptr argv)
+{
+	byte myBool = 1
+    consoleWrite(msg, msgSize, NULL)
+    return 0
+}

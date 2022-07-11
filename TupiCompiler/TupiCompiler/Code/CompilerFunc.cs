@@ -90,7 +90,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             }
 
             if (pos == e.Code.Length - 1) break;
-            char[] removeSpace = { ' ', ',', '\t', '$' };
+            char[] removeSpace = { ' ', ',', '\t', '\n', '$' };
             if (codeStr[pos] == ' ' && removeSpace.Contains(codeStr[pos + 1]))
             {
                 codeStr = codeStr.Remove(pos, 1);
@@ -115,9 +115,15 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 pos--;
                 continue;
             }
-            if (codeStr[pos] == '\n' && (codeStr[pos + 1] == '\n' || codeStr[pos + 1] == ' '))
+            if (codeStr[pos] == '\n' && codeStr[pos + 1] == '\n')
             {
                 codeStr = codeStr.Remove(pos, 1);
+                pos--;
+                continue;
+            }
+            if (codeStr[pos] == '\n' && codeStr[pos + 1] == ' ')
+            {
+                codeStr = codeStr.Remove(pos + 1, 1);
                 pos--;
                 continue;
             }
@@ -471,27 +477,33 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 string path = line.Replace("usetp ", "").Replace("<", "").Replace(">", "");
                 if (File.Exists(path))
                 {
-                    string asmName = CreateAssemblyFile(path, out ICodeData codeData, out List<string> linkLibs);
+                    string asmName = CreateAssemblyFile(path, out ICodeData codeData,
+                        out List<string> linkLibs, out List<string> fnExport);
                     Program.MainCompiler.GetRunData().AddCodeData(codeData);
                     Program.MainCompiler.LinkLibs.AddRange(linkLibs);
+                    Program.MainCompiler.FnExport.AddRange(fnExport);
                     isMacrosSet = true;
 
                     e.CompiledCode.UseTh.Add($"include {asmName}");
                 }
                 else if (File.Exists(Program.pathCompile + "/" + path))
                 {
-                    string asmName = CreateAssemblyFile(Program.pathCompile + "/" + path, out ICodeData codeData, out List<string> linkLibs);
+                    string asmName = CreateAssemblyFile(Program.pathCompile + "/" + path, out ICodeData codeData,
+                        out List<string> linkLibs, out List<string> fnExport);
                     Program.MainCompiler.GetRunData().AddCodeData(codeData);
                     Program.MainCompiler.LinkLibs.AddRange(linkLibs);
+                    Program.MainCompiler.FnExport.AddRange(fnExport);
                     isMacrosSet = true;
 
                     e.CompiledCode.UseTh.Add($"include {asmName}");
                 }
                 else if (File.Exists(Program.tpPath + path))
                 {
-                    string asmName = CreateAssemblyFile(Program.tpPath + path, out ICodeData codeData, out List<string> linkLibs);
+                    string asmName = CreateAssemblyFile(Program.tpPath + path, out ICodeData codeData,
+                        out List<string> linkLibs, out List<string> fnExport);
                     Program.MainCompiler.GetRunData().AddCodeData(codeData);
                     Program.MainCompiler.LinkLibs.AddRange(linkLibs);
+                    Program.MainCompiler.FnExport.AddRange(fnExport);
                     isMacrosSet = true;
 
                     e.CompiledCode.UseTh.Add($"include {asmName}");
@@ -840,6 +852,9 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
 
     void Compile_Func(object? sender, CompilerArgs e)
     {
+        ICompilerCode? compiler = (ICompilerCode?)sender;
+        if (compiler is null) return;
+
         FuncData? currentFunc = null;
         string fnCode = string.Empty;
         int localVarPos = 0;
@@ -861,12 +876,20 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             {
                 UpdateInsideFunc(terms, ref totalKeys, ref isInsideFunc);
                 if (terms.Length < 2 || isInsideStruct || isInsideUnion) continue;
-                if (terms[0] == "fn")
+
+                int start = 0;
+                if (terms[0] == "exp")
+                {
+                    start++;
+                    compiler.FnExport.Add(terms[start + 1].Remove(terms[start + 1].IndexOf('(')));
+                }
+
+                if (terms[start] == "fn")
                 {
                     string funcArguments = line[(line.IndexOf('(') + 1)..line.IndexOf(')')];
                     string[] args = funcArguments.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
-                    currentFunc = new(terms[1].Remove(terms[1].IndexOf('(')));
+                    currentFunc = new(terms[start + 1].Remove(terms[start + 1].IndexOf('(')));
                     e.RunData.Funcs.Add(currentFunc);
                     fnCode += $"{currentFunc.Name} proc\n";
                     //args
@@ -890,7 +913,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                         currentFunc.Args.Add(varData);
                         currentFunc.ShadowSpace = AddShadowSpaceFunc(currentFunc.ShadowSpace, varData.Size);
                     }
-                    localVarPos += fnCode.Length;
+                    localVarPos = fnCode.Length;
                 }
             }
             else if (currentFunc is not null && isAsmCode)
@@ -1459,7 +1482,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             totalKeys--;
         }
 
-        if (terms[0] == "fn")
+        if (terms[0] == "fn" || (terms[0] == "exp" && terms[1] == "fn"))
         {
             isInsideFunc = true;
         }
@@ -1640,7 +1663,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         return fileName + ".inc";
     }
 
-    private string CreateAssemblyFile(string path, out ICodeData codeData, out List<string> linkLibs)
+    private string CreateAssemblyFile(string path, out ICodeData codeData, out List<string> linkLibs, out List<string> fnExport)
     {
         string fileName = Path.GetFileNameWithoutExtension(path);
         StreamWriter writer = File.CreateText($"{Program.pathDir}/{fileName}.asm");
@@ -1648,6 +1671,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         writer.Close();
         codeData = compilerCode.GetRunData().GetCodeData();
         linkLibs = compilerCode.LinkLibs;
+        fnExport = compilerCode.FnExport;
         return fileName + ".asm";
     }
 

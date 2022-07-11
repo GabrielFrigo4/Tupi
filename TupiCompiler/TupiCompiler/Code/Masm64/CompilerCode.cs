@@ -15,10 +15,12 @@ internal class CompilerCode : CompilerAbstract, ICompilerCode
         {
             return CompiledCode.CreateAsmCode(isMainFile);
         };
+        FnExport = new();
         LinkLibs = new();
     }
 
     public bool IsMainFile { get; private set; }
+    public List<string> FnExport { get; private set; }
     public List<string> LinkLibs { get; private set; }
 
     public void SetCompilerFunc(ICompilerCodeFunc compilerCodeFunc)
