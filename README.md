@@ -3,7 +3,7 @@ Tupi is a compiled programming language that uses masm(microsoft assembly), so t
 
 # hello world in tupi 1:
     useth <std.th>
-    ref i8 msg "hello world", 0
+    ref i8 msg "hello world\n\0"
 
     i64 main(){
         consoleWriteStr(msg)
@@ -12,8 +12,8 @@ Tupi is a compiled programming language that uses masm(microsoft assembly), so t
 
 # hello world in tupi 2:
     useth <std.th>
-    ref i8 msg "hello world"
-    const msgSize size msg
+    ref i8 msg "hello world\n"
+    const msgSize sizeof msg
 
     i64 main(){
         consoleWrite(msg, msgSize, NULL)
