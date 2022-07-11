@@ -1,6 +1,6 @@
 useth <std.th>
-ref i8 msg "hello world"
-const msgSize size msg
+ref i8 msg "hello world\n"
+const msgSize sizeof msg
 
 fn main(i32 argc, iptr argv)
 {

@@ -396,7 +396,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             }
         }
 
-        Console.WriteLine(e.Code);
+        //Console.WriteLine(e.Code);
     }
     #endregion
 
@@ -2063,8 +2063,10 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             return ArgState.None;
         }
     }
+    #endregion
 
-    private void ShowErrors(params string[] errors)
+    #region Internal static Function
+    internal static void ShowErrors(params string[] errors)
     {
         ConsoleColor consoleColor = Console.ForegroundColor;
         Console.ForegroundColor = ConsoleColor.Red;
@@ -2073,7 +2075,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
         Console.ForegroundColor = consoleColor;
     }
 
-    private void ShowWarnigns(params string[] warnigns)
+    internal static void ShowWarnigns(params string[] warnigns)
     {
         ConsoleColor consoleColor = Console.ForegroundColor;
         Console.ForegroundColor = ConsoleColor.Yellow;

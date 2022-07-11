@@ -50,39 +50,53 @@ internal static class Program
     static int Main(string[] args)
     {
 #if DEBUG
-        args = new string[1];
-        args[0] = "TupiCode/mycode.tp";
+        List<string> listArgs = new();
+        //listArgs.Add("-s");
+        //listArgs.Add("TupiCode/mycode.tp");
+        listArgs.Add("-s");
+        listArgs.Add("TupiCode/exemples/tupiexe.tp");
+        listArgs.Add("-s");
+        listArgs.Add("TupiCode/exemples/tupilib.tp");
+        listArgs.Add("-o");
+        listArgs.Add("mycode.exe");
+        listArgs.Add("-e");
+        args = listArgs.ToArray();
 #endif
         if (args.Length > 0)
         {
-            string? _pathCompile = Path.GetDirectoryName(Path.GetFullPath(args[0]));
-            if (_pathCompile is not null)
-                pathCompile = Path.GetFullPath(_pathCompile);
-
-            Action<string, bool, bool, bool> action = CompileTupiProj;
-            Argument<string> source = new("source", "source for tupi compile");
+            Action<string[]?, bool, bool, bool, string?> action = CompileTupiProj;
+            Option<string[]?> source = new(new[] { "--source", "-s" }, "source for tupi compile");
             Option<bool> exe = new(new[] { "--exe", "-e" }, "is a exe output file");
             Option<bool> dll = new(new[] { "--dll", "-d" }, "is a dll output file");
             Option<bool> lib = new(new[] { "--lib", "-l" }, "is a lib output file");
+            Option<string?> output = new(new[] { "--output", "-o" }, "is a output file name");
             RootCommand cmd = new()
             {
                 source,
                 exe,
                 dll,
                 lib,
+                output,
             };
-            cmd.SetHandler(action, source, exe, dll, lib);
+            cmd.SetHandler(action, source, exe, dll, lib, output);
             return cmd.Invoke(args);
         }
         else
         {
-            Console.WriteLine("falta o comando ou argumento...");
+            CompilerFunc.ShowErrors("falta o comando ou argumento...");
             return 0;
         }
     }
 
-    internal static void CompileTupiProj(string pathTupi, bool isExe, bool isDll, bool isLib)
+    internal static void CompileTupiProj(string[]? filesTupi, bool isExe, bool isDll, bool isLib, string? output)
     {
+        List<string> nameFiles = new();
+        if(filesTupi is null)
+        {
+            CompilerFunc.ShowErrors("need a source file to compile");
+            return;
+        }
+
         OutputType outputType = OutputType.Exe;
         if(isExe)
             outputType = OutputType.Exe;
@@ -90,23 +104,31 @@ internal static class Program
             outputType = OutputType.Dll;
         else if (isLib)
             outputType = OutputType.Lib;
-        string tupiFileName = Path.GetFileNameWithoutExtension(pathTupi);
-        Console.WriteLine("compile tupi proj:");
-        Console.WriteLine("tranform tupi code to assembly(masm)");
 
-        Directory.CreateDirectory(pathDir);
-        StreamWriter write = File.CreateText(pathDir + $"\\{tupiFileName}.asm");
-        write.Write(CompileTupiCodeFile(pathTupi, out mainCompiler, true));
-        write.Close();
+        foreach(string pathTupi in filesTupi)
+        {
+            string? _pathCompile = Path.GetDirectoryName(Path.GetFullPath(pathTupi));
+            if (_pathCompile is not null)
+                pathCompile = Path.GetFullPath(_pathCompile);
 
-        List<string> files = new();
-        files.Add(tupiFileName);
+            string tupiFileName = Path.GetFileNameWithoutExtension(pathTupi);
+            nameFiles.Add(tupiFileName);
+            Console.WriteLine($"compile tupi file: {pathTupi}");
+            Console.WriteLine("tranform tupi code to assembly(masm)");
+
+            Directory.CreateDirectory(pathDir);
+            StreamWriter write = File.CreateText(pathDir + $"\\{tupiFileName}.asm");
+            write.Write(CompileTupiCodeFile(pathTupi, out mainCompiler, true));
+            write.Close();
+        }
+
         if (!Directory.Exists(pathDir + "\\header"))
             Directory.CreateDirectory(pathDir + "\\header");
         if (File.Exists(pathDir + "\\header\\std_tupi_def.inc"))
             File.Delete(pathDir + "\\header\\std_tupi_def.inc");
         File.Copy($"{x64Path}std_tupi_def.inc", pathDir + "\\header\\std_tupi_def.inc");
-        CompileAsm(pathDir, files, MainCompiler.LinkLibs, MainCompiler.FnExport, outputType);
+
+        CompileAsm(pathDir, nameFiles, MainCompiler.LinkLibs, MainCompiler.FnExport, outputType, output);
     }
 
     internal static string CompileTupiCodeFile(string pathTupiCode, out ICompilerCode compiler, bool isMainFile)
@@ -124,7 +146,7 @@ internal static class Program
     }
 
     internal static void CompileAsm(string path_dir_asm, List<string> nameFiles, List<string> libFiles, 
-        List<string> fnExport, OutputType output, bool run = false, bool assembler_warning = true)
+        List<string> fnExport, OutputType output, string? outputName, bool run = false, bool assembler_warning = true)
     {
         Console.WriteLine("tranform assembly to binary file");
         Process process = new();
@@ -144,55 +166,53 @@ internal static class Program
         {
             string libCommand = " lib";
             foreach (string objFile in nameFiles)
-            {
                 libCommand += $" {objFile}.obj";
 
-                {
-                    var libFilesDistinct = libFiles.Distinct();
-                    foreach (string libFile in libFilesDistinct)
-                    {
-                        libCommand += $" /nodefaultlib:{libFile}";
-                    }
-                }
-
-                {
-                    var fnExportDistinct = fnExport.Distinct();
-                    foreach (string fnExp in fnExportDistinct)
-                    {
-                        libCommand += $" /export:{fnExp}";
-                    }
-                }
-
-                startInfo.Arguments += libCommand;
+            var libFilesDistinct = libFiles.Distinct();
+            foreach (string libFile in libFilesDistinct)
+            {
+                libCommand += $" /nodefaultlib:{libFile}";
             }
+
+            var fnExportDistinct = fnExport.Distinct();
+            foreach (string fnExp in fnExportDistinct)
+            {
+                libCommand += $" /export:{fnExp}";
+            }
+
+            if(outputName is not null)
+            {
+                libCommand += $" /out:{outputName}";
+            }
+
+            startInfo.Arguments += libCommand;
         }
         else
         {
             string linkCommand = " link";
             foreach (string objFile in nameFiles)
-            {
                 linkCommand += $" {objFile}.obj";
-            }
 
             if (output == OutputType.Exe)
                 linkCommand += $" /entry:main /subsystem:console";
             else if (output == OutputType.Dll)
                 linkCommand += $" /DLL /entry:DllMain";
 
+            var libFilesDistinct = libFiles.Distinct();
+            foreach (string libFile in libFilesDistinct)
             {
-                var libFilesDistinct = libFiles.Distinct();
-                foreach (string libFile in libFilesDistinct)
-                {
-                    linkCommand += $" /defaultlib:{libFile}";
-                }
+                linkCommand += $" /defaultlib:{libFile}";
             }
 
+            var fnExportDistinct = fnExport.Distinct();
+            foreach (string fnExp in fnExportDistinct)
             {
-                var fnExportDistinct = fnExport.Distinct();
-                foreach (string fnExp in fnExportDistinct)
-                {
-                    linkCommand += $" /export:{fnExp}";
-                }
+                linkCommand += $" /export:{fnExp}";
+            }
+
+            if (outputName is not null)
+            {
+                linkCommand += $" /out:{outputName}";
             }
 
             startInfo.Arguments += linkCommand;
@@ -202,7 +222,6 @@ internal static class Program
             }
         }
 
-        Console.WriteLine(startInfo.Arguments);
         process.StartInfo = startInfo;
         process.Start();
         process.WaitForExit();
