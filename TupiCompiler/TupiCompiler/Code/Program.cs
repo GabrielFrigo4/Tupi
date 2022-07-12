@@ -222,6 +222,10 @@ internal static class Program
             }
         }
 
+        StreamWriter write = File.CreateText(pathDir + $"\\build.bat");
+        write.Write(startInfo.Arguments.Remove(0, $"/C cd \"{path_dir_asm}\" && ".Length));
+        write.Close();
+
         process.StartInfo = startInfo;
         process.Start();
         process.WaitForExit();
