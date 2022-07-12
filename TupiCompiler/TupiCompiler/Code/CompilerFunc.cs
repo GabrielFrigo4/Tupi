@@ -160,7 +160,20 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             }
 
             char[] spaceSign = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '=', ' '};
-            if (!isSign)
+            if (isSign)
+            {
+                if (codeStr[pos] == '+' && spaceSign.Contains(codeStr[pos + 1]))
+                {
+                    isSign = false;
+                    continue;
+                }
+                if (codeStr[pos] == '-' && spaceSign.Contains(codeStr[pos + 1]))
+                {
+                    isSign = false;
+                    continue;
+                }
+            }
+            else
             {
                 if (codeStr[pos] == '+' && !spaceSign.Contains(codeStr[pos + 1]) && codeStr[pos + 1] != '+')
                 {
@@ -168,22 +181,6 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                     continue;
                 }
                 if (codeStr[pos] == '-' && !spaceSign.Contains(codeStr[pos + 1]) && codeStr[pos + 1] != '-')
-                {
-                    codeStr = codeStr.Insert(pos + 1, " ");
-                    continue;
-                }
-                isSign = false;
-            }
-            else
-            {
-                if (codeStr[pos] == '+' && codeStr[pos + 1] != ' ' && 
-                    codeStr[pos + 1] != '=' && codeStr[pos + 1] != '+')
-                {
-                    codeStr = codeStr.Insert(pos + 1, " ");
-                    continue;
-                }
-                if (codeStr[pos] == '-' && codeStr[pos + 1] != ' ' &&
-                    codeStr[pos + 1] != '=' && codeStr[pos + 1] != '-')
                 {
                     codeStr = codeStr.Insert(pos + 1, " ");
                     continue;
@@ -210,7 +207,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 continue;
             }
 
-            if (codeStr[pos] != ' ' && spaceSign.Contains(codeStr[pos + 2]) &&
+            if (codeStr[pos] != ' ' && codeStr[pos] != ',' && spaceSign.Contains(codeStr[pos + 2]) &&
                 (codeStr[pos + 1] == '-' || codeStr[pos + 1] == '+'))
             {
                 isSign = true;
@@ -396,7 +393,7 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             }
         }
 
-        //Console.WriteLine(e.Code);
+        Console.WriteLine(e.Code);
     }
     #endregion
 

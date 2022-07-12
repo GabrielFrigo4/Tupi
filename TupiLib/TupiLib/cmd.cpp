@@ -147,7 +147,7 @@ EXTC const char* fToStr(double number, int decimalPlaces) {
     } while (invertPos > 0);
 
     //decimal part
-    if (DecimalPart > 0) {
+    if (DecimalPart > 0 && decimalPlaces != 0) {
         length++;
         if (strFloat != NULL) {
             char* strFloat2 = (char*)recreateMem(strFloat, length);

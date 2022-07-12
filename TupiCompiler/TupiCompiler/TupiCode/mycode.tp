@@ -49,7 +49,7 @@ fn main(i32 argc, iptr argv)
 	iptr myPointer2;
 	myStruct myStructVar;
 	
-	consoleWriteFloat(myFloat, 2)
+	consoleWriteFloat(myFloat, -1)
 	consoleWriteStr(pularLinha)
 	consoleWriteStr(pularLinha)
 	
@@ -126,7 +126,7 @@ fn main(i32 argc, iptr argv)
 	consoleWriteInt(myVarSumTeste)
 	consoleWriteStr(pularLinha)
 	
-	myVarSumTeste = myVarSumTeste1 + +10 - -100	$113
+	myVarSumTeste = myVarSumTeste1 ++10 - -100	$113
 	consoleWriteInt(myVarSumTeste)
 	consoleWriteStr(pularLinha)
 	
