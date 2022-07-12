@@ -21,6 +21,10 @@ usefn joinStr
 usefn joinStrWithChar
 usefn joinStrWithSpace
 
+usefn mathSign
+usefn mathFloor
+usefn mathAbs
+
 uselib <TupiLib.lib>
 
 #macro SW_HIDE 0

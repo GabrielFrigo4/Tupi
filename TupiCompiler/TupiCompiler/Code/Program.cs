@@ -51,12 +51,12 @@ internal static class Program
     {
 #if DEBUG
         List<string> listArgs = new();
+        listArgs.Add("-s");
+        listArgs.Add("TupiCode/mycode.tp");
         //listArgs.Add("-s");
-        //listArgs.Add("TupiCode/mycode.tp");
-        listArgs.Add("-s");
-        listArgs.Add("TupiCode/exemples/tupiexe.tp");
-        listArgs.Add("-s");
-        listArgs.Add("TupiCode/exemples/tupilib.tp");
+        //listArgs.Add("TupiCode/exemples/tupiexe.tp");
+        //listArgs.Add("-s");
+        //listArgs.Add("TupiCode/exemples/tupilib.tp");
         listArgs.Add("-o");
         listArgs.Add("mycode.exe");
         listArgs.Add("-e");

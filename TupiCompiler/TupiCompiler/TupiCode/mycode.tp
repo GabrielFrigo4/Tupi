@@ -7,7 +7,7 @@ ref i8 msgLoop "myInt in loop is \0"
 ref i8 msgInt "myInts is %d %d %d %d %d\n\0"
 ref i8 appName "python\0" 
 i64 myInt 120
-f64 myFloat 0.1
+f64 myFloat 10.15
 myStruct myStructTest {8, 8, 16, 16}
 Unginha myStructUnginha {8, 8, 16, 16}
 CUnginha myStructCUnginha {8, 8, 8, 16}
@@ -49,6 +49,10 @@ fn main(i32 argc, iptr argv)
 	iptr myPointer2;
 	myStruct myStructVar;
 	
+	consoleWriteFloat(myFloat, 2)
+	consoleWriteStr(pularLinha)
+	consoleWriteStr(pularLinha)
+	
 	asm 
 	{
 		;start asm
@@ -71,7 +75,6 @@ fn main(i32 argc, iptr argv)
 		;end asm
 	}	
 	
-	consoleWriteStr(pularLinha)
 	consoleWriteStr(pularLinha)
 	consoleWriteStr(pularLinha)
 

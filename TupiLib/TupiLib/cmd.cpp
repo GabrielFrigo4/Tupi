@@ -1,9 +1,7 @@
 #include "pch.h"
 #include "framework.h"
 #include "cmd.h"
-
-EXTC double floor(double x);
-EXTC double abs(double x);
+#include "math.h"
 
 EXTC BOOL consoleWrite(const VOID * lpBuffer, DWORD nNumberOfCharsToWrite, LPDWORD lpNumberOfCharsWritten) {
     HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -26,8 +24,8 @@ EXTC BOOL consoleWriteInt(long long int number) {
     return ret;
 }
 
-EXTC BOOL consoleWriteFloat(double number) {
-    const char* strFloat = fToStr(number);
+EXTC BOOL consoleWriteFloat(double number, int decimalPlaces) {
+    const char* strFloat = fToStr(number, decimalPlaces);
     BOOL ret = consoleWriteStr(strFloat);
     deleteMem((char*)strFloat);
     return ret;
@@ -94,9 +92,9 @@ EXTC const char* iToStr(long long int number) {
     return strInt;
 }
 
-EXTC const char* fToStr(double number) {
-    long long int IntPart = floor(abs(number));
-    double DecimalPart = abs(number) - IntPart;
+EXTC const char* fToStr(double number, int decimalPlaces) {
+    long long int IntPart = mathFloor(mathAbs(number));
+    double DecimalPart = mathAbs(number) - IntPart;
     bool isNegative = false;
     char* strFloat = (char*)createMem(1);
     char* strSignFloatIvert = (char*)createMem(1);
@@ -161,7 +159,13 @@ EXTC const char* fToStr(double number) {
     }
     while (DecimalPart > 0)
     {
-        int numb = floor(DecimalPart * 10);
+        if (decimalPlaces == 0) {
+            DecimalPart = 0;
+            break;
+        }
+        decimalPlaces--;
+
+        int numb = mathFloor(DecimalPart * 10);
         DecimalPart = DecimalPart * 10 - numb;
         length++;
         if (strFloat != NULL) {

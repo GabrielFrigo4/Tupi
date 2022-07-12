@@ -55,6 +55,9 @@ typedef const char* LPCSTR;
 typedef char* PSTR, * LPSTR;
 typedef BYTE* LPBYTE;
 typedef unsigned int UINT;
+typedef unsigned long* ULONG_PTR;
+typedef void* PVOID;
+typedef const void* LPCVOID;
 
 typedef struct _SECURITY_ATTRIBUTES {
 	DWORD	nLength;
@@ -87,6 +90,18 @@ typedef struct _PROCESS_INFORMATION {
 	DWORD  dwProcessId;
 	DWORD  dwThreadId;
 } PROCESS_INFORMATION, * PPROCESS_INFORMATION, * LPPROCESS_INFORMATION;
+typedef struct _OVERLAPPED {
+	ULONG_PTR Internal;
+	ULONG_PTR InternalHigh;
+	union {
+		struct {
+			DWORD Offset;
+			DWORD OffsetHigh;
+		} DUMMYSTRUCTNAME;
+		PVOID Pointer;
+	} DUMMYUNIONNAME;
+	HANDLE    hEvent;
+} OVERLAPPED, * LPOVERLAPPED;
 
 EXTC HANDLE GetProcessHeap();
 EXTC LPVOID HeapAlloc(
@@ -148,4 +163,18 @@ EXTC BOOL DeleteFileA(
 );
 EXTC void ExitProcess(
 	UINT uExitCode
+);
+EXTC BOOL ReadFile(
+	HANDLE       hFile,
+	LPVOID       lpBuffer,
+	DWORD        nNumberOfBytesToRead,
+	LPDWORD      lpNumberOfBytesRead,
+	LPOVERLAPPED lpOverlapped
+);
+EXTC BOOL WriteFile(
+	HANDLE       hFile,
+	LPCVOID      lpBuffer,
+	DWORD        nNumberOfBytesToWrite,
+	LPDWORD      lpNumberOfBytesWritten,
+	LPOVERLAPPED lpOverlapped
 );

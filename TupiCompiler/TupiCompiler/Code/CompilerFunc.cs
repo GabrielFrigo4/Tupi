@@ -564,12 +564,13 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 }
                 else
                 {
-                    ConsoleColor consoleColor = Console.ForegroundColor;
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"{path} lib not find");
-                    Console.WriteLine($"{Program.pathCompile}/{path} lib not find");
-                    Console.WriteLine($"{Program.x64Path}lib/{path} lib not find");
-                    Console.ForegroundColor = consoleColor;
+                    //ConsoleColor consoleColor = Console.ForegroundColor;
+                    //Console.ForegroundColor = ConsoleColor.Red;
+                    //Console.WriteLine($"{path} lib not find");
+                    //Console.WriteLine($"{Program.pathCompile}/{path} lib not find");
+                    //Console.WriteLine($"{Program.x64Path}lib/{path} lib not find");
+                    //Console.ForegroundColor = consoleColor;
+                    compiler.LinkLibs.Add(path);
                 }
             }
         }
@@ -1879,7 +1880,8 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
             string[] param = _param.Split(new char[] { ',', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
             string[] param1 = new string[param.Length];
             string[] param2 = new string[param.Length];
-            string[] comand = new string[param.Length];
+            string[] comand1 = new string[param.Length];
+            string[] comand2 = new string[param.Length];
             string[] registorsType = new string[4];
             string[] registorsB = new string[param.Length];
             string[] varType = Array.Empty<string>();
@@ -1894,7 +1896,8 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
 
                 if (state == ArgState.RefVar && varArg is not null)
                 {
-                    comand[i] = "lea";
+                    comand1[i] = "lea";
+                    comand2[i] = "mov";
                     param1[i] = varArg;
                     if (i < 4)
                     {
@@ -1905,9 +1908,8 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 }
                 else if (state == ArgState.Var && varData is not null)
                 {
-                    int pos;
-
-                    comand[i] = "mov";
+                    comand1[i] = "mov";
+                    comand2[i] = "mov";
                     for (int p = 1; p < varSemiPath.Length; p++)
                     {
                         if (e.RunData.GetStructByName(varData.Type)?.GetVarByName(varSemiPath[p]) is VarData der)
@@ -1915,8 +1917,8 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                         else
                             break;
                     }
-                    pos = GetPosRegistorBySize(varData.Size);
 
+                    int pos = GetPosRegistorBySize(varData.Size);
                     param1[i] = varPath;
                     if (i < 4)
                     {
@@ -1924,10 +1926,32 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                     }
                     registorsB[i] = e.ReadOnlyData.RegistorsB[pos];
                     param2[i] = registorsB[i];
+
+                    if (new[] { "f32", "real4" }.Contains(varData.Type))
+                    {
+                        comand1[i] = "lea";
+                        comand2[i] = "movss";
+                        param2[i] = $"real4 ptr [{registorsB[i]}]";
+                        if (i < 4)
+                        {
+                            registorsType[i] = e.ReadOnlyData.RegistorsRealX[i];
+                        }
+                    }
+                    else if (new[] { "f64", "real8" }.Contains(varData.Type))
+                    {
+                        comand1[i] = "lea";
+                        comand2[i] = "movsd";
+                        param2[i] = $"real8 ptr [{registorsB[i]}]";
+                        if (i < 4)
+                        {
+                            registorsType[i] = e.ReadOnlyData.RegistorsRealX[i];
+                        }
+                    }
                 }
                 else if(state == ArgState.PtrData && varArg is not null)
                 {
-                    comand[i] = "mov";
+                    comand1[i] = "mov";
+                    comand2[i] = "mov";
                     param1[i] = varArg;
                     if (i < 4)
                     {
@@ -1938,7 +1962,8 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
                 }
                 else if (state == ArgState.Number || state == ArgState.BasicEqu || state == ArgState.Const)
                 {
-                    comand[i] = "mov";
+                    comand1[i] = "mov";
+                    comand2[i] = "mov";
                     param1[i] = varPath;
                     if (i < 4)
                     {
@@ -1955,13 +1980,13 @@ internal class CompilerFunc : ICompilerCodeFunc, ICompilerHeaderFunc
 
             for (int i = 0; !(i >= 4 || i >= param.Length); i++)
             {
-                fnCode += $"\t{comand[i]} {registorsB[i]}, {param1[i]}\n";
-                fnCode += $"\tmov {registorsType[i]}, {param2[i]}\n";
+                fnCode += $"\t{comand1[i]} {registorsB[i]}, {param1[i]}\n";
+                fnCode += $"\t{comand2[i]} {registorsType[i]}, {param2[i]}\n";
             }
             for (int i = 4; i < param.Length; i++)
             {
-                fnCode += $"\t{comand[i]} {registorsB[i]}, {param1[i]}\n";
-                fnCode += $"\tmov {varType[i - 4]} ptr [rsp+{i * 8}], {param2[i]}\n";
+                fnCode += $"\t{comand1[i]} {registorsB[i]}, {param1[i]}\n";
+                fnCode += $"\t{comand2[i]} {varType[i - 4]} ptr [rsp+{i * 8}], {param2[i]}\n";
             }
             fnCode += $"\tcall {func_name}\n";
             return true;

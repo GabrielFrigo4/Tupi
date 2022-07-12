@@ -166,6 +166,7 @@
     <ClInclude Include="cmd.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="io.h" />
+    <ClInclude Include="math.h" />
     <ClInclude Include="mem.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="proc.h" />
