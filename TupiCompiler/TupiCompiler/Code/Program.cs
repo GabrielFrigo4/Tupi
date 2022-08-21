@@ -1,6 +1,8 @@
 ﻿using System.CommandLine;
 using System.Diagnostics;
 using System.Reflection;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace TupiCompiler.Code;
 internal static class Program
@@ -47,8 +49,14 @@ internal static class Program
 
     internal static string pathCompile = string.Empty;
 
+    internal static Config Config { get; set; }
+
     static int Main(string[] args)
     {
+        var deserializer = new DeserializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)  // see height_in_inches in sample yml 
+            .Build();
+        Config = deserializer.Deserialize<Config>(File.ReadAllText("./Config.yaml"));
 #if DEBUG
         List<string> listArgs = new();
         listArgs.Add("-s");
@@ -155,7 +163,7 @@ internal static class Program
             CreateNoWindow = !assembler_warning,
             WindowStyle = ProcessWindowStyle.Hidden,
             FileName = "cmd.exe",
-            Arguments = $"/C cd \"{path_dir_asm}\" && call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat\" x64  &&"
+            Arguments = $"/C cd \"{path_dir_asm}\" && call \"{Config.Vspath}VC\\Auxiliary\\Build\\vcvarsall.bat\" {Config.Arch}  &&"
         };
         foreach (string asmFile in nameFiles)
         {
@@ -231,6 +239,12 @@ internal static class Program
         process.WaitForExit();
         Console.WriteLine("compile finished!!");
     }
+}
+
+struct Config
+{
+    public string Vspath { get; private set; }
+    public string Arch { get; private set; }
 }
 
 enum OutputType
