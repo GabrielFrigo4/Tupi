@@ -1,3 +1,7 @@
+[PATCH 2]
+para x86/x64 usarei apenas NASM, quem sabe num futuro irei usar GAS, MASM...
+
+[PATCH 1]
 Arch: apenas X64/ARM64 (X16, X32, ARM16, ARM32 são obsoletos)
 Para X64 vai ser usado MASM, NASM, GAS
 O ARM64 vai ser para o futuro

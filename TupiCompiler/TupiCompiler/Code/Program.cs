@@ -41,10 +41,10 @@ internal static class Program
     }
 
     internal readonly static string
-        x64Path = EXE_PATH + "/_tupi/x64/",
-        x86Path = EXE_PATH + "/_tupi/x86/",
-        thPath = EXE_PATH + "/_tupi/header/",
-        tpPath = EXE_PATH + "/_tupi/code/",
+        x64Path = EXE_PATH + "/.TupiCore/tupi/x64/",
+        x86Path = EXE_PATH + "/.TupiCore/tupi/x86/",
+        thPath = EXE_PATH + "/.TupiCore/tupi/header/",
+        tpPath = EXE_PATH + "/.TupiCore/tupi/code/",
         pathDir = "./build";
 
     internal static string pathCompile = string.Empty;

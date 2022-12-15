@@ -33,26 +33,65 @@
     <None Update="TupiCode\tupiheader.th">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="_tupi\header\std.th">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="_tupi\x64\lib\TupiLib.lib">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="TupiCode\mycode.tp">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="_tupi\x64\std_tupi_def.inc">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="_tupi\x86\std_tupi_def.inc">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="_tupi\code\" />
-    <Folder Include="_tupi\x86\lib\" />
+    <Folder Include=".TupiCore\tupi\code\" />
+    <Folder Include=".TupiCore\tupi\x86\lib\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include=".TupiCore\nasm\LICENSE">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\nasm\nasm.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\nasm\ndisasm.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\nasm\rdoff\ldrdf.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\nasm\rdoff\rdf2bin.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\nasm\rdoff\rdf2com.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\nasm\rdoff\rdf2ihx.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\nasm\rdoff\rdf2ith.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\nasm\rdoff\rdf2srec.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\nasm\rdoff\rdfdump.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\nasm\rdoff\rdflib.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\nasm\rdoff\rdx.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\tupi\header\std.th">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\tupi\x64\lib\TupiLib.lib">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\tupi\x64\std_tupi_def.inc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\tupi\x86\std_tupi_def.inc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
