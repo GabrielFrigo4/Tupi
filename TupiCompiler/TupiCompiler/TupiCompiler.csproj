@@ -44,7 +44,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include=".TupiCore\link\lld-link.exe">
+    <None Include=".TupiCore\llvm\llvm-ar.exe" />
+    <None Include=".TupiCore\llvm\lld-link.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include=".TupiCore\nasm\LICENSE">
