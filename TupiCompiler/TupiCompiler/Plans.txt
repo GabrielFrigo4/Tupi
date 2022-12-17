@@ -1,5 +1,5 @@
 [PATCH 3]
-vou usar o NASM para criar objeto x86-32 e x86-64 e usarei o linker LLD-LINK para linkar
+vou usar o NASM para criar objeto x86-32 e x86-64 e usarei o linker LLD-LINK para linkar e LLVM-AR para criar lib
 
 [PATCH 2]
 para x86/x64 usarei apenas NASM, quem sabe num futuro irei usar GAS, MASM...
