@@ -41,6 +41,8 @@ internal static class Program
     }
 
     internal readonly static string
+        linkPath = EXE_PATH + "/.TupiCore/link/lld-link.exe",
+        nasmPath = EXE_PATH + "/.TupiCore/nasm/nasm.exe",
         x64Path = EXE_PATH + "/.TupiCore/tupi/x64/",
         x86Path = EXE_PATH + "/.TupiCore/tupi/x86/",
         thPath = EXE_PATH + "/.TupiCore/tupi/header/",
