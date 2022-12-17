@@ -50,6 +50,12 @@ internal static class Program
         tpPath = EXE_PATH + "/.TupiCore/tupi/code/",
         pathDir = "./build";
 
+    internal readonly static string
+        vsdev2022 = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\",
+        vsdev2019 = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\",
+        vsdev2017 = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\",
+        vsdev2015 = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2015\\Community\\";
+
     internal static string pathCompile = string.Empty;
 
     internal static Config Config { get; set; }
@@ -57,7 +63,7 @@ internal static class Program
     static int Main(string[] args)
     {
         var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(UnderscoredNamingConvention.Instance)  // see height_in_inches in sample yml 
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
             .Build();
         Config = deserializer.Deserialize<Config>(File.ReadAllText("./Config.yaml"));
 #if DEBUG
@@ -246,8 +252,9 @@ internal static class Program
 
 struct Config
 {
-    public string Vspath { get; private set; }
-    public string Arch { get; private set; }
+    public string? Vsdev { get; private set; }
+    public string? Vspath { get; private set; }
+    public string? Arch { get; private set; }
 }
 
 enum OutputType

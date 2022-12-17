@@ -1,3 +1,4 @@
 ﻿# tupi file config
+vsdev: '2022'
 vspath: 'C:\Program Files\Microsoft Visual Studio\2022\Community\'
 arch: 'x64'
