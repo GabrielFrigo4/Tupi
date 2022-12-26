@@ -18,6 +18,9 @@
     <None Update="Config.yaml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Info.yaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="TupiCode\exemples\tupidll.tp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -44,8 +47,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include=".TupiCore\llvm\llvm-ar.exe" />
     <None Include=".TupiCore\llvm\lld-link.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\llvm\llvm-lib.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\llvm\llvm-mt.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\llvm\llvm-size.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\mingw64\ar.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\mingw64\ld.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include=".TupiCore\mingw64\size.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include=".TupiCore\nasm\LICENSE">

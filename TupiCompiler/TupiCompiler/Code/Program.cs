@@ -41,8 +41,13 @@ internal static class Program
     }
 
     internal readonly static string
-        linkPath = EXE_PATH + "/.TupiCore/llvm/lld-link.exe",
-        arPath = EXE_PATH + "/.TupiCore/llvm/llvm-ar.exe",
+        llvmSizePath = EXE_PATH + "/.TupiCore/llvm/llvm-size.exe",
+        llvmLinkPath = EXE_PATH + "/.TupiCore/llvm/lld-link.exe",
+        llvmLibPath = EXE_PATH + "/.TupiCore/llvm/llvm-lib.exe",
+        llvmMtPath = EXE_PATH + "/.TupiCore/llvm/llvm-mt.exe",
+        mingw64SizePath = EXE_PATH + "/.TupiCore/mingw64/size.exe",
+        mingw64LinkPath = EXE_PATH + "/.TupiCore/mingw64/ld.exe",
+        mingw64ArPath = EXE_PATH + "/.TupiCore/mingw64/ar.exe",
         nasmPath = EXE_PATH + "/.TupiCore/nasm/nasm.exe",
         x64Path = EXE_PATH + "/.TupiCore/tupi/x64/",
         x86Path = EXE_PATH + "/.TupiCore/tupi/x86/",
