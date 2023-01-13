@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove=".TupiCore\nasm\rdoff\**" />
+    <EmbeddedResource Remove=".TupiCore\nasm\rdoff\**" />
+    <None Remove=".TupiCore\nasm\rdoff\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageReference Include="YamlDotNet" Version="12.2.1" />
   </ItemGroup>
@@ -68,40 +74,10 @@
     <None Include=".TupiCore\mingw64\size.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include=".TupiCore\nasm\LICENSE">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include=".TupiCore\nasm\nasm.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include=".TupiCore\nasm\ndisasm.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include=".TupiCore\nasm\rdoff\ldrdf.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include=".TupiCore\nasm\rdoff\rdf2bin.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include=".TupiCore\nasm\rdoff\rdf2com.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include=".TupiCore\nasm\rdoff\rdf2ihx.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include=".TupiCore\nasm\rdoff\rdf2ith.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include=".TupiCore\nasm\rdoff\rdf2srec.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include=".TupiCore\nasm\rdoff\rdfdump.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include=".TupiCore\nasm\rdoff\rdflib.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include=".TupiCore\nasm\rdoff\rdx.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include=".TupiCore\tupi\header\std.th">
