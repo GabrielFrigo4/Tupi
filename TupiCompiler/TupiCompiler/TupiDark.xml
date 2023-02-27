@@ -32,7 +32,7 @@
             <Keywords name="Keywords6">TRUE&#x000D;&#x000A;FALSE&#x000D;&#x000A;NULL</Keywords>
             <Keywords name="Keywords7">?</Keywords>
             <Keywords name="Keywords8">asm</Keywords>
-            <Keywords name="Delimiters">00# 01 02((EOL)) 03 04 05 06&apos; 07 08((EOL &apos;)) 09 10 11 12&quot; 13 14((EOL &quot;)) 15 16 17 18&lt; 19 20((EOL &gt;)) 21 22 23</Keywords>
+            <Keywords name="Delimiters">00# 01 02((EOL)) 03 04 05 06&apos; 07\ 08((EOL &apos;)) 09 10 11 12&quot; 13\ 14((EOL &quot;)) 15 16 17 18&lt; 19 20((EOL &gt;)) 21 22 23</Keywords>
         </KeywordLists>
         <Styles>
             <WordsStyle name="DEFAULT" fgColor="EBEBEB" bgColor="FFFFFF" colorStyle="1" fontStyle="0" nesting="0" />
